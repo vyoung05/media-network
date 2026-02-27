@@ -1,0 +1,264 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&display=swap');
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-secondary text-text font-body antialiased;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.02'/%3E%3C/svg%3E");
+  }
+
+  ::selection {
+    @apply bg-primary/30 text-text;
+  }
+
+  /* Luxury scrollbar */
+  ::-webkit-scrollbar {
+    @apply w-1.5;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-secondary;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-primary/30 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary/50;
+  }
+
+  /* Focus styles */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-primary/50 ring-offset-2 ring-offset-secondary;
+  }
+}
+
+@layer components {
+  .container-caviar {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .container-narrow {
+    @apply max-w-4xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .container-wide {
+    @apply max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Buttons */
+  .btn-primary {
+    @apply px-8 py-3.5 bg-gradient-to-r from-primary to-caviar-gold-light text-secondary font-semibold
+           tracking-wider uppercase text-sm rounded-none
+           hover:from-caviar-gold-light hover:to-primary
+           transition-all duration-500 ease-out
+           shadow-gold hover:shadow-gold-lg;
+  }
+
+  .btn-burgundy {
+    @apply px-8 py-3.5 bg-highlight text-text font-semibold
+           tracking-wider uppercase text-sm rounded-none
+           hover:bg-highlight/80 transition-all duration-300
+           border border-highlight/50;
+  }
+
+  .btn-ghost {
+    @apply px-8 py-3.5 text-primary font-medium tracking-wider uppercase text-sm
+           rounded-none border border-primary/30
+           hover:bg-primary/10 hover:border-primary/60
+           transition-all duration-300;
+  }
+
+  .btn-outline-gold {
+    @apply px-8 py-3.5 border border-primary text-primary font-semibold
+           tracking-wider uppercase text-sm rounded-none
+           hover:bg-primary hover:text-secondary
+           transition-all duration-500;
+  }
+
+  /* Inputs */
+  .input-caviar {
+    @apply w-full px-5 py-3.5 bg-surface/50 border border-caviar-charcoal/50
+           text-text placeholder-text/30 font-body text-sm
+           focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30
+           transition-all duration-300 rounded-none;
+  }
+
+  .textarea-caviar {
+    @apply input-caviar min-h-[120px] resize-y;
+  }
+
+  /* Cards */
+  .card-caviar {
+    @apply bg-surface/30 border border-caviar-charcoal/30 overflow-hidden
+           backdrop-blur-sm transition-all duration-500;
+  }
+
+  .card-glass {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10
+           shadow-glass transition-all duration-500;
+  }
+
+  .card-cream {
+    @apply bg-accent/5 border border-accent/10 backdrop-blur-sm;
+  }
+
+  /* Typography */
+  .text-gradient-gold {
+    @apply bg-gradient-to-r from-primary via-caviar-gold-light to-primary bg-clip-text text-transparent;
+  }
+
+  .text-editorial {
+    @apply font-accent italic text-accent/80;
+  }
+
+  /* Drop cap for magazine articles */
+  .drop-cap::first-letter {
+    @apply float-left text-7xl font-headline text-primary leading-none
+           mr-3 mt-1;
+    font-size: 4.5rem;
+    line-height: 0.8;
+  }
+
+  /* Pull quote */
+  .pull-quote {
+    @apply font-accent text-2xl md:text-3xl italic text-primary/80
+           border-l-2 border-primary/40 pl-6 my-8;
+  }
+
+  /* Magazine-grade columns */
+  .magazine-columns {
+    @apply text-base leading-relaxed;
+    column-count: 2;
+    column-gap: 2.5rem;
+    column-rule: 1px solid rgba(201, 168, 76, 0.15);
+  }
+
+  @media (max-width: 768px) {
+    .magazine-columns {
+      column-count: 1;
+    }
+  }
+
+  /* Dividers */
+  .divider-gold {
+    @apply h-px w-full bg-gradient-to-r from-transparent via-primary/40 to-transparent;
+  }
+
+  .divider-ornament {
+    @apply flex items-center gap-4 my-8;
+  }
+
+  .divider-ornament::before,
+  .divider-ornament::after {
+    content: '';
+    @apply h-px flex-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent;
+  }
+
+  /* Page texture overlay */
+  .page-texture {
+    background-image:
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E"),
+      linear-gradient(180deg, rgba(245, 240, 232, 0.02) 0%, rgba(245, 240, 232, 0.01) 100%);
+  }
+}
+
+/* Magazine Reader Specific Styles */
+.magazine-reader {
+  perspective: 2000px;
+}
+
+.magazine-reader .stf__parent {
+  margin: 0 auto;
+}
+
+.magazine-reader .stf__wrapper {
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(201, 168, 76, 0.1);
+}
+
+.magazine-page {
+  background: linear-gradient(135deg, #F5F0E8 0%, #EDE5D5 50%, #F5F0E8 100%);
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.magazine-page-dark {
+  background: linear-gradient(135deg, #0A0A0A 0%, #1A1A1A 50%, #0A0A0A 100%);
+}
+
+/* Page fold effect */
+.page-fold-shadow {
+  background: linear-gradient(to right,
+    rgba(0, 0, 0, 0.2) 0%,
+    rgba(0, 0, 0, 0.05) 10%,
+    transparent 40%,
+    transparent 60%,
+    rgba(0, 0, 0, 0.05) 90%,
+    rgba(0, 0, 0, 0.15) 100%
+  );
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+  .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .line-clamp-4 { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+
+  /* Text balance for headlines */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .text-pretty {
+    text-wrap: pretty;
+  }
+}
+
+/* Fullscreen magazine styles */
+.magazine-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 9990;
+  background: #0A0A0A;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Ken Burns for hero images */
+@keyframes kenBurnsZoom {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.08); }
+}
+
+.ken-burns-zoom {
+  animation: kenBurnsZoom 20s ease-in-out infinite alternate;
+}
+
+/* Cinematic vignette overlay */
+.vignette {
+  box-shadow: inset 0 0 150px rgba(0, 0, 0, 0.6);
+}
+
+/* Grain overlay */
+.grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.04;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}

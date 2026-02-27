@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600;700;900&display=swap');
+
+@layer base {
+  body {
+    @apply bg-secondary text-white font-body antialiased;
+  }
+
+  ::selection {
+    @apply bg-primary/30 text-white;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    @apply w-2;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-secondary;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-neutral/30 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-neutral/50;
+  }
+}
+
+@layer components {
+  .container-wire {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .wire-border {
+    @apply border-gray-800;
+  }
+
+  .btn-primary {
+    @apply px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-colors;
+  }
+
+  .btn-accent {
+    @apply px-6 py-3 bg-accent text-white font-bold rounded-lg hover:bg-accent/90 transition-colors;
+  }
+
+  .btn-ghost {
+    @apply px-6 py-3 text-neutral hover:text-white hover:bg-surface transition-colors rounded-lg;
+  }
+
+  .input-wire {
+    @apply w-full px-4 py-3 bg-secondary border border-gray-700 rounded-lg text-white placeholder-neutral focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary;
+  }
+
+  .card-wire {
+    @apply bg-surface rounded-lg border border-gray-800/50 overflow-hidden;
+  }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .text-gradient-red {
+    @apply bg-gradient-to-r from-primary to-red-400 bg-clip-text text-transparent;
+  }
+}

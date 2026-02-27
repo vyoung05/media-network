@@ -1,0 +1,28 @@
+{
+  "name": "media-network",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:saucewire": "npm run dev --workspace=apps/saucewire",
+    "dev:trapglow": "npm run dev --workspace=apps/trapglow",
+    "dev:saucecaviar": "npm run dev --workspace=apps/saucecaviar",
+    "dev:trapfrequency": "npm run dev --workspace=apps/trapfrequency",
+    "dev:admin": "npm run dev --workspace=apps/admin",
+    "build:saucewire": "npm run build --workspace=apps/saucewire",
+    "build:trapglow": "npm run build --workspace=apps/trapglow",
+    "build:saucecaviar": "npm run build --workspace=apps/saucecaviar",
+    "build:trapfrequency": "npm run build --workspace=apps/trapfrequency",
+    "build:admin": "npm run build --workspace=apps/admin",
+    "build": "npm run build --workspaces",
+    "lint": "npm run lint --workspaces",
+    "clean": "rimraf node_modules apps/*/node_modules packages/*/node_modules apps/*/.next"
+  },
+  "devDependencies": {
+    "rimraf": "^5.0.5",
+    "typescript": "^5.4.5"
+  }
+}

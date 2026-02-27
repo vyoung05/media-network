@@ -1,0 +1,76 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@layer base {
+  body {
+    @apply bg-admin-bg text-white font-sans antialiased;
+  }
+
+  ::selection {
+    @apply bg-blue-500/30 text-white;
+  }
+
+  ::-webkit-scrollbar {
+    @apply w-1.5;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-700 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-600;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-admin-card/60 backdrop-blur-xl border border-white/[0.06] rounded-xl;
+  }
+
+  .glass-panel-solid {
+    @apply bg-admin-card border border-admin-border rounded-xl;
+  }
+
+  .glass-sidebar {
+    @apply bg-admin-surface/80 backdrop-blur-xl border-r border-white/[0.06];
+  }
+
+  .admin-input {
+    @apply w-full px-4 py-2.5 bg-admin-bg/60 border border-admin-border rounded-lg text-white placeholder-gray-500 
+      focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 transition-all;
+  }
+
+  .admin-btn {
+    @apply px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200;
+  }
+
+  .admin-btn-primary {
+    @apply admin-btn bg-blue-600 text-white hover:bg-blue-500 active:bg-blue-700;
+  }
+
+  .admin-btn-success {
+    @apply admin-btn bg-emerald-600 text-white hover:bg-emerald-500 active:bg-emerald-700;
+  }
+
+  .admin-btn-danger {
+    @apply admin-btn bg-red-600 text-white hover:bg-red-500 active:bg-red-700;
+  }
+
+  .admin-btn-ghost {
+    @apply admin-btn text-gray-400 hover:text-white hover:bg-white/5;
+  }
+
+  .stat-card {
+    @apply glass-panel p-6 hover:bg-admin-hover/40 transition-colors duration-200;
+  }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
