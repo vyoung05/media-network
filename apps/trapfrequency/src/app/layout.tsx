@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     url: 'https://trapfrequency.com',
     images: [
       {
-        url: '/og-image.png',
+        url: 'https://heyboss.heeyo.ai/replicate-z-image-turbo-1772241201-ce4e6fb9.jpeg',
         width: 1200,
         height: 630,
         alt: 'TrapFrequency - Tune Into The Craft',
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'TrapFrequency',
     description: 'Tune Into The Craft — Music Production Hub',
-    images: ['/og-image.png'],
+    images: ['https://heyboss.heeyo.ai/replicate-z-image-turbo-1772241201-ce4e6fb9.jpeg'],
   },
   alternates: {
     types: {

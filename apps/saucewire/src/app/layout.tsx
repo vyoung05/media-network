@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     url: 'https://saucewire.com',
     images: [
       {
-        url: '/og-image.png',
+        url: 'https://heyboss.heeyo.ai/replicate-z-image-turbo-1772241235-870da467.jpeg',
         width: 1200,
         height: 630,
         alt: 'SauceWire - Culture. Connected. Now.',
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'SauceWire',
     description: 'Culture. Connected. Now.',
-    images: ['/og-image.png'],
+    images: ['https://heyboss.heeyo.ai/replicate-z-image-turbo-1772241235-870da467.jpeg'],
   },
   alternates: {
     types: {

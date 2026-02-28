@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     url: 'https://saucecaviar.com',
     images: [
       {
-        url: '/og-image.png',
+        url: 'https://heyboss.heeyo.ai/replicate-z-image-turbo-1772241222-81943aed.jpeg',
         width: 1200,
         height: 630,
         alt: 'SauceCaviar - Culture Served Premium',
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'SauceCaviar',
     description: 'Culture Served Premium. The digital magazine experience.',
-    images: ['/og-image.png'],
+    images: ['https://heyboss.heeyo.ai/replicate-z-image-turbo-1772241222-81943aed.jpeg'],
   },
   alternates: {
     types: {
