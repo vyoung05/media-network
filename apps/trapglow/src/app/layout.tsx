@@ -21,11 +21,20 @@ export const metadata: Metadata = {
     siteName: 'TrapGlow',
     type: 'website',
     url: 'https://trapglow.com',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'TrapGlow - Shining Light on What\'s Next',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'TrapGlow',
     description: 'Shining Light on What\'s Next.',
+    images: ['/og-image.png'],
   },
   alternates: {
     types: {

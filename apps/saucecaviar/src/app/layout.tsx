@@ -21,11 +21,20 @@ export const metadata: Metadata = {
     siteName: 'SauceCaviar',
     type: 'website',
     url: 'https://saucecaviar.com',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'SauceCaviar - Culture Served Premium',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'SauceCaviar',
     description: 'Culture Served Premium. The digital magazine experience.',
+    images: ['/og-image.png'],
   },
   alternates: {
     types: {

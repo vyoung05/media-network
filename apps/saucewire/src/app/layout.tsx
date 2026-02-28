@@ -20,11 +20,21 @@ export const metadata: Metadata = {
     description: 'Breaking culture news. Always on.',
     siteName: 'SauceWire',
     type: 'website',
+    url: 'https://saucewire.com',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'SauceWire - Culture. Connected. Now.',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'SauceWire',
     description: 'Culture. Connected. Now.',
+    images: ['/og-image.png'],
   },
   alternates: {
     types: {

@@ -24,11 +24,21 @@ export const metadata: Metadata = {
     description: 'Music production tutorials, beats, gear reviews, and producer spotlights.',
     siteName: 'TrapFrequency',
     type: 'website',
+    url: 'https://trapfrequency.com',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'TrapFrequency - Tune Into The Craft',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'TrapFrequency',
     description: 'Tune Into The Craft — Music Production Hub',
+    images: ['/og-image.png'],
   },
   alternates: {
     types: {
