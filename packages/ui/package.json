@@ -1,28 +1,31 @@
 {
-  "name": "@media-network/ui",
-  "version": "0.1.0",
-  "private": true,
-  "main": "./src/index.tsx",
-  "types": "./src/index.tsx",
-  "exports": {
-    ".": "./src/index.tsx",
-    "./article-card": "./src/components/ArticleCard.tsx",
-    "./submission-form": "./src/components/SubmissionForm.tsx",
-    "./breaking-banner": "./src/components/BreakingBanner.tsx",
-    "./category-filter": "./src/components/CategoryFilter.tsx",
-    "./news-feed": "./src/components/NewsFeed.tsx",
-    "./loading": "./src/components/Loading.tsx"
-  },
-  "dependencies": {
-    "@media-network/shared": "*"
-  },
-  "peerDependencies": {
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0"
-  },
-  "devDependencies": {
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
-    "typescript": "^5.4.5"
-  }
+    "name":  "@media-network/ui",
+    "version":  "0.1.0",
+    "private":  true,
+    "main":  "./src/index.tsx",
+    "types":  "./src/index.tsx",
+    "exports":  {
+                    ".":  "./src/index.tsx",
+                    "./article-card":  "./src/components/ArticleCard.tsx",
+                    "./submission-form":  "./src/components/SubmissionForm.tsx",
+                    "./breaking-banner":  "./src/components/BreakingBanner.tsx",
+                    "./category-filter":  "./src/components/CategoryFilter.tsx",
+                    "./news-feed":  "./src/components/NewsFeed.tsx",
+                    "./loading":  "./src/components/Loading.tsx"
+                },
+    "dependencies":  {
+                         "@media-network/shared":  "*"
+                     },
+    "peerDependencies":  {
+                             "react":  "^18.0.0",
+                             "react-dom":  "^18.0.0"
+                         },
+    "devDependencies":  {
+                            "@types/react":  "^18.2.0",
+                            "@types/react-dom":  "^18.2.0",
+                            "typescript":  "^5.4.5"
+                        },
+    "scripts":  {
+                    "build":  "echo \u0027No build needed for ui package\u0027"
+                }
 }
