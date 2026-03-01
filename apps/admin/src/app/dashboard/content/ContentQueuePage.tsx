@@ -3,9 +3,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/components/AuthProvider';
-import { getArticles, updateArticleStatus } from '@media-network/shared';
-import type { Article, Brand, ArticleStatus } from '@media-network/shared';
+import { useBrand } from '@/contexts/BrandContext';
+import type { Article, Brand } from '@media-network/shared';
 import { timeAgo } from '@media-network/shared';
 
 const BRAND_COLORS: Record<Brand, string> = {
@@ -23,24 +22,31 @@ const BRAND_NAMES: Record<Brand, string> = {
 };
 
 export function ContentQueuePage() {
-  const { supabase } = useAuth();
+  const { activeBrand } = useBrand();
   const router = useRouter();
   const [articles, setArticles] = useState<Article[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [filterBrand, setFilterBrand] = useState<Brand | 'all'>('all');
+  const [error, setError] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<'all' | 'ai' | 'human'>('all');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const fetchArticles = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
-      const res = await getArticles(supabase, {
-        status: 'pending_review',
-        brand: filterBrand === 'all' ? undefined : filterBrand,
-        per_page: 50,
-      });
-      let data = res.data;
+      const params = new URLSearchParams();
+      params.set('status', 'pending_review');
+      if (activeBrand !== 'all') params.set('brand', activeBrand);
+      params.set('per_page', '50');
+
+      const res = await fetch(`/api/content?${params}`);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `HTTP ${res.status}`);
+      }
+      const result = await res.json();
+      let data: Article[] = result.data || [];
 
       // Client-side filter for AI/human
       if (filterType === 'ai') {
@@ -50,39 +56,32 @@ export function ContentQueuePage() {
       }
 
       setArticles(data);
-      setTotalCount(res.count);
-    } catch (err) {
+      setTotalCount(result.count || 0);
+    } catch (err: any) {
       console.error('Error fetching content queue:', err);
+      setError(err.message || 'Failed to load content queue');
     } finally {
       setLoading(false);
     }
-  }, [supabase, filterBrand, filterType]);
+  }, [activeBrand, filterType]);
 
   useEffect(() => {
     fetchArticles();
   }, [fetchArticles]);
 
-  const handleApprove = async (id: string) => {
+  const handleStatusChange = async (id: string, status: string) => {
     setActionLoading(id);
     try {
-      await updateArticleStatus(supabase, id, 'published');
+      const res = await fetch(`/api/content/${id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) throw new Error('Failed to update status');
       setArticles((prev) => prev.filter((a) => a.id !== id));
       setTotalCount((prev) => prev - 1);
     } catch (err) {
-      console.error('Error approving article:', err);
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const handleReject = async (id: string) => {
-    setActionLoading(id);
-    try {
-      await updateArticleStatus(supabase, id, 'archived');
-      setArticles((prev) => prev.filter((a) => a.id !== id));
-      setTotalCount((prev) => prev - 1);
-    } catch (err) {
-      console.error('Error rejecting article:', err);
+      console.error('Error updating article status:', err);
     } finally {
       setActionLoading(null);
     }
@@ -95,7 +94,7 @@ export function ContentQueuePage() {
         <div>
           <h1 className="text-2xl font-bold text-white">Content Queue</h1>
           <p className="text-sm text-gray-500 mt-1">
-            {loading ? 'Loading...' : `${totalCount} articles pending review`}
+            {loading ? 'Loading...' : `${totalCount} articles pending review${activeBrand !== 'all' ? ` for ${BRAND_NAMES[activeBrand]}` : ''}`}
           </p>
         </div>
         <button
@@ -111,34 +110,6 @@ export function ContentQueuePage() {
 
       {/* Filters */}
       <div className="glass-panel p-4 flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-mono text-gray-500">Brand:</span>
-          <div className="flex gap-1">
-            <button
-              onClick={() => setFilterBrand('all')}
-              className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
-                filterBrand === 'all' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'
-              }`}
-            >
-              All
-            </button>
-            {(Object.keys(BRAND_NAMES) as Brand[]).map((brand) => (
-              <button
-                key={brand}
-                onClick={() => setFilterBrand(brand)}
-                className={`px-3 py-1 text-xs font-medium rounded-md transition-colors flex items-center gap-1.5 ${
-                  filterBrand === brand ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'
-                }`}
-              >
-                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: BRAND_COLORS[brand] }} />
-                {BRAND_NAMES[brand]}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="w-px h-5 bg-white/10" />
-
         <div className="flex items-center gap-2">
           <span className="text-xs font-mono text-gray-500">Type:</span>
           <div className="flex gap-1">
@@ -157,6 +128,22 @@ export function ContentQueuePage() {
         </div>
       </div>
 
+      {/* Error state */}
+      {error && (
+        <div className="glass-panel p-6 border border-red-500/20 bg-red-500/5">
+          <div className="flex items-center gap-3">
+            <svg className="w-5 h-5 text-red-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            <div>
+              <p className="text-sm text-red-400 font-medium">Failed to load content queue</p>
+              <p className="text-xs text-gray-500 mt-0.5">{error}</p>
+            </div>
+            <button onClick={fetchArticles} className="ml-auto admin-btn-ghost text-xs">Retry</button>
+          </div>
+        </div>
+      )}
+
       {/* Loading state */}
       {loading && (
         <div className="glass-panel p-12 text-center">
@@ -166,7 +153,7 @@ export function ContentQueuePage() {
       )}
 
       {/* Queue list */}
-      {!loading && (
+      {!loading && !error && (
         <div className="space-y-3">
           <AnimatePresence mode="popLayout">
             {articles.map((article, i) => (
@@ -215,7 +202,7 @@ export function ContentQueuePage() {
 
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <button
-                      onClick={() => handleApprove(article.id)}
+                      onClick={() => handleStatusChange(article.id, 'published')}
                       disabled={actionLoading === article.id}
                       className="admin-btn-success px-4 py-2 text-xs flex items-center gap-1.5 disabled:opacity-50"
                     >
@@ -225,7 +212,7 @@ export function ContentQueuePage() {
                       Approve
                     </button>
                     <button
-                      onClick={() => handleReject(article.id)}
+                      onClick={() => handleStatusChange(article.id, 'archived')}
                       disabled={actionLoading === article.id}
                       className="admin-btn-danger px-4 py-2 text-xs flex items-center gap-1.5 disabled:opacity-50"
                     >

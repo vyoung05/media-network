@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/components/AuthProvider';
-import { getArticles, getSubmissions, getUsers, getAnalyticsSummary } from '@media-network/shared';
+import { useBrand } from '@/contexts/BrandContext';
 import type { Article, Submission, Brand } from '@media-network/shared';
 import { timeAgo } from '@media-network/shared';
 
@@ -212,7 +212,7 @@ function formatViews(n: number): string {
 }
 
 export function DashboardHome() {
-  const { supabase } = useAuth();
+  const { activeBrand } = useBrand();
   const [stats, setStats] = useState<DashboardStats>({
     totalArticles: 0,
     pendingReview: 0,
@@ -233,8 +233,9 @@ export function DashboardHome() {
   useEffect(() => {
     async function fetchDashboardData() {
       try {
-        // Use the server-side API route (uses service_role, bypasses RLS)
-        const res = await fetch('/api/dashboard');
+        const params = new URLSearchParams();
+        if (activeBrand !== 'all') params.set('brand', activeBrand);
+        const res = await fetch(`/api/dashboard?${params}`);
         if (!res.ok) throw new Error('Failed to fetch dashboard data');
         const data = await res.json();
 
@@ -255,7 +256,7 @@ export function DashboardHome() {
     }
 
     fetchDashboardData();
-  }, []);
+  }, [activeBrand]);
 
   return (
     <div className="space-y-6">

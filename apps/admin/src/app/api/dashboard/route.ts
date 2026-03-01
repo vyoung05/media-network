@@ -1,5 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+
+export const dynamic = 'force-dynamic';
 
 function getSupabase() {
   return createClient(
@@ -9,9 +11,28 @@ function getSupabase() {
   );
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const supabase = getSupabase();
+    const { searchParams } = new URL(request.url);
+    const brand = searchParams.get('brand') || undefined;
+
+    // Build queries with optional brand filter
+    let publishedQuery = supabase.from('articles').select('id', { count: 'exact', head: true }).eq('status', 'published');
+    let pendingQuery = supabase.from('articles').select('id', { count: 'exact', head: true }).eq('status', 'pending_review');
+    let submissionsQuery = supabase.from('submissions').select('id', { count: 'exact', head: true });
+    let pendingSubsQuery = supabase.from('submissions').select('id', { count: 'exact', head: true }).eq('status', 'pending');
+    let writersQuery = supabase.from('users').select('id', { count: 'exact', head: true }).in('role', ['writer', 'editor']);
+    let recentQuery = supabase.from('articles').select('id, title, brand, status, published_at, created_at').eq('status', 'published').order('published_at', { ascending: false }).limit(10);
+
+    if (brand) {
+      publishedQuery = publishedQuery.eq('brand', brand);
+      pendingQuery = pendingQuery.eq('brand', brand);
+      submissionsQuery = submissionsQuery.eq('brand', brand);
+      pendingSubsQuery = pendingSubsQuery.eq('brand', brand);
+      writersQuery = writersQuery.contains('brand_affiliations', [brand]);
+      recentQuery = recentQuery.eq('brand', brand);
+    }
 
     // Fetch all stats in parallel using service role (bypasses RLS)
     const [
@@ -20,23 +41,22 @@ export async function GET() {
       submissionsRes,
       pendingSubsRes,
       writersRes,
-      // Per-brand counts
+      // Per-brand counts (always fetch all brands)
       swRes, scRes, tgRes, tfRes,
       // Recent published articles
       recentRes,
     ] = await Promise.all([
-      supabase.from('articles').select('id', { count: 'exact', head: true }).eq('status', 'published'),
-      supabase.from('articles').select('id', { count: 'exact', head: true }).eq('status', 'pending_review'),
-      supabase.from('submissions').select('id', { count: 'exact', head: true }),
-      supabase.from('submissions').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-      supabase.from('users').select('id', { count: 'exact', head: true }).in('role', ['writer', 'editor']),
+      publishedQuery,
+      pendingQuery,
+      submissionsQuery,
+      pendingSubsQuery,
+      writersQuery,
       // Per brand
       supabase.from('articles').select('id', { count: 'exact', head: true }).eq('brand', 'saucewire').eq('status', 'published'),
       supabase.from('articles').select('id', { count: 'exact', head: true }).eq('brand', 'saucecaviar').eq('status', 'published'),
       supabase.from('articles').select('id', { count: 'exact', head: true }).eq('brand', 'trapglow').eq('status', 'published'),
       supabase.from('articles').select('id', { count: 'exact', head: true }).eq('brand', 'trapfrequency').eq('status', 'published'),
-      // Recent articles
-      supabase.from('articles').select('id, title, brand, status, published_at, created_at').eq('status', 'published').order('published_at', { ascending: false }).limit(10),
+      recentQuery,
     ]);
 
     const stats = {

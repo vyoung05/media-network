@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import type { Brand } from '@media-network/shared';
+import { useBrand } from '@/contexts/BrandContext';
 
 const BRAND_COLORS: Record<Brand, string> = {
   saucecaviar: '#C9A84C',
@@ -27,13 +28,9 @@ interface NavItem {
   badge?: number;
 }
 
-interface SidebarProps {
-  activeBrand: Brand;
-  onBrandChange: (brand: Brand) => void;
-}
-
-export function Sidebar({ activeBrand, onBrandChange }: SidebarProps) {
+export function Sidebar() {
   const pathname = usePathname();
+  const { activeBrand, setActiveBrand } = useBrand();
 
   const navItems: NavItem[] = [
     {
@@ -53,7 +50,6 @@ export function Sidebar({ activeBrand, onBrandChange }: SidebarProps) {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
         </svg>
       ),
-      badge: 8,
     },
     {
       label: 'Submissions',
@@ -63,7 +59,6 @@ export function Sidebar({ activeBrand, onBrandChange }: SidebarProps) {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
         </svg>
       ),
-      badge: 12,
     },
     {
       label: 'Writers',
@@ -73,7 +68,6 @@ export function Sidebar({ activeBrand, onBrandChange }: SidebarProps) {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
         </svg>
       ),
-      badge: 3,
     },
     {
       label: 'Settings',
@@ -115,10 +109,33 @@ export function Sidebar({ activeBrand, onBrandChange }: SidebarProps) {
           Active Brand
         </p>
         <div className="space-y-1">
+          {/* All brands option */}
+          <button
+            onClick={() => setActiveBrand('all')}
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
+              activeBrand === 'all'
+                ? 'bg-white/10 text-white'
+                : 'text-gray-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <div
+              className="w-2 h-2 rounded-full flex-shrink-0 bg-gray-400 transition-all duration-200"
+              style={{
+                boxShadow: activeBrand === 'all' ? '0 0 8px #888' : 'none',
+              }}
+            />
+            <span className="font-medium">All Brands</span>
+            {activeBrand === 'all' && (
+              <motion.div
+                layoutId="active-brand"
+                className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-400"
+              />
+            )}
+          </button>
           {(Object.keys(BRAND_NAMES) as Brand[]).map((brand) => (
             <button
               key={brand}
-              onClick={() => onBrandChange(brand)}
+              onClick={() => setActiveBrand(brand)}
               className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
                 activeBrand === brand
                   ? 'bg-white/10 text-white'
@@ -172,11 +189,6 @@ export function Sidebar({ activeBrand, onBrandChange }: SidebarProps) {
                 {item.icon}
               </span>
               <span className="font-medium">{item.label}</span>
-              {item.badge !== undefined && item.badge > 0 && (
-                <span className="ml-auto px-2 py-0.5 text-xs font-bold rounded-full bg-blue-500/20 text-blue-400">
-                  {item.badge}
-                </span>
-              )}
             </Link>
           );
         })}

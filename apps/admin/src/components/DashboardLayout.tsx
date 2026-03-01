@@ -1,20 +1,35 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { Brand } from '@media-network/shared';
+import { BrandProvider, useBrand } from '@/contexts/BrandContext';
 import { Sidebar } from './Sidebar';
+
+const BRAND_COLORS: Record<string, string> = {
+  saucecaviar: '#C9A84C',
+  trapglow: '#8B5CF6',
+  saucewire: '#E63946',
+  trapfrequency: '#39FF14',
+};
+
+const BRAND_NAMES: Record<string, string> = {
+  saucecaviar: 'SauceCaviar',
+  trapglow: 'TrapGlow',
+  saucewire: 'SauceWire',
+  trapfrequency: 'TrapFrequency',
+  all: 'All Brands',
+};
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
-export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const [activeBrand, setActiveBrand] = useState<Brand>('saucewire');
+function DashboardLayoutInner({ children }: DashboardLayoutProps) {
+  const { activeBrand } = useBrand();
 
   return (
     <div className="min-h-screen flex">
-      <Sidebar activeBrand={activeBrand} onBrandChange={setActiveBrand} />
+      <Sidebar />
       <div className="flex-1 ml-64">
         {/* Top bar */}
         <header className="sticky top-0 z-30 h-16 glass-panel-solid flex items-center justify-between px-8 border-b border-admin-border rounded-none">
@@ -52,21 +67,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
             {/* Brand indicator */}
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5">
-              <div
-                className="w-2 h-2 rounded-full"
-                style={{
-                  backgroundColor:
-                    activeBrand === 'saucecaviar' ? '#C9A84C'
-                    : activeBrand === 'trapglow' ? '#8B5CF6'
-                    : activeBrand === 'saucewire' ? '#E63946'
-                    : '#39FF14',
-                }}
-              />
+              {activeBrand !== 'all' && (
+                <div
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: BRAND_COLORS[activeBrand] || '#888' }}
+                />
+              )}
               <span className="text-xs font-mono text-gray-400">
-                {activeBrand === 'saucecaviar' ? 'SauceCaviar'
-                  : activeBrand === 'trapglow' ? 'TrapGlow'
-                  : activeBrand === 'saucewire' ? 'SauceWire'
-                  : 'TrapFrequency'}
+                {BRAND_NAMES[activeBrand] || 'All Brands'}
               </span>
             </div>
           </div>
@@ -87,5 +95,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </AnimatePresence>
       </div>
     </div>
+  );
+}
+
+export function DashboardLayout({ children }: DashboardLayoutProps) {
+  return (
+    <BrandProvider>
+      <DashboardLayoutInner>{children}</DashboardLayoutInner>
+    </BrandProvider>
   );
 }

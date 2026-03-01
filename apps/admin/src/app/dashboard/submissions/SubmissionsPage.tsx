@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/components/AuthProvider';
-import { getSubmissions, reviewSubmission } from '@media-network/shared';
+import { useBrand } from '@/contexts/BrandContext';
 import type { Brand, Submission, SubmissionStatus, SubmissionType } from '@media-network/shared';
 import { timeAgo } from '@media-network/shared';
 
@@ -214,10 +214,11 @@ function SubmissionDetail({
 }
 
 export function SubmissionsPage() {
-  const { supabase, user } = useAuth();
+  const { user } = useAuth();
+  const { activeBrand } = useBrand();
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filterBrand, setFilterBrand] = useState<Brand | 'all'>('all');
+  const [error, setError] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<SubmissionType | 'all'>('all');
   const [filterStatus, setFilterStatus] = useState<SubmissionStatus | 'all'>('all');
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
@@ -228,37 +229,31 @@ export function SubmissionsPage() {
 
   const fetchSubmissions = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
-      const res = await getSubmissions(supabase, {
-        brand: filterBrand === 'all' ? undefined : filterBrand,
-        type: filterType === 'all' ? undefined : filterType,
-        status: filterStatus === 'all' ? undefined : filterStatus,
-        per_page: 50,
-      });
-      setSubmissions(res.data);
+      const params = new URLSearchParams();
+      if (activeBrand !== 'all') params.set('brand', activeBrand);
+      if (filterType !== 'all') params.set('type', filterType);
+      if (filterStatus !== 'all') params.set('status', filterStatus);
+      params.set('per_page', '50');
 
-      // Fetch counts for all statuses
-      const [allRes, pendingRes, reviewRes, approvedRes, rejectedRes] = await Promise.all([
-        getSubmissions(supabase, { per_page: 1 }),
-        getSubmissions(supabase, { status: 'pending', per_page: 1 }),
-        getSubmissions(supabase, { status: 'under_review', per_page: 1 }),
-        getSubmissions(supabase, { status: 'approved', per_page: 1 }),
-        getSubmissions(supabase, { status: 'rejected', per_page: 1 }),
-      ]);
-      setStatusCounts({
-        all: allRes.count,
-        pending: pendingRes.count,
-        under_review: reviewRes.count,
-        approved: approvedRes.count,
-        rejected: rejectedRes.count,
-        published: 0,
-      });
-    } catch (err) {
+      const res = await fetch(`/api/submissions?${params}`);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `HTTP ${res.status}`);
+      }
+      const result = await res.json();
+      setSubmissions(result.data || []);
+      if (result.statusCounts) {
+        setStatusCounts(result.statusCounts);
+      }
+    } catch (err: any) {
       console.error('Error fetching submissions:', err);
+      setError(err.message || 'Failed to load submissions');
     } finally {
       setLoading(false);
     }
-  }, [supabase, filterBrand, filterType, filterStatus]);
+  }, [activeBrand, filterType, filterStatus]);
 
   useEffect(() => {
     fetchSubmissions();
@@ -266,7 +261,12 @@ export function SubmissionsPage() {
 
   const handleStatusChange = async (id: string, status: SubmissionStatus, notes?: string) => {
     try {
-      await reviewSubmission(supabase, id, status, user?.id || '', notes);
+      const res = await fetch(`/api/submissions/${id}/review`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status, reviewer_id: user?.id || '', reviewer_notes: notes }),
+      });
+      if (!res.ok) throw new Error('Failed to update submission status');
       setSelectedSubmission(null);
       fetchSubmissions(); // Refresh
     } catch (err) {
@@ -357,34 +357,6 @@ export function SubmissionsPage() {
       {/* Filters bar */}
       <div className="glass-panel p-3 flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-mono text-gray-500">Brand:</span>
-          <div className="flex gap-1">
-            <button
-              onClick={() => setFilterBrand('all')}
-              className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
-                filterBrand === 'all' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'
-              }`}
-            >
-              All
-            </button>
-            {(Object.keys(BRAND_NAMES) as Brand[]).map((brand) => (
-              <button
-                key={brand}
-                onClick={() => setFilterBrand(brand)}
-                className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors flex items-center gap-1.5 ${
-                  filterBrand === brand ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'
-                }`}
-              >
-                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: BRAND_COLORS[brand] }} />
-                {BRAND_NAMES[brand]}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="w-px h-5 bg-white/10" />
-
-        <div className="flex items-center gap-2">
           <span className="text-xs font-mono text-gray-500">Type:</span>
           <div className="flex gap-1">
             <button
@@ -410,6 +382,22 @@ export function SubmissionsPage() {
         </div>
       </div>
 
+      {/* Error state */}
+      {error && (
+        <div className="glass-panel p-6 border border-red-500/20 bg-red-500/5">
+          <div className="flex items-center gap-3">
+            <svg className="w-5 h-5 text-red-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            <div>
+              <p className="text-sm text-red-400 font-medium">Failed to load submissions</p>
+              <p className="text-xs text-gray-500 mt-0.5">{error}</p>
+            </div>
+            <button onClick={fetchSubmissions} className="ml-auto admin-btn-ghost text-xs">Retry</button>
+          </div>
+        </div>
+      )}
+
       {/* Loading */}
       {loading && (
         <div className="glass-panel p-12 text-center">
@@ -419,7 +407,7 @@ export function SubmissionsPage() {
       )}
 
       {/* Submissions list */}
-      {!loading && (
+      {!loading && !error && (
         <div className="space-y-2">
           <AnimatePresence mode="popLayout">
             {filtered.map((sub, i) => {

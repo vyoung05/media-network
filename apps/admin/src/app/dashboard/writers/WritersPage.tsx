@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '@/components/AuthProvider';
-import { getUsers } from '@media-network/shared';
+import { useBrand } from '@/contexts/BrandContext';
 import type { Brand, User, UserRole } from '@media-network/shared';
 import { StatCard } from '@/components/StatCard';
 
@@ -30,47 +29,38 @@ const ROLE_LABELS: Record<UserRole, { label: string; color: string }> = {
   reader: { label: 'Reader', color: 'text-gray-400 bg-gray-400/10' },
 };
 
-function formatViews(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
-  return n.toString();
-}
-
 export function WritersPage() {
-  const { supabase } = useAuth();
+  const { activeBrand } = useBrand();
   const [writers, setWriters] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filterBrand, setFilterBrand] = useState<Brand | 'all'>('all');
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [totalCount, setTotalCount] = useState(0);
 
   const fetchWriters = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
-      // Fetch writers and editors
-      const [writersRes, editorsRes] = await Promise.all([
-        getUsers(supabase, {
-          role: 'writer',
-          brand: filterBrand === 'all' ? undefined : filterBrand,
-          per_page: 100,
-        }),
-        getUsers(supabase, {
-          role: 'editor',
-          brand: filterBrand === 'all' ? undefined : filterBrand,
-          per_page: 100,
-        }),
-      ]);
+      const params = new URLSearchParams();
+      if (activeBrand !== 'all') params.set('brand', activeBrand);
+      params.set('per_page', '100');
 
-      const allUsers = [...editorsRes.data, ...writersRes.data];
-      setWriters(allUsers);
-      setTotalCount(writersRes.count + editorsRes.count);
-    } catch (err) {
+      const res = await fetch(`/api/writers?${params}`);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      setWriters(data.data || []);
+      setTotalCount(data.count || 0);
+    } catch (err: any) {
       console.error('Error fetching writers:', err);
+      setError(err.message || 'Failed to load writers');
     } finally {
       setLoading(false);
     }
-  }, [supabase, filterBrand]);
+  }, [activeBrand]);
 
   useEffect(() => {
     fetchWriters();
@@ -98,7 +88,7 @@ export function WritersPage() {
         <div>
           <h1 className="text-2xl font-bold text-white">Writers</h1>
           <p className="text-sm text-gray-500 mt-1">
-            {loading ? 'Loading...' : `${totalCount} contributors across all brands`}
+            {loading ? 'Loading...' : `${totalCount} contributors${activeBrand !== 'all' ? ` for ${BRAND_NAMES[activeBrand]}` : ' across all brands'}`}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -157,30 +147,21 @@ export function WritersPage() {
         />
       </div>
 
-      {/* Brand filter */}
-      <div className="flex items-center gap-2">
-        <span className="text-xs font-mono text-gray-500">Brand:</span>
-        <button
-          onClick={() => setFilterBrand('all')}
-          className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
-            filterBrand === 'all' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'
-          }`}
-        >
-          All
-        </button>
-        {(Object.keys(BRAND_NAMES) as Brand[]).map((brand) => (
-          <button
-            key={brand}
-            onClick={() => setFilterBrand(brand)}
-            className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors flex items-center gap-1.5 ${
-              filterBrand === brand ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'
-            }`}
-          >
-            <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: BRAND_COLORS[brand] }} />
-            {BRAND_NAMES[brand]}
-          </button>
-        ))}
-      </div>
+      {/* Error state */}
+      {error && (
+        <div className="glass-panel p-6 border border-red-500/20 bg-red-500/5">
+          <div className="flex items-center gap-3">
+            <svg className="w-5 h-5 text-red-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            <div>
+              <p className="text-sm text-red-400 font-medium">Failed to load writers</p>
+              <p className="text-xs text-gray-500 mt-0.5">{error}</p>
+            </div>
+            <button onClick={fetchWriters} className="ml-auto admin-btn-ghost text-xs">Retry</button>
+          </div>
+        </div>
+      )}
 
       {/* Loading */}
       {loading && (
@@ -191,7 +172,7 @@ export function WritersPage() {
       )}
 
       {/* Writers grid */}
-      {!loading && viewMode === 'grid' && (
+      {!loading && !error && viewMode === 'grid' && (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           <AnimatePresence mode="popLayout">
             {filtered.map((writer, i) => {
@@ -254,7 +235,7 @@ export function WritersPage() {
       )}
 
       {/* Writers list */}
-      {!loading && viewMode === 'list' && (
+      {!loading && !error && viewMode === 'list' && (
         <div className="space-y-2">
           <AnimatePresence mode="popLayout">
             {filtered.map((writer, i) => {
@@ -307,7 +288,7 @@ export function WritersPage() {
       )}
 
       {/* Empty state */}
-      {!loading && filtered.length === 0 && (
+      {!loading && !error && filtered.length === 0 && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
