@@ -1164,67 +1164,97 @@ export async function POST() {
   const supabase = createClient(supabaseUrl, serviceKey);
   const results: Record<string, { count: number; error?: string }> = {};
 
+  // Helper to strip fake string IDs (DB uses auto-generated UUIDs)
+  const stripId = (obj: any) => {
+    const { id, ...rest } = obj;
+    return rest;
+  };
+
   try {
-    // 1. Upsert producers
+    // 1. Upsert producers (use slug as conflict key)
     const producerData = producers.map(p => ({
-      ...p,
+      ...stripId(p),
       avatar: p.avatar || FALLBACK_IMAGES.producerAvatar,
       cover_image: p.cover_image || FALLBACK_IMAGES.producerCover,
     }));
-    const { error: producerError, data: producerResult } = await supabase
+    const { error: producerError } = await supabase
       .from('producers')
-      .upsert(producerData, { onConflict: 'id' });
+      .upsert(producerData, { onConflict: 'slug' });
     results.producers = { count: producerData.length, error: producerError?.message };
 
-    // 2. Upsert tutorials
-    const tutorialData = tutorials.map(t => ({
-      ...t,
-      cover_image: t.cover_image || FALLBACK_IMAGES.tutorialCover,
-    }));
+    // Fetch inserted producers to get real UUIDs for foreign keys
+    const { data: dbProducers } = await supabase.from('producers').select('id, slug');
+    const producerSlugToId: Record<string, string> = {};
+    (dbProducers || []).forEach((p: any) => { producerSlugToId[p.slug] = p.id; });
+
+    // Map old fake producer IDs to slugs for lookups
+    const oldIdToSlug: Record<string, string> = {};
+    producers.forEach(p => { oldIdToSlug[p.id] = p.slug; });
+
+    // 2. Upsert tutorials (replace producer_id with real UUID)
+    const tutorialData = tutorials.map(t => {
+      const { id, producer_id, ...rest } = t;
+      const producerSlug = producer_id ? oldIdToSlug[producer_id] : null;
+      return {
+        ...rest,
+        cover_image: t.cover_image || FALLBACK_IMAGES.tutorialCover,
+        producer_id: producerSlug ? producerSlugToId[producerSlug] || null : null,
+      };
+    });
     const { error: tutorialError } = await supabase
       .from('tutorials')
-      .upsert(tutorialData, { onConflict: 'id' });
+      .upsert(tutorialData, { onConflict: 'slug' });
     results.tutorials = { count: tutorialData.length, error: tutorialError?.message };
 
-    // 3. Upsert beats
-    const beatData = beats.map(b => ({
-      ...b,
-      cover_image: b.cover_image || FALLBACK_IMAGES.beatCover,
-    }));
+    // 3. Upsert beats (replace producer_id with real UUID)
+    const beatData = beats.map(b => {
+      const { id, producer_id, ...rest } = b;
+      const producerSlug = producer_id ? oldIdToSlug[producer_id] : null;
+      return {
+        ...rest,
+        cover_image: b.cover_image || FALLBACK_IMAGES.beatCover,
+        producer_id: producerSlug ? producerSlugToId[producerSlug] || null : null,
+      };
+    });
     const { error: beatError } = await supabase
       .from('beats')
-      .upsert(beatData, { onConflict: 'id' });
+      .upsert(beatData, { onConflict: 'slug' });
     results.beats = { count: beatData.length, error: beatError?.message };
 
-    // 4. Upsert gear reviews
-    const gearData = gearReviews.map(g => ({
-      ...g,
-      cover_image: g.cover_image || FALLBACK_IMAGES.gearCover,
-    }));
+    // 4. Upsert gear reviews (replace producer_id with real UUID)
+    const gearData = gearReviews.map(g => {
+      const { id, producer_id, ...rest } = g;
+      const producerSlug = producer_id ? oldIdToSlug[producer_id] : null;
+      return {
+        ...rest,
+        cover_image: g.cover_image || FALLBACK_IMAGES.gearCover,
+        producer_id: producerSlug ? producerSlugToId[producerSlug] || null : null,
+      };
+    });
     const { error: gearError } = await supabase
       .from('gear_reviews')
-      .upsert(gearData, { onConflict: 'id' });
+      .upsert(gearData, { onConflict: 'slug' });
     results.gear_reviews = { count: gearData.length, error: gearError?.message };
 
     // 5. Upsert sample packs
     const packData = samplePacks.map(sp => ({
-      ...sp,
+      ...stripId(sp),
       cover_image: sp.cover_image || FALLBACK_IMAGES.samplePackCover,
     }));
     const { error: packError } = await supabase
       .from('sample_packs')
-      .upsert(packData, { onConflict: 'id' });
+      .upsert(packData, { onConflict: 'slug' });
     results.sample_packs = { count: packData.length, error: packError?.message };
 
     // 6. Upsert artists
     const artistData = artists.map(a => ({
-      ...a,
+      ...stripId(a),
       avatar: a.avatar || FALLBACK_IMAGES.artistAvatar,
       cover_image: a.cover_image || FALLBACK_IMAGES.artistCover,
     }));
     const { error: artistError } = await supabase
       .from('artists')
-      .upsert(artistData, { onConflict: 'id' });
+      .upsert(artistData, { onConflict: 'slug' });
     results.artists = { count: artistData.length, error: artistError?.message };
 
     const hasErrors = Object.values(results).some(r => r.error);
