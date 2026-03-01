@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     const { data: articles, error: fetchError } = await supabase
       .from('articles')
       .select('id, title, brand')
-      .eq('status', 'pending')
+      .eq('status', 'pending_review')
       .not('scheduled_publish_at', 'is', null)
       .lte('scheduled_publish_at', now);
 

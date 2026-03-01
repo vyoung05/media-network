@@ -3,4 +3,4 @@ ALTER TABLE articles ADD COLUMN IF NOT EXISTS scheduled_publish_at TIMESTAMPTZ D
 
 CREATE INDEX IF NOT EXISTS idx_articles_scheduled 
   ON articles(scheduled_publish_at) 
-  WHERE scheduled_publish_at IS NOT NULL AND status = 'pending';
+  WHERE scheduled_publish_at IS NOT NULL AND status = 'pending_review';
