@@ -25,16 +25,19 @@ const BRAND_CONFIG: Record<string, { name: string; color: string; icon: string; 
 };
 
 type AIEngine = 'openai' | 'gemini';
+type SourceMode = 'both' | 'rss_only' | 'brave_only';
 
 interface PipelineStatus {
   enabled: boolean;
   hasOpenAI: boolean;
   hasGemini: boolean;
   hasBraveSearch: boolean;
+  hasRssFeeds: boolean;
+  rssFeedCount: number;
   activeEngine: string;
   brands: Record<string, {
     totalGenerated: number;
-    recent: { id: string; title: string; status: string; created_at: string }[];
+    recent: { id: string; title: string; status: string; created_at: string; metadata?: any }[];
   }>;
 }
 
@@ -46,7 +49,15 @@ interface RunResult {
   error?: string;
   query?: string;
   engine?: string;
+  via?: string;
+  sourceMode?: string;
 }
+
+const SOURCE_OPTIONS: { value: SourceMode; label: string; icon: string; description: string }[] = [
+  { value: 'both', label: 'RSS + Search', icon: '📡', description: 'RSS feeds first, Brave Search fallback' },
+  { value: 'rss_only', label: 'RSS Only', icon: '📰', description: 'Only use RSS feeds' },
+  { value: 'brave_only', label: 'Search Only', icon: '🔍', description: 'Only use Brave Search' },
+];
 
 export default function AIPipelinePage() {
   const [status, setStatus] = useState<PipelineStatus | null>(null);
@@ -55,6 +66,7 @@ export default function AIPipelinePage() {
   const [runningBrand, setRunningBrand] = useState<string | null>(null);
   const [lastRun, setLastRun] = useState<RunResult[] | null>(null);
   const [selectedEngine, setSelectedEngine] = useState<AIEngine>('gemini');
+  const [selectedSource, setSelectedSource] = useState<SourceMode>('both');
 
   const fetchStatus = useCallback(async () => {
     try {
@@ -82,7 +94,11 @@ export default function AIPipelinePage() {
       const res = await fetch('/api/ai-pipeline', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...(brand ? { brand } : {}), engine: selectedEngine }),
+        body: JSON.stringify({
+          ...(brand ? { brand } : {}),
+          engine: selectedEngine,
+          source: selectedSource === 'both' ? 'both' : selectedSource === 'rss_only' ? 'rss' : 'brave',
+        }),
       });
       const data = await res.json();
       setLastRun(data.results || []);
@@ -108,7 +124,7 @@ export default function AIPipelinePage() {
             🤖 AI Content Pipeline
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            Auto-generate articles from trending news for each brand
+            Auto-generate articles from RSS feeds & trending news for each brand
           </p>
         </div>
         <motion.button
@@ -133,7 +149,7 @@ export default function AIPipelinePage() {
         </motion.button>
       </motion.div>
 
-      {/* Engine Toggle + API Status */}
+      {/* Engine Toggle + Source Toggle + API Status */}
       {status && (
         <motion.div
           initial={{ opacity: 0, y: 8 }}
@@ -180,6 +196,43 @@ export default function AIPipelinePage() {
             </div>
           </div>
 
+          {/* Source Mode Selector */}
+          <div className="px-5 py-4 border-b border-white/[0.06]">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div>
+                <h3 className="text-sm font-semibold text-white">Content Source</h3>
+                <p className="text-[10px] text-gray-500 mt-0.5">
+                  Where to find news articles
+                  {status.hasRssFeeds && (
+                    <span className="text-cyan-400 ml-1">• {status.rssFeedCount} RSS feeds active</span>
+                  )}
+                </p>
+              </div>
+              <div className="flex items-center gap-1 bg-white/[0.04] rounded-xl p-1">
+                {SOURCE_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => setSelectedSource(option.value)}
+                    className={`px-3 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                      selectedSource === option.value
+                        ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                        : 'text-gray-400 hover:text-gray-300 hover:bg-white/[0.04]'
+                    }`}
+                    title={option.description}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <span className="text-sm">{option.icon}</span>
+                      <span className="hidden sm:inline">{option.label}</span>
+                      {selectedSource === option.value && (
+                        <span className="hidden sm:inline text-[9px] bg-cyan-500/30 px-1.5 py-0.5 rounded-full">Active</span>
+                      )}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
           {/* API Keys Status */}
           <div className="px-5 py-3 flex items-center gap-4 flex-wrap">
             <div className="flex items-center gap-2">
@@ -194,9 +247,15 @@ export default function AIPipelinePage() {
               <span className={`w-2 h-2 rounded-full ${status.hasBraveSearch ? 'bg-green-500' : 'bg-red-500'}`} />
               <span className="text-xs text-gray-400">Brave Search {status.hasBraveSearch ? '✓' : '✗ Not set'}</span>
             </div>
+            <div className="flex items-center gap-2">
+              <span className={`w-2 h-2 rounded-full ${status.hasRssFeeds ? 'bg-green-500' : 'bg-yellow-500'}`} />
+              <span className="text-xs text-gray-400">
+                RSS Feeds {status.hasRssFeeds ? `✓ ${status.rssFeedCount} active` : '⚠ None configured'}
+              </span>
+            </div>
             {!status.enabled && (
               <p className="text-xs text-amber-400 ml-auto">
-                ⚠️ Set at least one AI key + BRAVE_SEARCH_API_KEY in Vercel env vars
+                ⚠️ Set at least one AI key + a content source (RSS feeds or Brave Search)
               </p>
             )}
           </div>
@@ -254,9 +313,16 @@ export default function AIPipelinePage() {
                         </span>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs text-gray-300 truncate">{article.title}</p>
-                          <p className="text-[10px] text-gray-600">
-                            {new Date(article.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
-                          </p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <p className="text-[10px] text-gray-600">
+                              {new Date(article.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                            </p>
+                            {article.metadata?.source_via && (
+                              <span className="text-[9px] text-cyan-500/60 bg-cyan-500/10 px-1.5 py-0.5 rounded-full">
+                                via {article.metadata.source_via}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -331,11 +397,21 @@ export default function AIPipelinePage() {
                               via {result.engine === 'gemini' ? '✨ Gemini' : '🧠 OpenAI'}
                             </span>
                           )}
+                          {result.via && (
+                            <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400">
+                              📡 {result.via}
+                            </span>
+                          )}
                         </span>
                       )}
-                      {result.status === 'no_results' && `⚠️ No search results for "${result.query}"`}
+                      {result.status === 'no_results' && `⚠️ No results found (${result.sourceMode || 'unknown'} mode)`}
                       {result.status === 'all_duplicates' && '🔄 All results already in database'}
-                      {result.status === 'rewrite_failed' && `❌ Failed to rewrite: "${result.source}"`}
+                      {result.status === 'rewrite_failed' && (
+                        <span>
+                          ❌ Failed to rewrite: &ldquo;{result.source}&rdquo;
+                          {result.via && <span className="text-gray-500 ml-1">({result.via})</span>}
+                        </span>
+                      )}
                       {result.status === 'insert_failed' && `❌ DB error: ${result.error}`}
                       {result.status === 'error' && `❌ ${result.error}`}
                     </span>
@@ -357,7 +433,7 @@ export default function AIPipelinePage() {
         <h3 className="text-sm font-semibold text-white mb-3">How it works</h3>
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           {[
-            { step: '1', icon: '🔍', title: 'Search', desc: 'Brave Search finds trending news matching each brand' },
+            { step: '1', icon: '📡', title: 'Source', desc: 'RSS feeds fetch latest news; Brave Search fills gaps' },
             { step: '2', icon: '🤖', title: 'Rewrite', desc: 'Gemini or OpenAI rewrites in each brand\'s voice — you choose' },
             { step: '3', icon: '📋', title: 'Queue', desc: 'Articles queued as drafts for admin review' },
             { step: '4', icon: '🚀', title: 'Publish', desc: 'Admin approves & publishes — or enable auto-publish' },

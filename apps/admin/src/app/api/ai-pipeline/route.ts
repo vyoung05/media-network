@@ -8,11 +8,17 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({}));
     const brand = body.brand; // optional: run for specific brand only
     const engine = body.engine; // optional: 'openai' or 'gemini'
+    const source = body.source; // optional: 'both' | 'rss' | 'brave'
 
-    // Call the cron endpoint internally with engine param
+    // Build query params
+    const params = new URLSearchParams();
+    if (engine) params.set('engine', engine);
+    if (source) params.set('source', source);
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+
+    // Call the cron endpoint internally with params
     const baseUrl = request.nextUrl.origin;
-    const engineParam = engine ? `?engine=${engine}` : '';
-    const res = await fetch(`${baseUrl}/api/cron/ai-pipeline${engineParam}`, {
+    const res = await fetch(`${baseUrl}/api/cron/ai-pipeline${queryString}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
     });
@@ -47,7 +53,7 @@ export async function GET() {
     for (const brand of brands) {
       const { data, count } = await supabase
         .from('articles')
-        .select('id, title, status, created_at', { count: 'exact' })
+        .select('id, title, status, created_at, metadata', { count: 'exact' })
         .eq('brand', brand)
         .eq('is_ai_generated', true)
         .order('created_at', { ascending: false })
@@ -76,11 +82,23 @@ export async function GET() {
     else if (hasGemini) activeEngine = 'gemini';
     else if (hasOpenAI) activeEngine = 'openai';
 
+    // Count RSS feeds
+    let rssFeedCount = 0;
+    try {
+      const { count } = await supabase
+        .from('rss_feeds')
+        .select('id', { count: 'exact', head: true })
+        .eq('enabled', true);
+      rssFeedCount = count || 0;
+    } catch {}
+
     return NextResponse.json({
-      enabled: (hasOpenAI || hasGemini) && !!process.env.BRAVE_SEARCH_API_KEY,
+      enabled: (hasOpenAI || hasGemini) && !!(process.env.BRAVE_SEARCH_API_KEY || rssFeedCount > 0),
       hasOpenAI,
       hasGemini,
       hasBraveSearch: !!process.env.BRAVE_SEARCH_API_KEY,
+      hasRssFeeds: rssFeedCount > 0,
+      rssFeedCount,
       activeEngine,
       brands: stats,
     });

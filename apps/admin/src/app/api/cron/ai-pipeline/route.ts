@@ -68,9 +68,156 @@ const BRAND_SEARCH_QUERIES: Record<string, { queries: string[]; categories: stri
   },
 };
 
+// ─── Source Mode ──────────────────────────────────────────
+
+type SourceMode = 'both' | 'rss_only' | 'brave_only';
+
+function parseSourceMode(value: string | null): SourceMode {
+  if (value === 'rss' || value === 'rss_only') return 'rss_only';
+  if (value === 'brave' || value === 'brave_only') return 'brave_only';
+  return 'both';
+}
+
+// ─── RSS Feed Fetching ───────────────────────────────────
+
+function stripHtml(html: string): string {
+  return html
+    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(parseInt(dec)))
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function parseRssXml(xml: string, feedName: string): { title: string; url: string; description: string; source: string }[] {
+  const items: { title: string; url: string; description: string; source: string }[] = [];
+
+  // Match both <item> (RSS 2.0) and <entry> (Atom) elements
+  const itemRegex = /<item[\s>]([\s\S]*?)<\/item>/gi;
+  const entryRegex = /<entry[\s>]([\s\S]*?)<\/entry>/gi;
+
+  const allMatches: string[] = [];
+  let match: RegExpExecArray | null;
+
+  while ((match = itemRegex.exec(xml)) !== null) {
+    allMatches.push(match[1]);
+  }
+  while ((match = entryRegex.exec(xml)) !== null) {
+    allMatches.push(match[1]);
+  }
+
+  for (const itemXml of allMatches.slice(0, 10)) {
+    // Extract title
+    const titleMatch = itemXml.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+    const title = titleMatch ? stripHtml(titleMatch[1]) : '';
+
+    // Extract link — RSS uses <link>, Atom uses <link href="..."/>
+    let url = '';
+    const linkHrefMatch = itemXml.match(/<link[^>]+href=["']([^"']+)["'][^>]*\/?>/i);
+    const linkTextMatch = itemXml.match(/<link[^>]*>([\s\S]*?)<\/link>/i);
+    if (linkHrefMatch) {
+      url = linkHrefMatch[1].trim();
+    } else if (linkTextMatch) {
+      url = stripHtml(linkTextMatch[1]);
+    }
+
+    // Extract description — try description, summary, content:encoded, content
+    const descMatch =
+      itemXml.match(/<description[^>]*>([\s\S]*?)<\/description>/i) ||
+      itemXml.match(/<summary[^>]*>([\s\S]*?)<\/summary>/i) ||
+      itemXml.match(/<content:encoded[^>]*>([\s\S]*?)<\/content:encoded>/i) ||
+      itemXml.match(/<content[^>]*>([\s\S]*?)<\/content>/i);
+    const description = descMatch ? stripHtml(descMatch[1]).substring(0, 500) : '';
+
+    if (title && url) {
+      items.push({ title, url, description, source: `${feedName} RSS` });
+    }
+  }
+
+  return items;
+}
+
+async function fetchRssFeeds(brand: string): Promise<{ title: string; url: string; description: string; source: string }[]> {
+  const supabase = getSupabaseService();
+
+  // Get enabled feeds for this brand
+  const { data: feeds, error } = await supabase
+    .from('rss_feeds')
+    .select('*')
+    .eq('brand', brand)
+    .eq('enabled', true);
+
+  if (error || !feeds || feeds.length === 0) {
+    console.log(`[RSS] No enabled feeds for brand: ${brand}`);
+    return [];
+  }
+
+  console.log(`[RSS] Fetching ${feeds.length} feeds for ${brand}`);
+
+  const allItems: { title: string; url: string; description: string; source: string }[] = [];
+
+  for (const feed of feeds) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000);
+
+      const res = await fetch(feed.url, {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': 'YoungEmpireMediaBot/1.0',
+          Accept: 'application/rss+xml, application/xml, text/xml, application/atom+xml',
+        },
+      });
+      clearTimeout(timeout);
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+
+      const xml = await res.text();
+      const items = parseRssXml(xml, feed.name);
+
+      console.log(`[RSS] ${feed.name}: ${items.length} items parsed`);
+
+      allItems.push(...items);
+
+      // Update last_fetched_at and clear error
+      await supabase
+        .from('rss_feeds')
+        .update({
+          last_fetched_at: new Date().toISOString(),
+          fetch_error: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', feed.id);
+    } catch (err: any) {
+      const errorMsg = err.name === 'AbortError' ? 'Timeout (5s)' : err.message;
+      console.warn(`[RSS] ${feed.name} failed: ${errorMsg}`);
+
+      // Update error in database
+      await supabase
+        .from('rss_feeds')
+        .update({
+          fetch_error: errorMsg,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', feed.id);
+    }
+  }
+
+  return allItems;
+}
+
 // ─── Brave Search ────────────────────────────────────────
 
-async function searchNews(query: string, count = 5): Promise<{ title: string; url: string; description: string; age?: string }[]> {
+async function searchNews(query: string, count = 5): Promise<{ title: string; url: string; description: string; age?: string; source: string }[]> {
   const apiKey = getApiKey('BRAVE_SEARCH_API_KEY');
   if (!apiKey) {
     console.warn('BRAVE_SEARCH_API_KEY not set, using fallback');
@@ -100,11 +247,45 @@ async function searchNews(query: string, count = 5): Promise<{ title: string; ur
       url: r.url,
       description: r.description || '',
       age: r.age,
+      source: 'Brave Search',
     }));
   } catch (err: any) {
     console.error('Search error:', err.message);
     return [];
   }
+}
+
+// ─── Unified Source Fetching ─────────────────────────────
+
+async function fetchSources(
+  brand: string,
+  sourceMode: SourceMode,
+  query: string
+): Promise<{ title: string; url: string; description: string; source: string }[]> {
+  let results: { title: string; url: string; description: string; source: string }[] = [];
+
+  if (sourceMode === 'rss_only') {
+    // RSS only — no Brave fallback
+    results = await fetchRssFeeds(brand);
+    console.log(`[Sources] RSS only: ${results.length} items for ${brand}`);
+  } else if (sourceMode === 'brave_only') {
+    // Brave only — current behavior
+    results = await searchNews(query, 5);
+    console.log(`[Sources] Brave only: ${results.length} items for ${brand}`);
+  } else {
+    // Both: RSS primary, Brave fallback if < 3 results
+    results = await fetchRssFeeds(brand);
+    console.log(`[Sources] RSS first: ${results.length} items for ${brand}`);
+
+    if (results.length < 3) {
+      console.log(`[Sources] RSS returned < 3 results, supplementing with Brave Search`);
+      const braveResults = await searchNews(query, 5);
+      results = [...results, ...braveResults];
+      console.log(`[Sources] After Brave supplement: ${results.length} total items`);
+    }
+  }
+
+  return results;
 }
 
 // ─── AI Rewrite ──────────────────────────────────────────
@@ -269,6 +450,8 @@ export async function GET(request: NextRequest) {
 
   // Allow engine override via query param: ?engine=gemini or ?engine=openai
   const engineParam = request.nextUrl.searchParams.get('engine') as AIEngine | null;
+  // Source mode: ?source=both|rss|brave
+  const sourceMode = parseSourceMode(request.nextUrl.searchParams.get('source'));
 
   try {
     // Load API keys from Supabase (dashboard-managed keys override env vars)
@@ -284,16 +467,16 @@ export async function GET(request: NextRequest) {
       const config = BRAND_SEARCH_QUERIES[brand];
       if (!config) continue;
 
-      // Pick a random query from the brand's list
+      // Pick a random query from the brand's list (used for Brave fallback)
       const query = config.queries[Math.floor(Math.random() * config.queries.length)];
       const category = config.categories[Math.floor(Math.random() * config.categories.length)];
 
-      console.log(`[AI Pipeline] ${brand}: searching "${query}" (engine: ${activeEngine})`);
+      console.log(`[AI Pipeline] ${brand}: source=${sourceMode}, query="${query}" (engine: ${activeEngine})`);
 
-      // Search for news
-      const searchResults = await searchNews(query, 5);
+      // Fetch sources based on mode
+      const searchResults = await fetchSources(brand, sourceMode, query);
       if (searchResults.length === 0) {
-        results.push({ brand, status: 'no_results', query });
+        results.push({ brand, status: 'no_results', query, sourceMode });
         continue;
       }
 
@@ -308,7 +491,7 @@ export async function GET(request: NextRequest) {
       const newResults = searchResults.filter((r) => !existingUrls.has(r.url));
 
       if (newResults.length === 0) {
-        results.push({ brand, status: 'all_duplicates', query });
+        results.push({ brand, status: 'all_duplicates', query, sourceMode });
         continue;
       }
 
@@ -318,7 +501,7 @@ export async function GET(request: NextRequest) {
       // Rewrite with AI
       const article = await rewriteArticle(source, config.voice, category, activeEngine);
       if (!article) {
-        results.push({ brand, status: 'rewrite_failed', source: source.title, engine: activeEngine });
+        results.push({ brand, status: 'rewrite_failed', source: source.title, engine: activeEngine, sourceMode, via: source.source });
         continue;
       }
 
@@ -355,6 +538,8 @@ export async function GET(request: NextRequest) {
             ai_engine: article.engine,
             search_query: query,
             source_title: source.title,
+            source_via: source.source,
+            source_mode: sourceMode,
             generated_at: new Date().toISOString(),
           },
         })
@@ -370,7 +555,7 @@ export async function GET(request: NextRequest) {
       await supabase.from('notifications').insert({
         type: 'article',
         title: `🤖 AI Article: ${article.title.substring(0, 50)}`,
-        message: `New ${brand} article via ${article.engine.toUpperCase()} from "${source.title.substring(0, 50)}"`,
+        message: `New ${brand} article via ${article.engine.toUpperCase()} from "${source.title.substring(0, 50)}" (${source.source})`,
         link: `/dashboard/content`,
         brand,
         read: false,
@@ -382,6 +567,8 @@ export async function GET(request: NextRequest) {
         article: { id: inserted?.id, title: article.title, slug },
         source: source.title,
         engine: article.engine,
+        via: source.source,
+        sourceMode,
       });
     }
 
@@ -390,6 +577,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       engine: activeEngine,
+      sourceMode,
       elapsed_ms: elapsed,
       results,
       timestamp: new Date().toISOString(),
