@@ -95,57 +95,58 @@ export default function UsersPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Users</h1>
-          <p className="text-sm text-gray-500 mt-1">
+      <div className="flex items-start sm:items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold text-white">Users</h1>
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">
             Manage team members, roles, and brand access
           </p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="admin-btn-primary px-4 py-2.5 flex items-center gap-2"
+          className="admin-btn-primary px-3 sm:px-4 py-2 sm:py-2.5 flex items-center gap-2 text-sm flex-shrink-0"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          Add User
+          <span className="hidden sm:inline">Add User</span>
+          <span className="sm:hidden">Add</span>
         </button>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
         {['admin', 'editor', 'writer', 'reader'].map((role) => (
-          <div key={role} className="glass-panel p-4">
-            <div className="flex items-center gap-2 mb-2">
+          <div key={role} className="glass-panel p-3 sm:p-4">
+            <div className="flex items-center gap-2 mb-1 sm:mb-2">
               <div className={`w-2 h-2 rounded-full ${ROLE_COLORS[role].dot}`} />
               <span className="text-xs font-mono text-gray-500 uppercase">{role}s</span>
             </div>
-            <p className="text-2xl font-bold text-white">{roleCounts[role] || 0}</p>
+            <p className="text-xl sm:text-2xl font-bold text-white">{roleCounts[role] || 0}</p>
           </div>
         ))}
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-1 p-1 rounded-lg bg-white/5">
+      <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-0.5 sm:gap-1 p-1 rounded-lg bg-white/5 overflow-x-auto">
           {['all', 'admin', 'editor', 'writer', 'reader'].map((role) => (
             <button
               key={role}
               onClick={() => setFilterRole(role)}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+              className={`px-2.5 sm:px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap touch-manipulation ${
                 filterRole === role
                   ? 'bg-white/10 text-white'
-                  : 'text-gray-500 hover:text-gray-300'
+                  : 'text-gray-500 hover:text-gray-300 active:text-gray-300'
               }`}
             >
               {role === 'all' ? 'All' : role.charAt(0).toUpperCase() + role.slice(1) + 's'}
             </button>
           ))}
         </div>
-        <span className="text-xs text-gray-600 ml-auto font-mono">
+        <span className="text-xs text-gray-600 ml-auto font-mono whitespace-nowrap">
           {users.length} user{users.length !== 1 ? 's' : ''}
         </span>
       </div>
@@ -174,126 +175,221 @@ export default function UsersPage() {
           <p className="text-sm text-gray-600">Create your first team member to get started</p>
         </div>
       ) : (
-        /* Users Table */
-        <div className="glass-panel overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-white/[0.06]">
-                <th className="text-left px-6 py-3 text-xs font-mono text-gray-500 uppercase tracking-wider">User</th>
-                <th className="text-left px-6 py-3 text-xs font-mono text-gray-500 uppercase tracking-wider">Role</th>
-                <th className="text-left px-6 py-3 text-xs font-mono text-gray-500 uppercase tracking-wider">Brands</th>
-                <th className="text-left px-6 py-3 text-xs font-mono text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="text-left px-6 py-3 text-xs font-mono text-gray-500 uppercase tracking-wider">Joined</th>
-                <th className="text-right px-6 py-3 text-xs font-mono text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/[0.04]">
-              {users.map((user) => (
-                <motion.tr
-                  key={user.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="hover:bg-white/[0.02] transition-colors"
-                >
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
-                        {user.name
-                          .split(' ')
-                          .map((n) => n[0])
-                          .join('')
-                          .toUpperCase()
-                          .slice(0, 2)}
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-white">{user.name}</p>
-                        <p className="text-xs text-gray-500">{user.email}</p>
-                      </div>
+        <>
+          {/* Mobile: Card layout */}
+          <div className="md:hidden space-y-3">
+            {users.map((user) => (
+              <motion.div
+                key={user.id}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="glass-panel p-4"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
+                      {user.name
+                        .split(' ')
+                        .map((n) => n[0])
+                        .join('')
+                        .toUpperCase()
+                        .slice(0, 2)}
                     </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-                        ROLE_COLORS[user.role]?.bg
-                      } ${ROLE_COLORS[user.role]?.text}`}
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-white truncate">{user.name}</p>
+                      <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <button
+                      onClick={() => setEditingUser(user)}
+                      className="p-2.5 text-gray-400 hover:text-white active:text-white transition-colors rounded-lg hover:bg-white/10 active:bg-white/10 touch-manipulation"
+                      aria-label="Edit user"
                     >
-                      <span className={`w-1.5 h-1.5 rounded-full ${ROLE_COLORS[user.role]?.dot}`} />
-                      {user.role}
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(user)}
+                      className="p-2.5 text-gray-400 hover:text-red-400 active:text-red-400 transition-colors rounded-lg hover:bg-red-500/10 active:bg-red-500/10 touch-manipulation"
+                      aria-label="Delete user"
+                    >
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 mt-3 flex-wrap">
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                      ROLE_COLORS[user.role]?.bg
+                    } ${ROLE_COLORS[user.role]?.text}`}
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full ${ROLE_COLORS[user.role]?.dot}`} />
+                    {user.role}
+                  </span>
+                  {user.is_verified && (
+                    <span className="inline-flex items-center gap-1 text-xs text-green-400">
+                      <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      Verified
                     </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-1.5">
-                      {user.brand_affiliations?.length > 0 ? (
-                        user.brand_affiliations.map((brand) => (
-                          <span
-                            key={brand}
-                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-white/5"
-                            title={BRAND_NAMES[brand] || brand}
-                          >
-                            <span
-                              className="w-1.5 h-1.5 rounded-full"
-                              style={{ backgroundColor: BRAND_COLORS[brand] || '#888' }}
-                            />
-                            <span className="text-gray-400">{BRAND_NAMES[brand] || brand}</span>
-                          </span>
-                        ))
-                      ) : (
-                        <span className="text-xs text-gray-600">No brands</span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    {user.is_verified ? (
-                      <span className="inline-flex items-center gap-1 text-xs text-green-400">
-                        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                          <path
-                            fillRule="evenodd"
-                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                        Verified
+                  )}
+                  <span className="text-xs text-gray-600 ml-auto">
+                    {new Date(user.created_at).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                    })}
+                  </span>
+                </div>
+                {user.brand_affiliations?.length > 0 && (
+                  <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                    {user.brand_affiliations.map((brand) => (
+                      <span
+                        key={brand}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-white/5"
+                      >
+                        <span
+                          className="w-1.5 h-1.5 rounded-full"
+                          style={{ backgroundColor: BRAND_COLORS[brand] || '#888' }}
+                        />
+                        <span className="text-gray-400">{BRAND_NAMES[brand] || brand}</span>
                       </span>
-                    ) : (
-                      <span className="text-xs text-gray-500">Unverified</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-xs text-gray-500">
-                      {new Date(user.created_at).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                      })}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => setEditingUser(user)}
-                        className="p-1.5 text-gray-500 hover:text-white transition-colors rounded-md hover:bg-white/5"
-                        title="Edit user"
+                    ))}
+                  </div>
+                )}
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Desktop: Table layout */}
+          <div className="hidden md:block glass-panel overflow-hidden">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-white/[0.06]">
+                  <th className="text-left px-6 py-3 text-xs font-mono text-gray-500 uppercase tracking-wider">User</th>
+                  <th className="text-left px-6 py-3 text-xs font-mono text-gray-500 uppercase tracking-wider">Role</th>
+                  <th className="text-left px-6 py-3 text-xs font-mono text-gray-500 uppercase tracking-wider">Brands</th>
+                  <th className="text-left px-6 py-3 text-xs font-mono text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="text-left px-6 py-3 text-xs font-mono text-gray-500 uppercase tracking-wider">Joined</th>
+                  <th className="text-right px-6 py-3 text-xs font-mono text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/[0.04]">
+                {users.map((user) => (
+                  <motion.tr
+                    key={user.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="hover:bg-white/[0.02] transition-colors"
+                  >
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
+                          {user.name
+                            .split(' ')
+                            .map((n) => n[0])
+                            .join('')
+                            .toUpperCase()
+                            .slice(0, 2)}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-white">{user.name}</p>
+                          <p className="text-xs text-gray-500">{user.email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                          ROLE_COLORS[user.role]?.bg
+                        } ${ROLE_COLORS[user.role]?.text}`}
                       >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => handleDelete(user)}
-                        className="p-1.5 text-gray-500 hover:text-red-400 transition-colors rounded-md hover:bg-red-500/5"
-                        title="Delete user"
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  </td>
-                </motion.tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                        <span className={`w-1.5 h-1.5 rounded-full ${ROLE_COLORS[user.role]?.dot}`} />
+                        {user.role}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {user.brand_affiliations?.length > 0 ? (
+                          user.brand_affiliations.map((brand) => (
+                            <span
+                              key={brand}
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-white/5"
+                              title={BRAND_NAMES[brand] || brand}
+                            >
+                              <span
+                                className="w-1.5 h-1.5 rounded-full"
+                                style={{ backgroundColor: BRAND_COLORS[brand] || '#888' }}
+                              />
+                              <span className="text-gray-400">{BRAND_NAMES[brand] || brand}</span>
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-xs text-gray-600">No brands</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      {user.is_verified ? (
+                        <span className="inline-flex items-center gap-1 text-xs text-green-400">
+                          <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          Verified
+                        </span>
+                      ) : (
+                        <span className="text-xs text-gray-500">Unverified</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-xs text-gray-500">
+                        {new Date(user.created_at).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => setEditingUser(user)}
+                          className="p-1.5 text-gray-500 hover:text-white transition-colors rounded-md hover:bg-white/5"
+                          title="Edit user"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => handleDelete(user)}
+                          className="p-1.5 text-gray-500 hover:text-red-400 transition-colors rounded-md hover:bg-red-500/5"
+                          title="Delete user"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       {/* Create/Edit Modal */}
@@ -396,20 +492,20 @@ function UserModal({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm"
       onClick={onClose}
     >
       <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.95, opacity: 0 }}
-        className="glass-panel w-full max-w-lg mx-4 p-6"
+        initial={{ scale: 0.95, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.95, opacity: 0, y: 20 }}
+        className="glass-panel w-full max-w-lg sm:mx-4 p-5 sm:p-6 max-h-[90vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-lg font-bold text-white mb-1">
           {isEdit ? 'Edit User' : 'Create New User'}
         </h2>
-        <p className="text-sm text-gray-500 mb-6">
+        <p className="text-xs sm:text-sm text-gray-500 mb-4 sm:mb-6">
           {isEdit
             ? 'Update user details, role, and brand access'
             : 'Add a new team member who can log in and manage content'}
@@ -469,16 +565,16 @@ function UserModal({
           {/* Role */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1.5">Role</label>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {['admin', 'editor', 'writer', 'reader'].map((role) => (
                 <button
                   key={role}
                   type="button"
                   onClick={() => setForm({ ...form, role: role as any })}
-                  className={`px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
+                  className={`px-3 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-all border touch-manipulation ${
                     form.role === role
                       ? `${ROLE_COLORS[role].bg} ${ROLE_COLORS[role].text} border-current`
-                      : 'border-white/[0.06] text-gray-500 hover:text-gray-300 hover:bg-white/5'
+                      : 'border-white/[0.06] text-gray-500 hover:text-gray-300 active:text-gray-300 hover:bg-white/5 active:bg-white/5'
                   }`}
                 >
                   {role.charAt(0).toUpperCase() + role.slice(1)}
@@ -496,10 +592,10 @@ function UserModal({
                   key={brand}
                   type="button"
                   onClick={() => toggleBrand(brand)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
+                  className={`flex items-center gap-2 px-3 py-2.5 sm:py-2 rounded-lg text-xs font-medium transition-all border touch-manipulation ${
                     form.brand_affiliations.includes(brand)
                       ? 'border-current bg-white/10 text-white'
-                      : 'border-white/[0.06] text-gray-500 hover:text-gray-300 hover:bg-white/5'
+                      : 'border-white/[0.06] text-gray-500 hover:text-gray-300 active:text-gray-300 hover:bg-white/5 active:bg-white/5'
                   }`}
                 >
                   <span
@@ -529,14 +625,14 @@ function UserModal({
             <button
               type="button"
               onClick={onClose}
-              className="admin-btn-ghost px-4 py-2"
+              className="admin-btn-ghost px-4 py-2.5 sm:py-2 touch-manipulation"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="admin-btn-primary px-4 py-2 flex items-center gap-2 disabled:opacity-50"
+              className="admin-btn-primary px-4 py-2.5 sm:py-2 flex items-center gap-2 disabled:opacity-50 touch-manipulation"
             >
               {saving ? (
                 <>
