@@ -1,4 +1,4 @@
-import { fetchArticles, fetchAudioUrl } from '@/lib/supabase';
+import { fetchArticles, fetchAudioUrl, fetchAllIssues } from '@/lib/supabase';
 import { mockIssues } from '@/lib/mock-data';
 
 function escapeXml(str: string): string {
@@ -38,9 +38,11 @@ export async function GET() {
     // Non-blocking
   }
 
-  // Include published issues from mock data (until issues are in Supabase)
-  const issueItems = mockIssues
-    .filter((issue) => issue.status === 'published')
+  // Fetch real issues from Supabase, fall back to mock
+  let issues = await fetchAllIssues();
+  if (issues.length === 0) issues = mockIssues.filter((i) => i.status === 'published');
+
+  const issueItems = issues
     .map(
       (issue) => `
     <item>

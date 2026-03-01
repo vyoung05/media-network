@@ -4,15 +4,18 @@ import React, { useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, useScroll, useTransform, useInView } from 'framer-motion';
-import { getLatestIssue, getAllIssues } from '@/lib/mock-data';
+import type { MagazineIssue } from '@/lib/mock-data';
 import { IssueCard } from './IssueCard';
 import { SubscribeForm } from './SubscribeForm';
 import { TextReveal } from './TextReveal';
 import { GlassMorphCard } from './GlassMorphCard';
 
-export function HomePageClient() {
-  const latestIssue = getLatestIssue();
-  const allIssues = getAllIssues();
+interface HomePageClientProps {
+  latestIssue: MagazineIssue;
+  allIssues: MagazineIssue[];
+}
+
+export function HomePageClient({ latestIssue, allIssues }: HomePageClientProps) {
   const heroRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(sectionRef, { once: true, margin: '-100px' });

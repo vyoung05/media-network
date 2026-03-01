@@ -1,19 +1,17 @@
 import type { Metadata } from 'next';
-import { mockIssues } from '@/lib/mock-data';
+import { fetchIssueBySlug, fetchIssuesSlugs } from '@/lib/supabase';
+import { mockIssues, getIssueBySlug } from '@/lib/mock-data';
 import { IssueReaderClient } from './IssueReaderClient';
+
+export const dynamic = 'force-dynamic';
 
 interface Props {
   params: { slug: string };
 }
 
-export function generateStaticParams() {
-  return mockIssues.map((issue) => ({
-    slug: issue.slug,
-  }));
-}
-
-export function generateMetadata({ params }: Props): Metadata {
-  const issue = mockIssues.find((i) => i.slug === params.slug);
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  let issue = await fetchIssueBySlug(params.slug);
+  if (!issue) issue = getIssueBySlug(params.slug) || null;
   if (!issue) return { title: 'Issue Not Found' };
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://saucecaviar.com';
@@ -42,6 +40,12 @@ export function generateMetadata({ params }: Props): Metadata {
   };
 }
 
-export default function IssueReaderPage({ params }: Props) {
-  return <IssueReaderClient slug={params.slug} />;
+export default async function IssueReaderPage({ params }: Props) {
+  // Fetch from Supabase with pages
+  let issue = await fetchIssueBySlug(params.slug);
+
+  // Fall back to mock data
+  if (!issue) issue = getIssueBySlug(params.slug) || null;
+
+  return <IssueReaderClient slug={params.slug} serverIssue={issue} />;
 }

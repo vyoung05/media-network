@@ -2,11 +2,14 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { getAllIssues } from '@/lib/mock-data';
+import type { MagazineIssue } from '@/lib/mock-data';
 import { IssueCard } from '@/components/IssueCard';
 
-export function IssuesPageClient() {
-  const issues = getAllIssues();
+interface IssuesPageClientProps {
+  issues: MagazineIssue[];
+}
+
+export function IssuesPageClient({ issues }: IssuesPageClientProps) {
 
   return (
     <div className="min-h-screen pt-28 pb-20 bg-secondary">

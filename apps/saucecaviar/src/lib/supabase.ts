@@ -7,6 +7,7 @@ import {
   getArticleAudioUrl,
 } from '@media-network/shared';
 import type { Article, Brand } from '@media-network/shared';
+import type { MagazineIssue, MagazinePage } from './mock-data';
 
 const BRAND: Brand = 'saucecaviar';
 
@@ -55,4 +56,123 @@ export async function fetchAudioUrl(articleId: string): Promise<string | null> {
   const supabase = getSupabase();
   if (!supabase) return null;
   return getArticleAudioUrl(supabase, articleId);
+}
+
+// ======================== MAGAZINE ISSUES ========================
+
+// Map DB snake_case rows to the MagazineIssue/MagazinePage types the components expect
+function mapPage(row: any): MagazinePage {
+  return {
+    id: row.id,
+    pageNumber: row.page_number,
+    type: row.type,
+    title: row.title || undefined,
+    subtitle: row.subtitle || undefined,
+    content: row.content || undefined,
+    pullQuote: row.pull_quote || undefined,
+    author: row.author || undefined,
+    authorTitle: row.author_title || undefined,
+    imageUrl: row.image_url || '',
+    imageAlt: row.image_alt || undefined,
+    secondaryImageUrl: row.secondary_image_url || undefined,
+    backgroundColor: row.background_color || undefined,
+    textColor: row.text_color || undefined,
+    category: row.category || undefined,
+    tags: row.tags || [],
+    videoUrl: row.video_url || undefined,
+    musicEmbed: row.music_embed || undefined,
+    artistName: row.artist_name || undefined,
+    artistBio: row.artist_bio || undefined,
+    artistLinks: row.artist_links || undefined,
+    advertiserName: row.advertiser_name || undefined,
+    advertiserTagline: row.advertiser_tagline || undefined,
+    advertiserCta: row.advertiser_cta || undefined,
+    advertiserUrl: row.advertiser_url || undefined,
+    tocEntries: row.toc_entries || undefined,
+  };
+}
+
+function mapIssue(row: any, pages: any[] = []): MagazineIssue {
+  return {
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    issueNumber: row.issue_number,
+    subtitle: row.subtitle || '',
+    description: row.description || '',
+    coverImage: row.cover_image || '',
+    publishedAt: row.published_at || '',
+    status: row.status,
+    pageCount: row.page_count || pages.length,
+    pages: pages.map(mapPage),
+    featuredColor: row.featured_color || '#C9A84C',
+    season: row.season || '',
+  };
+}
+
+export async function fetchAllIssues(): Promise<MagazineIssue[]> {
+  const supabase = getSupabase();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from('magazine_issues')
+    .select('*')
+    .eq('status', 'published')
+    .order('issue_number', { ascending: false });
+
+  if (error || !data) return [];
+  return data.map((row: any) => mapIssue(row));
+}
+
+export async function fetchLatestIssue(): Promise<MagazineIssue | null> {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+
+  const { data, error } = await supabase
+    .from('magazine_issues')
+    .select('*')
+    .eq('status', 'published')
+    .order('issue_number', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (error || !data) return null;
+  return mapIssue(data);
+}
+
+export async function fetchIssueBySlug(slug: string): Promise<MagazineIssue | null> {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+
+  // Fetch issue
+  const { data: issue, error: issueError } = await supabase
+    .from('magazine_issues')
+    .select('*')
+    .eq('slug', slug)
+    .single();
+
+  if (issueError || !issue) return null;
+
+  // Fetch pages
+  const { data: pages, error: pagesError } = await supabase
+    .from('magazine_pages')
+    .select('*')
+    .eq('issue_id', issue.id)
+    .order('page_number', { ascending: true });
+
+  if (pagesError) return mapIssue(issue);
+  return mapIssue(issue, pages || []);
+}
+
+export async function fetchIssuesSlugs(): Promise<string[]> {
+  const supabase = getSupabase();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from('magazine_issues')
+    .select('slug')
+    .eq('status', 'published');
+
+  if (error || !data) return [];
+  return data.map((row: any) => row.slug);
 }

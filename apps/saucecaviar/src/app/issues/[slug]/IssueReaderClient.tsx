@@ -2,16 +2,16 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { getIssueBySlug } from '@/lib/mock-data';
+import type { MagazineIssue } from '@/lib/mock-data';
 import { MagazineReader } from '@/components/magazine/MagazineReader';
 
 interface IssueReaderClientProps {
   slug: string;
+  serverIssue?: MagazineIssue | null;
 }
 
-export function IssueReaderClient({ slug }: IssueReaderClientProps) {
-  const issue = getIssueBySlug(slug);
+export function IssueReaderClient({ slug, serverIssue }: IssueReaderClientProps) {
+  const issue = serverIssue || null;
 
   if (!issue) {
     return (
