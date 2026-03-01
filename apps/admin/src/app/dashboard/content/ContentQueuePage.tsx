@@ -4,8 +4,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useBrand } from '@/contexts/BrandContext';
-import type { Article, Brand } from '@media-network/shared';
+import type { Article, Brand, SocialPlatform } from '@media-network/shared';
 import { timeAgo } from '@media-network/shared';
+import { CrossPostModal } from '@/components/CrossPostModal';
+import { ShareButton } from '@/components/ShareButton';
+import { SharePreviewModal } from '@/components/SharePreviewModal';
 
 const BRAND_COLORS: Record<Brand, string> = {
   saucecaviar: '#C9A84C',
@@ -30,6 +33,10 @@ export function ContentQueuePage() {
   const [error, setError] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<'all' | 'ai' | 'human'>('all');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [crossPostArticle, setCrossPostArticle] = useState<Article | null>(null);
+  const [crossPostLoading, setCrossPostLoading] = useState(false);
+  const [sharePreviewArticle, setSharePreviewArticle] = useState<Article | null>(null);
+  const [shareLoading, setShareLoading] = useState(false);
 
   const fetchArticles = useCallback(async () => {
     setLoading(true);
@@ -69,21 +76,62 @@ export function ContentQueuePage() {
     fetchArticles();
   }, [fetchArticles]);
 
-  const handleStatusChange = async (id: string, status: string) => {
+  const handleStatusChange = async (id: string, status: string, crossPostTo?: Brand[]) => {
     setActionLoading(id);
     try {
-      const res = await fetch(`/api/content/${id}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status }),
-      });
-      if (!res.ok) throw new Error('Failed to update status');
+      if (status === 'published') {
+        // Use the publish endpoint with cross-posting support
+        const res = await fetch(`/api/articles/${id}/publish`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            cross_post_to: crossPostTo || [],
+          }),
+        });
+        if (!res.ok) throw new Error('Failed to publish');
+      } else {
+        const res = await fetch(`/api/content/${id}/status`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status }),
+        });
+        if (!res.ok) throw new Error('Failed to update status');
+      }
       setArticles((prev) => prev.filter((a) => a.id !== id));
       setTotalCount((prev) => prev - 1);
     } catch (err) {
       console.error('Error updating article status:', err);
     } finally {
       setActionLoading(null);
+    }
+  };
+
+  const handleCrossPostConfirm = async (selectedBrands: Brand[]) => {
+    if (!crossPostArticle) return;
+    setCrossPostLoading(true);
+    await handleStatusChange(crossPostArticle.id, 'published', selectedBrands);
+    setCrossPostLoading(false);
+    setCrossPostArticle(null);
+  };
+
+  const handleShareConfirm = async (platforms: SocialPlatform[]) => {
+    if (!sharePreviewArticle || platforms.length === 0) return;
+    setShareLoading(true);
+    try {
+      await fetch('/api/social/share', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          article_id: sharePreviewArticle.id,
+          platforms,
+          brand: sharePreviewArticle.brand,
+        }),
+      });
+    } catch (err) {
+      console.error('Share failed:', err);
+    } finally {
+      setShareLoading(false);
+      setSharePreviewArticle(null);
     }
   };
 
@@ -189,6 +237,22 @@ export function ContentQueuePage() {
                             🤖 AI
                           </span>
                         )}
+                        {(article as any).cross_posted_from && (
+                          <span
+                            className="text-xs px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-400 font-mono flex items-center gap-1 cursor-help"
+                            title={`Cross-posted from ${(article as any).metadata?.cross_posted_from_brand || 'another brand'}: ${(article as any).metadata?.cross_posted_from_title || ''}`}
+                          >
+                            🔗 Cross-posted
+                          </span>
+                        )}
+                        {(article as any).cross_posted_to?.length > 0 && (
+                          <span
+                            className="text-xs px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-400 font-mono cursor-help"
+                            title={`Cross-posted to ${(article as any).cross_posted_to.length} brand(s)`}
+                          >
+                            🔗 ×{(article as any).cross_posted_to.length}
+                          </span>
+                        )}
                         {(article as any).scheduled_publish_at && (
                           <span className="text-xs px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 font-mono flex items-center gap-1">
                             🕐 Scheduled {new Date((article as any).scheduled_publish_at).toLocaleDateString('en-US', {
@@ -215,14 +279,14 @@ export function ContentQueuePage() {
 
                   <div className="flex items-center gap-2 flex-shrink-0 sm:ml-0 ml-7">
                     <button
-                      onClick={() => handleStatusChange(article.id, 'published')}
+                      onClick={() => setCrossPostArticle(article)}
                       disabled={actionLoading === article.id}
                       className="admin-btn-success px-4 py-2 text-xs flex items-center justify-center gap-1.5 disabled:opacity-50 flex-1 sm:flex-initial min-h-[44px] sm:min-h-0"
                     >
                       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
-                      Approve
+                      Publish
                     </button>
                     <button
                       onClick={() => handleStatusChange(article.id, 'archived')}
@@ -234,6 +298,12 @@ export function ContentQueuePage() {
                       </svg>
                       Reject
                     </button>
+                    <ShareButton
+                      articleId={article.id}
+                      brand={article.brand}
+                      articleTitle={article.title}
+                      compact
+                    />
                     <button
                       onClick={() => router.push(`/dashboard/content/${article.id}/edit`)}
                       className="admin-btn-ghost px-3 py-2 text-xs min-h-[44px] sm:min-h-0"
@@ -260,6 +330,27 @@ export function ContentQueuePage() {
             </motion.div>
           )}
         </div>
+      )}
+
+      {/* Cross-Post Modal */}
+      <CrossPostModal
+        isOpen={!!crossPostArticle}
+        onClose={() => setCrossPostArticle(null)}
+        onConfirm={handleCrossPostConfirm}
+        currentBrand={crossPostArticle?.brand || 'saucewire'}
+        articleTitle={crossPostArticle?.title || ''}
+        loading={crossPostLoading}
+      />
+
+      {/* Share Preview Modal */}
+      {sharePreviewArticle && (
+        <SharePreviewModal
+          isOpen={!!sharePreviewArticle}
+          onClose={() => setSharePreviewArticle(null)}
+          onConfirm={handleShareConfirm}
+          article={sharePreviewArticle}
+          loading={shareLoading}
+        />
       )}
     </div>
   );

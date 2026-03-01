@@ -16,6 +16,8 @@ import { AdTemplate } from './templates/AdTemplate';
 import { ArtistTemplate } from './templates/ArtistTemplate';
 import { FullBleedTemplate } from './templates/FullBleedTemplate';
 import { BackCoverTemplate } from './templates/BackCoverTemplate';
+import { AudioTemplate } from './templates/AudioTemplate';
+import { HotOrNotWidget } from './HotOrNotWidget';
 
 interface MagazineReaderProps {
   issue: MagazineIssue;
@@ -32,6 +34,7 @@ function PageContent({ page, onJumpToPage }: { page: MagazinePage; onJumpToPage?
     case 'artist': return <ArtistTemplate page={page} />;
     case 'full-bleed': return <FullBleedTemplate page={page} />;
     case 'back-cover': return <BackCoverTemplate page={page} />;
+    case 'audio': return <AudioTemplate page={page} />;
     default: return <ArticleTemplate page={page} />;
   }
 }
@@ -314,6 +317,20 @@ export function MagazineReader({ issue }: MagazineReaderProps) {
           >
             Use arrow keys to navigate · F for fullscreen · Swipe on mobile
           </motion.p>
+        )}
+
+        {/* Hot or Not — after the last page */}
+        {!isFullscreen && currentPage === totalPages - 1 && (
+          <motion.div
+            className="w-full max-w-3xl mx-auto mt-8 px-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <div className="border-t border-primary/10 pt-8">
+              <HotOrNotWidget issueId={issue.id} />
+            </div>
+          </motion.div>
         )}
       </div>
     </>

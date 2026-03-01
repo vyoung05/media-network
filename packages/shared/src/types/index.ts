@@ -316,6 +316,159 @@ export const BRAND_CONFIGS: Record<Brand, BrandConfig> = {
   },
 };
 
+// ======================== CROSS-POSTING ========================
+
+export interface CrossPostInfo {
+  cross_posted_from: string | null;
+  cross_posted_to: string[];
+}
+
+// ======================== SOCIAL MEDIA ========================
+
+export type SocialPlatform = 'twitter' | 'instagram' | 'facebook' | 'tiktok' | 'linkedin';
+
+export type ShareStatus = 'pending' | 'success' | 'failed';
+
+export interface SocialMediaSettings {
+  id: string;
+  brand: Brand;
+  platform: SocialPlatform;
+  enabled: boolean;
+  credentials: Record<string, string>;
+  auto_share_on_publish: boolean;
+  default_template: string;
+  default_hashtags: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SocialShareLog {
+  id: string;
+  article_id: string;
+  platform: SocialPlatform;
+  brand: Brand;
+  status: ShareStatus;
+  post_url: string | null;
+  error_message: string | null;
+  shared_at: string;
+}
+
+export interface ShareRequest {
+  article_id: string;
+  platforms: SocialPlatform[];
+  brand: Brand;
+  custom_text?: string;
+}
+
+export interface CrossPostRequest {
+  target_brands: Brand[];
+}
+
+export const SOCIAL_PLATFORMS: { id: SocialPlatform; name: string; icon: string; color: string; maxChars?: number }[] = [
+  { id: 'twitter', name: 'Twitter / X', icon: '𝕏', color: '#1DA1F2', maxChars: 280 },
+  { id: 'instagram', name: 'Instagram', icon: '📸', color: '#E4405F' },
+  { id: 'facebook', name: 'Facebook', icon: '📘', color: '#1877F2' },
+  { id: 'tiktok', name: 'TikTok', icon: '🎵', color: '#000000' },
+  { id: 'linkedin', name: 'LinkedIn', icon: '💼', color: '#0A66C2' },
+];
+
+export const PLATFORM_CREDENTIAL_FIELDS: Record<SocialPlatform, { key: string; label: string; type: 'text' | 'password' }[]> = {
+  twitter: [
+    { key: 'api_key', label: 'API Key', type: 'password' },
+    { key: 'api_secret', label: 'API Secret', type: 'password' },
+    { key: 'access_token', label: 'Access Token', type: 'password' },
+    { key: 'access_secret', label: 'Access Token Secret', type: 'password' },
+  ],
+  instagram: [
+    { key: 'account_name', label: 'Connected Account', type: 'text' },
+    { key: 'access_token', label: 'Meta Business API Token', type: 'password' },
+    { key: 'page_id', label: 'Instagram Business Account ID', type: 'text' },
+  ],
+  facebook: [
+    { key: 'page_id', label: 'Page ID', type: 'text' },
+    { key: 'access_token', label: 'Page Access Token', type: 'password' },
+  ],
+  tiktok: [
+    { key: 'username', label: 'Username', type: 'text' },
+    { key: 'access_token', label: 'Access Token', type: 'password' },
+  ],
+  linkedin: [
+    { key: 'profile_id', label: 'Profile / Company ID', type: 'text' },
+    { key: 'access_token', label: 'Access Token', type: 'password' },
+  ],
+};
+
+// ======================== NEWSLETTER TYPES ========================
+
+export type NewsletterProvider = 'resend' | 'sendgrid' | 'mailgun';
+export type CampaignStatus = 'draft' | 'sending' | 'sent' | 'failed';
+export type DigestFrequency = 'instant' | 'daily' | 'weekly';
+
+export interface NewsletterSubscriber {
+  id: string;
+  email: string;
+  name: string | null;
+  brand: string;
+  subscribed_at: string;
+  unsubscribed_at: string | null;
+  is_active: boolean;
+  preferences: Record<string, any>;
+}
+
+export interface NewsletterCampaign {
+  id: string;
+  brand: string;
+  subject: string;
+  html_content: string | null;
+  text_content: string | null;
+  article_ids: string[];
+  status: CampaignStatus;
+  sent_count: number;
+  open_count: number;
+  click_count: number;
+  scheduled_at: string | null;
+  sent_at: string | null;
+  created_at: string;
+}
+
+export interface NewsletterSettings {
+  id: string;
+  brand: string;
+  enabled: boolean;
+  provider: NewsletterProvider;
+  api_key_encrypted: string | null;
+  from_email: string | null;
+  from_name: string | null;
+  reply_to: string | null;
+  template_style: string;
+  footer_text: string | null;
+  auto_send_on_publish: boolean;
+  digest_frequency: DigestFrequency;
+  digest_day: number;
+  digest_hour: number;
+}
+
+// ======================== SEO TYPES ========================
+
+export interface SEOData {
+  seo_title: string | null;
+  seo_description: string | null;
+  focus_keyword: string | null;
+  seo_score: number | null;
+}
+
+export interface SEORule {
+  id: string;
+  label: string;
+  passed: boolean;
+  suggestion: string;
+}
+
+export interface SEOScoreResult {
+  score: number;
+  rules: SEORule[];
+}
+
 // ======================== HELPERS ========================
 
 export const SAUCEWIRE_CATEGORIES = ['Music', 'Fashion', 'Entertainment', 'Sports', 'Tech'] as const;

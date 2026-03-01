@@ -11,7 +11,14 @@ export type PageType =
   | 'ad'
   | 'artist'
   | 'full-bleed'
-  | 'back-cover';
+  | 'back-cover'
+  | 'audio'
+  | 'gallery'
+  | 'video-ad'
+  | 'interactive'
+  | 'quote'
+  | 'credits'
+  | 'letter';
 
 export interface MagazinePage {
   id: string;

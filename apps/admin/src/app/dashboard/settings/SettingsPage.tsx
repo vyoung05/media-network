@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import type { Brand } from '@media-network/shared';
+import { SocialMediaSettingsTab } from '@/components/SocialMediaSettingsTab';
 
 // ======================== TYPES ========================
 
@@ -222,7 +223,7 @@ function FieldRow({
 // ======================== MAIN COMPONENT ========================
 
 export function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<'general' | 'brands' | 'ai' | 'api'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'brands' | 'ai' | 'api' | 'social'>('general');
   const [general, setGeneral] = useState(INITIAL_GENERAL);
   const [brandSettings, setBrandSettings] = useState(INITIAL_BRAND_SETTINGS);
   const [api, setApi] = useState(INITIAL_API);
@@ -246,6 +247,7 @@ export function SettingsPage() {
     { key: 'brands' as const, label: 'Brands', icon: '🏷️' },
     { key: 'ai' as const, label: 'AI Pipeline', icon: '🤖' },
     { key: 'api' as const, label: 'API Keys', icon: '🔑' },
+    { key: 'social' as const, label: 'Social Media', icon: '📱' },
   ];
 
   const currentBrand = brandSettings[activeBrandTab];
@@ -636,6 +638,9 @@ export function SettingsPage() {
           </motion.div>
         </div>
       )}
+
+      {/* ===================== SOCIAL MEDIA TAB ===================== */}
+      {activeTab === 'social' && <SocialMediaSettingsTab />}
     </div>
   );
 }

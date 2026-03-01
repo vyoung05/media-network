@@ -89,6 +89,23 @@ function mapPage(row: any): MagazinePage {
     advertiserCta: row.advertiser_cta || undefined,
     advertiserUrl: row.advertiser_url || undefined,
     tocEntries: row.toc_entries || undefined,
+    // Enhanced fields (from rich magazine editor)
+    spotify_embed: row.spotify_embed || undefined,
+    audio_embed_url: row.audio_embed_url || undefined,
+    youtube_url: row.youtube_url || undefined,
+    video_embed_url: row.video_embed_url || undefined,
+    gallery_images: row.gallery_images || undefined,
+    interactive_embed_url: row.interactive_embed_url || undefined,
+    iframe_url: row.iframe_url || undefined,
+    lower_third_text: row.lower_third_text || undefined,
+    lower_third_subtitle: row.lower_third_subtitle || undefined,
+    caption: row.caption || undefined,
+    credits: row.credits || undefined,
+    cta_text: row.cta_text || undefined,
+    cta_url: row.cta_url || undefined,
+    layout_style: row.layout_style || undefined,
+    animation: row.animation || undefined,
+    transition_effect: row.transition_effect || undefined,
   };
 }
 

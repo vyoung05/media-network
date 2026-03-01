@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import type { MagazinePage } from '@/lib/mock-data';
+import { MusicPlayer } from '../MusicPlayer';
 
 interface ArtistTemplateProps {
   page: MagazinePage;
@@ -76,6 +77,45 @@ export function ArtistTemplate({ page }: ArtistTemplateProps) {
             ))}
           </div>
         </div>
+
+        {/* Music Player */}
+        {page.artistLinks && (page.artistLinks.spotify || page.artistLinks.apple_music || page.artistLinks.soundcloud || page.artistLinks.youtube) && (
+          <motion.div
+            className="mt-3"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+          >
+            <MusicPlayer
+              spotifyUrl={page.artistLinks.spotify}
+              appleMusicUrl={page.artistLinks.apple_music}
+              soundcloudUrl={page.artistLinks.soundcloud}
+              youtubeUrl={page.artistLinks.youtube}
+              trackArtist={page.artistName}
+              coverImage={page.imageUrl}
+              compact
+            />
+          </motion.div>
+        )}
+
+        {/* Music embed from page field */}
+        {page.musicEmbed && !page.artistLinks?.spotify && (
+          <motion.div
+            className="mt-3"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+          >
+            <MusicPlayer
+              spotifyUrl={page.musicEmbed.includes('spotify') ? page.musicEmbed : undefined}
+              soundcloudUrl={page.musicEmbed.includes('soundcloud') ? page.musicEmbed : undefined}
+              youtubeUrl={page.musicEmbed.includes('youtube') || page.musicEmbed.includes('youtu.be') ? page.musicEmbed : undefined}
+              previewUrl={!page.musicEmbed.includes('spotify') && !page.musicEmbed.includes('soundcloud') && !page.musicEmbed.includes('youtube') ? page.musicEmbed : undefined}
+              trackArtist={page.artistName}
+              compact
+            />
+          </motion.div>
+        )}
 
         {/* Social links */}
         {page.artistLinks && (

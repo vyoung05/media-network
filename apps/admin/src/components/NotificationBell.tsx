@@ -61,9 +61,81 @@ export function NotificationBell() {
 
   useEffect(() => {
     fetchNotifications();
-    // Poll every 30 seconds
-    const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
+
+    // Try Supabase Realtime first, fall back to polling
+    let interval: ReturnType<typeof setInterval> | null = null;
+    let channel: any = null;
+
+    async function setupRealtime() {
+      try {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        if (!supabaseUrl || !supabaseKey) throw new Error('No Supabase env');
+
+        const { createClient } = await import('@supabase/supabase-js');
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        channel = supabase
+          .channel('notifications-realtime')
+          .on(
+            'postgres_changes',
+            { event: 'INSERT', schema: 'public', table: 'notifications' },
+            (payload: any) => {
+              const newNotif: Notification = {
+                id: payload.new.id,
+                type: payload.new.type || 'info',
+                title: payload.new.title,
+                message: payload.new.message,
+                link: payload.new.link,
+                brand: payload.new.brand,
+                read: payload.new.read || false,
+                created_at: payload.new.created_at,
+              };
+              setNotifications((prev) => [newNotif, ...prev].slice(0, 20));
+              setUnreadCount((prev) => prev + 1);
+            }
+          )
+          .on(
+            'postgres_changes',
+            { event: 'UPDATE', schema: 'public', table: 'notifications' },
+            (payload: any) => {
+              setNotifications((prev) =>
+                prev.map((n) =>
+                  n.id === payload.new.id ? { ...n, read: payload.new.read } : n
+                )
+              );
+              // Recount unread
+              setNotifications((prev) => {
+                setUnreadCount(prev.filter((n) => !n.read).length);
+                return prev;
+              });
+            }
+          )
+          .subscribe((status: string) => {
+            if (status === 'SUBSCRIBED') {
+              console.log('🔔 Notifications: Realtime connected');
+            } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+              console.warn('🔔 Notifications: Realtime failed, falling back to polling');
+              if (!interval) {
+                interval = setInterval(fetchNotifications, 30000);
+              }
+            }
+          });
+      } catch {
+        // Fallback to polling
+        console.log('🔔 Notifications: Using polling (30s)');
+        interval = setInterval(fetchNotifications, 30000);
+      }
+    }
+
+    setupRealtime();
+
+    return () => {
+      if (interval) clearInterval(interval);
+      if (channel) {
+        channel.unsubscribe?.();
+      }
+    };
   }, [fetchNotifications]);
 
   // Close dropdown on outside click

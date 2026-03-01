@@ -1,16 +1,39 @@
-# Progress: Add Unsplash Cover Images to Brand Site Mock Data
+# Newsletter + SEO Build Progress
 
-## Analysis
-- **TrapFrequency**: Had ALL `null` images — 10 producers (avatar+cover), 12 tutorials, 10 beats, 8 gear reviews, 5 sample packs = 55 null values ✅ UPDATED
-- **TrapGlow**: Artists & blog posts already had images. 4 author `avatar_url: null` values updated ✅
-- **SauceCaviar**: Already had real Unsplash URLs everywhere — no changes needed ✅
+## Database Setup
+- [ ] Newsletter tables (subscribers, campaigns, settings)
+- [ ] SEO columns on articles table
 
-## Tasks
-- [✅] Update TrapFrequency mock-data.ts — all 55 null image values replaced
-- [✅] Update TrapGlow mock-data.ts — 4 author avatar_url values replaced
-- [✅] SauceCaviar — already complete, no changes needed
-- [✅] Build trapfrequency — PASS (49 pages)
-- [✅] Build trapglow — PASS (19 pages)
-- [✅] Build saucecaviar — PASS (12 pages)
-- [✅] Committed: `feat: add Unsplash cover images to all brand site mock data`
-- [✅] Pushed to main: `95d8536..1306f3a`
+## Types (shared)
+- [ ] Newsletter types in shared package
+
+## API Routes (admin)
+- [ ] /api/newsletter/subscribers
+- [ ] /api/newsletter/campaigns
+- [ ] /api/newsletter/campaigns/[id]/send
+- [ ] /api/newsletter/settings
+- [ ] /api/newsletter/subscribe (public)
+- [ ] /api/newsletter/unsubscribe (public)
+- [ ] /api/seo/scores
+- [ ] Update articles publish endpoint for newsletter trigger
+
+## Admin Pages
+- [ ] /dashboard/newsletter (hub)
+- [ ] /dashboard/newsletter/subscribers
+- [ ] /dashboard/newsletter/campaigns/new
+- [ ] /dashboard/newsletter/settings
+- [ ] /dashboard/seo (dashboard)
+
+## Components
+- [ ] SEOPanel component
+- [ ] Email templates (brand-styled)
+- [ ] Newsletter signup component for brand sites
+
+## Brand Sites
+- [ ] Sitemap.xml for all 4 brands
+- [ ] Robots.txt for all 4 brands
+- [ ] JSON-LD component (shared)
+- [ ] Newsletter signup on all 4 brand sites
+
+## Final
+- [ ] Git commit & push
