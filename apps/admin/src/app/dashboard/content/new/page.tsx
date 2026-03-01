@@ -287,7 +287,7 @@ export default function NewArticlePage() {
                       className={`px-3 py-1.5 text-xs rounded-md transition-all flex items-center gap-1.5 ${
                         brand === b.id ? 'bg-white/15 text-white ring-1' : 'text-gray-500 hover:text-white hover:bg-white/5'
                       }`}
-                      style={brand === b.id ? { ringColor: b.color } : {}}
+                      style={brand === b.id ? { borderColor: b.color, borderWidth: '1px' } : {}}
                     >
                       <div className="w-2 h-2 rounded-full" style={{ backgroundColor: b.color }} />
                       {b.name}
