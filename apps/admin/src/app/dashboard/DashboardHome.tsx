@@ -6,6 +6,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { useBrand } from '@/contexts/BrandContext';
 import type { Article, Submission, Brand } from '@media-network/shared';
 import { timeAgo } from '@media-network/shared';
+import { AnnouncementsPanel } from '@/components/AnnouncementsPanel';
 
 interface StatCardProps {
   label: string;
@@ -327,6 +328,9 @@ export function DashboardHome() {
           />
         </motion.div>
       </div>
+
+      {/* Announcements */}
+      <AnnouncementsPanel isAdmin={true} />
 
       {/* Two-column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
