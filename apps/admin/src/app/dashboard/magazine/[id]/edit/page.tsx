@@ -6,7 +6,20 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 // ─── Types ───────────────────────────────────────────────
 
-type PageType = 'cover' | 'toc' | 'article' | 'spread' | 'video' | 'ad' | 'artist' | 'full-bleed' | 'back-cover';
+type PageType =
+  | 'cover' | 'toc' | 'article' | 'spread' | 'video' | 'ad' | 'artist' | 'full-bleed' | 'back-cover'
+  | 'gallery' | 'video-ad' | 'interactive' | 'audio' | 'quote' | 'credits' | 'letter';
+
+interface GalleryImage {
+  image_url: string;
+  caption?: string;
+  alt?: string;
+}
+
+interface CreditEntry {
+  role: string;
+  name: string;
+}
 
 interface MagazinePage {
   id: string;
@@ -36,6 +49,30 @@ interface MagazinePage {
   advertiser_cta?: string;
   advertiser_url?: string;
   toc_entries?: { title: string; page: number; category: string }[];
+  // ─── New DB columns ───
+  video_embed_url?: string;
+  youtube_url?: string;
+  gallery_images?: GalleryImage[];
+  audio_embed_url?: string;
+  spotify_embed?: string;
+  interactive_embed_url?: string;
+  iframe_url?: string;
+  title_font_size?: string;
+  title_font_style?: string;
+  title_alignment?: string;
+  overlay_opacity?: number;
+  text_position?: string;
+  lower_third_text?: string;
+  lower_third_subtitle?: string;
+  caption?: string;
+  photo_credit?: string;
+  credits?: CreditEntry[];
+  layout_style?: string;
+  animation?: string;
+  transition_effect?: string;
+  cta_text?: string;
+  cta_url?: string;
+  cta_style?: string;
 }
 
 interface MagazineIssue {
@@ -66,6 +103,13 @@ const PAGE_TYPE_ICONS: Record<PageType, string> = {
   'artist': '🎤',
   'full-bleed': '🌅',
   'back-cover': '📕',
+  'gallery': '🖼️',
+  'video-ad': '📺',
+  'interactive': '🎮',
+  'audio': '🎵',
+  'quote': '💬',
+  'credits': '🎬',
+  'letter': '✉️',
 };
 
 const PAGE_TYPE_LABELS: Record<PageType, string> = {
@@ -78,9 +122,19 @@ const PAGE_TYPE_LABELS: Record<PageType, string> = {
   'artist': 'Artist Feature',
   'full-bleed': 'Full Bleed',
   'back-cover': 'Back Cover',
+  'gallery': 'Photo Gallery',
+  'video-ad': 'Video Ad/Commercial',
+  'interactive': 'Interactive Embed',
+  'audio': 'Audio Embed',
+  'quote': 'Pull Quote / Statement',
+  'credits': 'Credits Page',
+  'letter': 'Letter from Editor',
 };
 
-const ALL_PAGE_TYPES: PageType[] = ['cover', 'toc', 'article', 'spread', 'video', 'ad', 'artist', 'full-bleed', 'back-cover'];
+const ALL_PAGE_TYPES: PageType[] = [
+  'cover', 'toc', 'article', 'spread', 'video', 'ad', 'artist', 'full-bleed', 'back-cover',
+  'gallery', 'video-ad', 'interactive', 'audio', 'quote', 'credits', 'letter',
+];
 
 const STATUS_COLORS: Record<string, string> = {
   draft: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
@@ -93,80 +147,361 @@ const STATUS_COLORS: Record<string, string> = {
 type FieldDef = {
   key: string;
   label: string;
-  type: 'text' | 'textarea' | 'url' | 'color' | 'tags' | 'toc-entries' | 'artist-links';
+  type: 'text' | 'textarea' | 'url' | 'color' | 'tags' | 'toc-entries' | 'artist-links' | 'select' | 'number' | 'gallery-editor' | 'credits-editor';
   placeholder?: string;
+  options?: { value: string; label: string }[];
+  min?: number;
+  max?: number;
+  step?: number;
+  group?: string;
 };
+
+// ─── Common field groups appended to every page type ─────
+
+const COMMON_FIELDS: FieldDef[] = [
+  { key: 'lower_third_text', label: 'Lower Third Text', type: 'text', placeholder: 'Overlay text...', group: 'Lower Third / Captions' },
+  { key: 'lower_third_subtitle', label: 'Lower Third Subtitle', type: 'text', placeholder: 'Subtitle overlay...', group: 'Lower Third / Captions' },
+  { key: 'caption', label: 'Caption', type: 'text', placeholder: 'Caption text...', group: 'Lower Third / Captions' },
+  { key: 'photo_credit', label: 'Photo/Media Credit', type: 'text', placeholder: 'Photo by...', group: 'Lower Third / Captions' },
+  { key: 'layout_style', label: 'Layout Style', type: 'select', options: [
+    { value: 'standard', label: 'Standard' },
+    { value: 'cinematic', label: 'Cinematic' },
+    { value: 'minimal', label: 'Minimal' },
+    { value: 'editorial', label: 'Editorial' },
+    { value: 'immersive', label: 'Immersive' },
+  ], group: 'Layout & Effects' },
+  { key: 'animation', label: 'Enter Animation', type: 'select', options: [
+    { value: 'none', label: 'None' },
+    { value: 'fade', label: 'Fade' },
+    { value: 'slide', label: 'Slide' },
+    { value: 'zoom', label: 'Zoom' },
+    { value: 'parallax', label: 'Parallax' },
+  ], group: 'Layout & Effects' },
+  { key: 'transition_effect', label: 'Page Transition', type: 'select', options: [
+    { value: 'none', label: 'None' },
+    { value: 'slide', label: 'Slide' },
+    { value: 'fade', label: 'Fade' },
+    { value: 'flip', label: 'Flip' },
+    { value: 'dissolve', label: 'Dissolve' },
+  ], group: 'Layout & Effects' },
+  { key: 'cta_text', label: 'CTA Button Text', type: 'text', placeholder: 'Learn More', group: 'CTA' },
+  { key: 'cta_url', label: 'CTA Link URL', type: 'url', placeholder: 'https://...', group: 'CTA' },
+];
+
+const FONT_SIZE_OPTIONS = [
+  { value: 'lg', label: 'Large' },
+  { value: 'xl', label: 'Extra Large' },
+  { value: '2xl', label: '2XL' },
+  { value: '3xl', label: '3XL' },
+];
+
+const FONT_SIZE_QUOTE_OPTIONS = [
+  { value: '2xl', label: '2XL' },
+  { value: '3xl', label: '3XL' },
+  { value: '4xl', label: '4XL' },
+];
+
+const ALIGNMENT_OPTIONS = [
+  { value: 'left', label: 'Left' },
+  { value: 'center', label: 'Center' },
+  { value: 'right', label: 'Right' },
+];
+
+const TEXT_POSITION_OPTIONS = [
+  { value: 'top', label: 'Top' },
+  { value: 'center', label: 'Center' },
+  { value: 'bottom', label: 'Bottom' },
+];
+
+const CTA_STYLE_OPTIONS = [
+  { value: 'button', label: 'Button' },
+  { value: 'link', label: 'Link' },
+  { value: 'banner', label: 'Banner' },
+];
+
+const GALLERY_LAYOUT_OPTIONS = [
+  { value: 'grid', label: 'Grid' },
+  { value: 'masonry', label: 'Masonry' },
+  { value: 'carousel', label: 'Carousel' },
+  { value: 'filmstrip', label: 'Filmstrip' },
+];
 
 const PAGE_TYPE_FIELDS: Record<PageType, FieldDef[]> = {
   'cover': [
-    { key: 'title', label: 'Title', type: 'text', placeholder: 'Cover title' },
-    { key: 'subtitle', label: 'Subtitle', type: 'text', placeholder: 'Cover subtitle' },
-    { key: 'image_url', label: 'Image URL', type: 'url', placeholder: 'https://...' },
-    { key: 'background_color', label: 'Background Color', type: 'color', placeholder: '#000000' },
+    { key: 'title', label: 'Title', type: 'text', placeholder: 'Cover title', group: 'Content' },
+    { key: 'subtitle', label: 'Subtitle', type: 'text', placeholder: 'Cover subtitle', group: 'Content' },
+    { key: 'image_url', label: 'Image URL', type: 'url', placeholder: 'https://...', group: 'Media' },
+    { key: 'youtube_url', label: 'YouTube URL (video cover background)', type: 'url', placeholder: 'https://youtube.com/...', group: 'Media' },
+    { key: 'background_color', label: 'Background Color', type: 'color', placeholder: '#000000', group: 'Media' },
+    { key: 'title_font_size', label: 'Title Font Size', type: 'select', options: FONT_SIZE_OPTIONS, group: 'Typography' },
+    { key: 'title_alignment', label: 'Title Alignment', type: 'select', options: ALIGNMENT_OPTIONS, group: 'Typography' },
+    { key: 'text_position', label: 'Text Position', type: 'select', options: TEXT_POSITION_OPTIONS, group: 'Typography' },
+    { key: 'overlay_opacity', label: 'Overlay Opacity', type: 'number', min: 0, max: 1, step: 0.1, group: 'Layout & Effects' },
+    ...COMMON_FIELDS,
   ],
   'toc': [
-    { key: 'title', label: 'Title', type: 'text', placeholder: 'Table of Contents' },
-    { key: 'image_url', label: 'Image URL', type: 'url', placeholder: 'https://...' },
-    { key: 'toc_entries', label: 'TOC Entries', type: 'toc-entries' },
+    { key: 'title', label: 'Title', type: 'text', placeholder: 'Table of Contents', group: 'Content' },
+    { key: 'image_url', label: 'Image URL', type: 'url', placeholder: 'https://...', group: 'Media' },
+    { key: 'toc_entries', label: 'TOC Entries', type: 'toc-entries', group: 'Content' },
+    ...COMMON_FIELDS,
   ],
   'article': [
-    { key: 'title', label: 'Title', type: 'text', placeholder: 'Article title' },
-    { key: 'subtitle', label: 'Subtitle', type: 'text', placeholder: 'Article subtitle' },
-    { key: 'author', label: 'Author', type: 'text', placeholder: 'Author name' },
-    { key: 'author_title', label: 'Author Title', type: 'text', placeholder: 'e.g. Senior Editor' },
-    { key: 'category', label: 'Category', type: 'text', placeholder: 'e.g. Culture' },
-    { key: 'content', label: 'Content', type: 'textarea', placeholder: 'Article body...' },
-    { key: 'image_url', label: 'Image URL', type: 'url', placeholder: 'https://...' },
-    { key: 'pull_quote', label: 'Pull Quote', type: 'text', placeholder: 'A standout quote...' },
-    { key: 'tags', label: 'Tags', type: 'tags', placeholder: 'culture, fashion, music' },
+    { key: 'title', label: 'Title', type: 'text', placeholder: 'Article title', group: 'Content' },
+    { key: 'subtitle', label: 'Subtitle', type: 'text', placeholder: 'Article subtitle', group: 'Content' },
+    { key: 'author', label: 'Author', type: 'text', placeholder: 'Author name', group: 'Content' },
+    { key: 'author_title', label: 'Author Title', type: 'text', placeholder: 'e.g. Senior Editor', group: 'Content' },
+    { key: 'category', label: 'Category', type: 'text', placeholder: 'e.g. Culture', group: 'Content' },
+    { key: 'content', label: 'Content', type: 'textarea', placeholder: 'Article body...', group: 'Content' },
+    { key: 'pull_quote', label: 'Pull Quote', type: 'text', placeholder: 'A standout quote...', group: 'Content' },
+    { key: 'image_url', label: 'Image URL', type: 'url', placeholder: 'https://...', group: 'Media' },
+    { key: 'youtube_url', label: 'YouTube Video URL', type: 'url', placeholder: 'https://youtube.com/...', group: 'Media' },
+    { key: 'audio_embed_url', label: 'Audio Embed URL', type: 'url', placeholder: 'https://...', group: 'Media' },
+    { key: 'spotify_embed', label: 'Spotify Embed URL', type: 'url', placeholder: 'https://open.spotify.com/...', group: 'Media' },
+    { key: 'gallery_images', label: 'Gallery Images', type: 'gallery-editor', group: 'Media' },
+    { key: 'tags', label: 'Tags', type: 'tags', placeholder: 'culture, fashion, music', group: 'Content' },
+    ...COMMON_FIELDS,
   ],
   'spread': [
-    { key: 'title', label: 'Title', type: 'text', placeholder: 'Spread title' },
-    { key: 'subtitle', label: 'Subtitle', type: 'text', placeholder: 'Spread subtitle' },
-    { key: 'image_url', label: 'Primary Image URL', type: 'url', placeholder: 'https://...' },
-    { key: 'secondary_image_url', label: 'Secondary Image URL', type: 'url', placeholder: 'https://...' },
-    { key: 'content', label: 'Content', type: 'textarea', placeholder: 'Spread body...' },
-    { key: 'category', label: 'Category', type: 'text', placeholder: 'e.g. Fashion' },
+    { key: 'title', label: 'Title', type: 'text', placeholder: 'Spread title', group: 'Content' },
+    { key: 'subtitle', label: 'Subtitle', type: 'text', placeholder: 'Spread subtitle', group: 'Content' },
+    { key: 'content', label: 'Content', type: 'textarea', placeholder: 'Spread body...', group: 'Content' },
+    { key: 'category', label: 'Category', type: 'text', placeholder: 'e.g. Fashion', group: 'Content' },
+    { key: 'image_url', label: 'Primary Image URL', type: 'url', placeholder: 'https://...', group: 'Media' },
+    { key: 'secondary_image_url', label: 'Secondary Image URL', type: 'url', placeholder: 'https://...', group: 'Media' },
+    { key: 'gallery_images', label: 'Additional Gallery Images', type: 'gallery-editor', group: 'Media' },
+    { key: 'caption', label: 'Caption', type: 'text', placeholder: 'Image caption...', group: 'Lower Third / Captions' },
+    { key: 'photo_credit', label: 'Photo Credit', type: 'text', placeholder: 'Photo by...', group: 'Lower Third / Captions' },
+    ...COMMON_FIELDS.filter(f => f.key !== 'caption' && f.key !== 'photo_credit'),
   ],
   'video': [
-    { key: 'title', label: 'Title', type: 'text', placeholder: 'Video title' },
-    { key: 'video_url', label: 'Video URL', type: 'url', placeholder: 'https://youtube.com/...' },
-    { key: 'content', label: 'Description', type: 'textarea', placeholder: 'Video description...' },
+    { key: 'title', label: 'Title', type: 'text', placeholder: 'Video title', group: 'Content' },
+    { key: 'content', label: 'Description', type: 'textarea', placeholder: 'Video description...', group: 'Content' },
+    { key: 'video_url', label: 'Video URL (legacy)', type: 'url', placeholder: 'https://...', group: 'Media' },
+    { key: 'youtube_url', label: 'YouTube URL', type: 'url', placeholder: 'https://youtube.com/...', group: 'Media' },
+    { key: 'video_embed_url', label: 'Video Embed URL (non-YouTube)', type: 'url', placeholder: 'https://...', group: 'Media' },
+    { key: 'title_font_size', label: 'Title Font Size', type: 'select', options: FONT_SIZE_OPTIONS, group: 'Typography' },
+    { key: 'overlay_opacity', label: 'Overlay Opacity', type: 'number', min: 0, max: 1, step: 0.1, group: 'Layout & Effects' },
+    ...COMMON_FIELDS,
   ],
   'ad': [
-    { key: 'title', label: 'Title', type: 'text', placeholder: 'Ad title' },
-    { key: 'image_url', label: 'Image URL', type: 'url', placeholder: 'https://...' },
-    { key: 'advertiser_name', label: 'Advertiser Name', type: 'text', placeholder: 'Brand name' },
-    { key: 'advertiser_tagline', label: 'Tagline', type: 'text', placeholder: 'The tagline...' },
-    { key: 'advertiser_cta', label: 'CTA Text', type: 'text', placeholder: 'Shop Now' },
-    { key: 'advertiser_url', label: 'CTA URL', type: 'url', placeholder: 'https://...' },
-    { key: 'background_color', label: 'Background Color', type: 'color', placeholder: '#000000' },
+    { key: 'title', label: 'Title', type: 'text', placeholder: 'Ad title', group: 'Content' },
+    { key: 'image_url', label: 'Image URL', type: 'url', placeholder: 'https://...', group: 'Media' },
+    { key: 'video_embed_url', label: 'Video Ad URL', type: 'url', placeholder: 'https://...', group: 'Media' },
+    { key: 'youtube_url', label: 'YouTube Ad URL', type: 'url', placeholder: 'https://youtube.com/...', group: 'Media' },
+    { key: 'advertiser_name', label: 'Advertiser Name', type: 'text', placeholder: 'Brand name', group: 'Advertiser' },
+    { key: 'advertiser_tagline', label: 'Tagline', type: 'text', placeholder: 'The tagline...', group: 'Advertiser' },
+    { key: 'advertiser_cta', label: 'CTA Text', type: 'text', placeholder: 'Shop Now', group: 'Advertiser' },
+    { key: 'advertiser_url', label: 'CTA URL', type: 'url', placeholder: 'https://...', group: 'Advertiser' },
+    { key: 'cta_style', label: 'CTA Style', type: 'select', options: CTA_STYLE_OPTIONS, group: 'Advertiser' },
+    { key: 'background_color', label: 'Background Color', type: 'color', placeholder: '#000000', group: 'Media' },
+    ...COMMON_FIELDS,
   ],
   'artist': [
-    { key: 'title', label: 'Title', type: 'text', placeholder: 'Feature title' },
-    { key: 'subtitle', label: 'Subtitle', type: 'text', placeholder: 'Subtitle' },
-    { key: 'artist_name', label: 'Artist Name', type: 'text', placeholder: 'Artist name' },
-    { key: 'artist_bio', label: 'Artist Bio', type: 'textarea', placeholder: 'Artist biography...' },
-    { key: 'image_url', label: 'Image URL', type: 'url', placeholder: 'https://...' },
-    { key: 'artist_links', label: 'Artist Links', type: 'artist-links' },
-    { key: 'music_embed', label: 'Music Embed', type: 'url', placeholder: 'Spotify/SoundCloud embed URL' },
-    { key: 'category', label: 'Category', type: 'text', placeholder: 'e.g. Hip-Hop' },
-    { key: 'pull_quote', label: 'Pull Quote', type: 'text', placeholder: 'A standout quote...' },
+    { key: 'title', label: 'Title', type: 'text', placeholder: 'Feature title', group: 'Content' },
+    { key: 'subtitle', label: 'Subtitle', type: 'text', placeholder: 'Subtitle', group: 'Content' },
+    { key: 'artist_name', label: 'Artist Name', type: 'text', placeholder: 'Artist name', group: 'Artist' },
+    { key: 'artist_bio', label: 'Artist Bio', type: 'textarea', placeholder: 'Artist biography...', group: 'Artist' },
+    { key: 'image_url', label: 'Image URL', type: 'url', placeholder: 'https://...', group: 'Media' },
+    { key: 'artist_links', label: 'Artist Links', type: 'artist-links', group: 'Artist' },
+    { key: 'music_embed', label: 'Music Embed', type: 'url', placeholder: 'Spotify/SoundCloud embed URL', group: 'Artist' },
+    { key: 'category', label: 'Category', type: 'text', placeholder: 'e.g. Hip-Hop', group: 'Content' },
+    { key: 'pull_quote', label: 'Pull Quote', type: 'text', placeholder: 'A standout quote...', group: 'Content' },
+    ...COMMON_FIELDS,
   ],
   'full-bleed': [
-    { key: 'title', label: 'Title', type: 'text', placeholder: 'Title' },
-    { key: 'subtitle', label: 'Subtitle', type: 'text', placeholder: 'Subtitle' },
-    { key: 'image_url', label: 'Image URL', type: 'url', placeholder: 'https://...' },
-    { key: 'category', label: 'Category', type: 'text', placeholder: 'Category' },
+    { key: 'title', label: 'Title', type: 'text', placeholder: 'Title', group: 'Content' },
+    { key: 'subtitle', label: 'Subtitle', type: 'text', placeholder: 'Subtitle', group: 'Content' },
+    { key: 'category', label: 'Category', type: 'text', placeholder: 'Category', group: 'Content' },
+    { key: 'image_url', label: 'Image URL', type: 'url', placeholder: 'https://...', group: 'Media' },
+    { key: 'youtube_url', label: 'YouTube URL (video background)', type: 'url', placeholder: 'https://youtube.com/...', group: 'Media' },
+    { key: 'title_font_size', label: 'Title Font Size', type: 'select', options: FONT_SIZE_OPTIONS, group: 'Typography' },
+    { key: 'title_alignment', label: 'Title Alignment', type: 'select', options: ALIGNMENT_OPTIONS, group: 'Typography' },
+    { key: 'text_position', label: 'Text Position', type: 'select', options: TEXT_POSITION_OPTIONS, group: 'Typography' },
+    { key: 'overlay_opacity', label: 'Overlay Opacity', type: 'number', min: 0, max: 1, step: 0.1, group: 'Layout & Effects' },
+    ...COMMON_FIELDS,
   ],
   'back-cover': [
-    { key: 'title', label: 'Title', type: 'text', placeholder: 'Title' },
-    { key: 'subtitle', label: 'Subtitle', type: 'text', placeholder: 'Subtitle' },
-    { key: 'content', label: 'Content', type: 'textarea', placeholder: 'Back cover content...' },
-    { key: 'image_url', label: 'Image URL', type: 'url', placeholder: 'https://...' },
-    { key: 'background_color', label: 'Background Color', type: 'color', placeholder: '#000000' },
+    { key: 'title', label: 'Title', type: 'text', placeholder: 'Title', group: 'Content' },
+    { key: 'subtitle', label: 'Subtitle', type: 'text', placeholder: 'Subtitle', group: 'Content' },
+    { key: 'content', label: 'Content', type: 'textarea', placeholder: 'Back cover content...', group: 'Content' },
+    { key: 'image_url', label: 'Image URL', type: 'url', placeholder: 'https://...', group: 'Media' },
+    { key: 'background_color', label: 'Background Color', type: 'color', placeholder: '#000000', group: 'Media' },
+    ...COMMON_FIELDS,
+  ],
+  // ─── NEW PAGE TYPES ───────────────────────────────────
+  'gallery': [
+    { key: 'title', label: 'Title', type: 'text', placeholder: 'Gallery title', group: 'Content' },
+    { key: 'subtitle', label: 'Subtitle', type: 'text', placeholder: 'Gallery subtitle', group: 'Content' },
+    { key: 'gallery_images', label: 'Gallery Images', type: 'gallery-editor', group: 'Media' },
+    { key: 'caption', label: 'Caption', type: 'text', placeholder: 'Gallery caption...', group: 'Lower Third / Captions' },
+    { key: 'photo_credit', label: 'Photo Credit', type: 'text', placeholder: 'Photos by...', group: 'Lower Third / Captions' },
+    { key: 'layout_style', label: 'Gallery Layout', type: 'select', options: GALLERY_LAYOUT_OPTIONS, group: 'Layout & Effects' },
+    ...COMMON_FIELDS.filter(f => f.key !== 'caption' && f.key !== 'photo_credit' && f.key !== 'layout_style'),
+  ],
+  'video-ad': [
+    { key: 'title', label: 'Title', type: 'text', placeholder: 'Video ad title', group: 'Content' },
+    { key: 'video_embed_url', label: 'Video Embed URL', type: 'url', placeholder: 'https://...', group: 'Media' },
+    { key: 'youtube_url', label: 'YouTube URL', type: 'url', placeholder: 'https://youtube.com/...', group: 'Media' },
+    { key: 'advertiser_name', label: 'Advertiser Name', type: 'text', placeholder: 'Brand name', group: 'Advertiser' },
+    { key: 'advertiser_tagline', label: 'Advertiser Tagline', type: 'text', placeholder: 'The tagline...', group: 'Advertiser' },
+    { key: 'advertiser_cta', label: 'Advertiser CTA', type: 'text', placeholder: 'Watch Now', group: 'Advertiser' },
+    { key: 'advertiser_url', label: 'Advertiser URL', type: 'url', placeholder: 'https://...', group: 'Advertiser' },
+    { key: 'cta_style', label: 'CTA Style', type: 'select', options: CTA_STYLE_OPTIONS, group: 'Advertiser' },
+    { key: 'overlay_opacity', label: 'Overlay Opacity', type: 'number', min: 0, max: 1, step: 0.1, group: 'Layout & Effects' },
+    { key: 'background_color', label: 'Background Color', type: 'color', placeholder: '#000000', group: 'Media' },
+    ...COMMON_FIELDS,
+  ],
+  'interactive': [
+    { key: 'title', label: 'Title', type: 'text', placeholder: 'Interactive content title', group: 'Content' },
+    { key: 'subtitle', label: 'Subtitle', type: 'text', placeholder: 'Subtitle', group: 'Content' },
+    { key: 'content', label: 'Description', type: 'textarea', placeholder: 'Describe the interactive content...', group: 'Content' },
+    { key: 'iframe_url', label: 'iFrame URL (game/quiz)', type: 'url', placeholder: 'https://...', group: 'Media' },
+    { key: 'interactive_embed_url', label: 'Interactive Embed URL (backup)', type: 'url', placeholder: 'https://...', group: 'Media' },
+    { key: 'image_url', label: 'Fallback Thumbnail', type: 'url', placeholder: 'https://...', group: 'Media' },
+    { key: 'cta_text', label: 'CTA Text', type: 'text', placeholder: 'Play Now', group: 'CTA' },
+    { key: 'cta_url', label: 'CTA URL', type: 'url', placeholder: 'https://...', group: 'CTA' },
+    ...COMMON_FIELDS.filter(f => f.key !== 'cta_text' && f.key !== 'cta_url'),
+  ],
+  'audio': [
+    { key: 'title', label: 'Title', type: 'text', placeholder: 'Audio title', group: 'Content' },
+    { key: 'subtitle', label: 'Subtitle', type: 'text', placeholder: 'Subtitle', group: 'Content' },
+    { key: 'artist_name', label: 'Artist Name', type: 'text', placeholder: 'Artist / Host name', group: 'Content' },
+    { key: 'content', label: 'Description', type: 'textarea', placeholder: 'Episode/track description...', group: 'Content' },
+    { key: 'spotify_embed', label: 'Spotify Embed URL', type: 'url', placeholder: 'https://open.spotify.com/...', group: 'Media' },
+    { key: 'audio_embed_url', label: 'Audio Embed URL', type: 'url', placeholder: 'https://soundcloud.com/...', group: 'Media' },
+    { key: 'image_url', label: 'Cover Art URL', type: 'url', placeholder: 'https://...', group: 'Media' },
+    ...COMMON_FIELDS,
+  ],
+  'quote': [
+    { key: 'title', label: 'Quote Text', type: 'textarea', placeholder: 'The big quote...', group: 'Content' },
+    { key: 'subtitle', label: 'Attribution', type: 'text', placeholder: '— Author Name', group: 'Content' },
+    { key: 'image_url', label: 'Background Image', type: 'url', placeholder: 'https://...', group: 'Media' },
+    { key: 'background_color', label: 'Background Color', type: 'color', placeholder: '#000000', group: 'Media' },
+    { key: 'text_color', label: 'Text Color', type: 'color', placeholder: '#FFFFFF', group: 'Typography' },
+    { key: 'title_font_size', label: 'Quote Font Size', type: 'select', options: FONT_SIZE_QUOTE_OPTIONS, group: 'Typography' },
+    { key: 'title_alignment', label: 'Text Alignment', type: 'select', options: ALIGNMENT_OPTIONS, group: 'Typography' },
+    { key: 'overlay_opacity', label: 'Overlay Opacity', type: 'number', min: 0, max: 1, step: 0.1, group: 'Layout & Effects' },
+    ...COMMON_FIELDS,
+  ],
+  'credits': [
+    { key: 'title', label: 'Credits Title', type: 'text', placeholder: 'Credits', group: 'Content' },
+    { key: 'content', label: 'Credits Text', type: 'textarea', placeholder: 'Additional credits text...', group: 'Content' },
+    { key: 'credits', label: 'Credits List', type: 'credits-editor', group: 'Content' },
+    { key: 'image_url', label: 'Background Image', type: 'url', placeholder: 'https://...', group: 'Media' },
+    { key: 'background_color', label: 'Background Color', type: 'color', placeholder: '#000000', group: 'Media' },
+    ...COMMON_FIELDS,
+  ],
+  'letter': [
+    { key: 'title', label: 'Title', type: 'text', placeholder: 'Letter from the Editor', group: 'Content' },
+    { key: 'subtitle', label: 'Subtitle', type: 'text', placeholder: 'Subtitle', group: 'Content' },
+    { key: 'author', label: 'Author', type: 'text', placeholder: 'Editor name', group: 'Content' },
+    { key: 'author_title', label: 'Author Title', type: 'text', placeholder: 'e.g. Editor-in-Chief', group: 'Content' },
+    { key: 'content', label: 'Letter Content', type: 'textarea', placeholder: 'Dear readers...', group: 'Content' },
+    { key: 'pull_quote', label: 'Pull Quote', type: 'text', placeholder: 'A standout quote...', group: 'Content' },
+    { key: 'image_url', label: 'Author Photo', type: 'url', placeholder: 'https://...', group: 'Media' },
+    ...COMMON_FIELDS,
   ],
 };
+
+// ─── Field grouping helpers ──────────────────────────────
+
+const GROUP_ORDER = [
+  'Content',
+  'Media',
+  'Artist',
+  'Advertiser',
+  'Typography',
+  'Layout & Effects',
+  'Lower Third / Captions',
+  'CTA',
+];
+
+const GROUP_ICONS: Record<string, string> = {
+  'Content': '📝',
+  'Media': '🎞️',
+  'Artist': '🎤',
+  'Advertiser': '📢',
+  'Typography': '🔤',
+  'Layout & Effects': '✨',
+  'Lower Third / Captions': '💬',
+  'CTA': '🔗',
+};
+
+function groupFields(fields: FieldDef[]): { group: string; fields: FieldDef[] }[] {
+  const grouped: Record<string, FieldDef[]> = {};
+  for (const field of fields) {
+    const g = field.group || 'Content';
+    if (!grouped[g]) grouped[g] = [];
+    grouped[g].push(field);
+  }
+  return GROUP_ORDER
+    .filter((g) => grouped[g] && grouped[g].length > 0)
+    .map((g) => ({ group: g, fields: grouped[g] }));
+}
+
+// ═══════════════════════════════════════════════════════════
+// COLLAPSIBLE FIELD GROUP
+// ═══════════════════════════════════════════════════════════
+
+function FieldGroup({
+  group,
+  fields,
+  pageForm,
+  setPageForm,
+  defaultOpen,
+}: {
+  group: string;
+  fields: FieldDef[];
+  pageForm: Record<string, any>;
+  setPageForm: React.Dispatch<React.SetStateAction<Record<string, any>>>;
+  defaultOpen: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <div className="border border-white/[0.06] rounded-xl overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-4 py-3 bg-white/[0.02] hover:bg-white/[0.04] active:bg-white/[0.06] transition-colors touch-manipulation"
+      >
+        <span className="flex items-center gap-2 text-sm font-medium text-gray-300">
+          <span>{GROUP_ICONS[group] || '📄'}</span>
+          {group}
+          <span className="text-xs text-gray-600">({fields.length})</span>
+        </span>
+        <svg
+          className={`w-4 h-4 text-gray-500 transition-transform ${open ? 'rotate-180' : ''}`}
+          fill="none" viewBox="0 0 24 24" stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="p-4 space-y-4">
+              {fields.map((field) => (
+                <PageFieldEditor
+                  key={field.key}
+                  field={field}
+                  value={pageForm[field.key]}
+                  onChange={(val) => setPageForm((f) => ({ ...f, [field.key]: val }))}
+                />
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 // ═══════════════════════════════════════════════════════════
 // MAIN COMPONENT
@@ -350,6 +685,16 @@ export default function EditMagazineIssuePage() {
         formData[field.key] = (page as any)[field.key] || [];
       } else if (field.type === 'artist-links') {
         formData[field.key] = (page as any)[field.key] || {};
+      } else if (field.type === 'gallery-editor') {
+        formData[field.key] = Array.isArray((page as any)[field.key])
+          ? (page as any)[field.key]
+          : [];
+      } else if (field.type === 'credits-editor') {
+        formData[field.key] = Array.isArray((page as any)[field.key])
+          ? (page as any)[field.key]
+          : [];
+      } else if (field.type === 'number') {
+        formData[field.key] = (page as any)[field.key] ?? '';
       } else {
         formData[field.key] = (page as any)[field.key] || '';
       }
@@ -364,7 +709,6 @@ export default function EditMagazineIssuePage() {
     setError(null);
     try {
       const payload: Record<string, any> = { ...pageForm };
-      // Convert tags string to array
       const fields = PAGE_TYPE_FIELDS[editingPage.type] || [];
       for (const field of fields) {
         if (field.type === 'tags' && typeof payload[field.key] === 'string') {
@@ -372,6 +716,9 @@ export default function EditMagazineIssuePage() {
             .split(',')
             .map((t: string) => t.trim())
             .filter(Boolean);
+        }
+        if (field.type === 'number' && payload[field.key] !== '' && payload[field.key] !== undefined) {
+          payload[field.key] = parseFloat(payload[field.key]);
         }
       }
 
@@ -413,6 +760,7 @@ export default function EditMagazineIssuePage() {
   if (!issue) return null;
 
   const sortedPages = [...issue.pages].sort((a, b) => a.page_number - b.page_number);
+  const fieldGroups = editingPage ? groupFields(PAGE_TYPE_FIELDS[editingPage.type] || []) : [];
 
   return (
     <div className="space-y-6 pb-24">
@@ -663,7 +1011,7 @@ export default function EditMagazineIssuePage() {
         )}
       </div>
 
-      {/* ═══ Page Edit Panel ═══ */}
+      {/* ═══ Page Edit Panel — Grouped Fields ═══ */}
       <AnimatePresence>
         {editingPage && (
           <motion.div
@@ -700,13 +1048,15 @@ export default function EditMagazineIssuePage() {
               </div>
             </div>
 
-            <div className="space-y-4">
-              {(PAGE_TYPE_FIELDS[editingPage.type] || []).map((field) => (
-                <PageFieldEditor
-                  key={field.key}
-                  field={field}
-                  value={pageForm[field.key]}
-                  onChange={(val) => setPageForm((f) => ({ ...f, [field.key]: val }))}
+            <div className="space-y-3">
+              {fieldGroups.map((g, i) => (
+                <FieldGroup
+                  key={g.group}
+                  group={g.group}
+                  fields={g.fields}
+                  pageForm={pageForm}
+                  setPageForm={setPageForm}
+                  defaultOpen={i < 2}
                 />
               ))}
             </div>
@@ -734,20 +1084,37 @@ export default function EditMagazineIssuePage() {
               exit={{ y: '100%', opacity: 0 }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full sm:max-w-lg glass-panel rounded-t-2xl sm:rounded-2xl p-5 sm:p-6 max-h-[80vh] overflow-y-auto"
+              className="relative w-full sm:max-w-2xl glass-panel rounded-t-2xl sm:rounded-2xl p-5 sm:p-6 max-h-[85vh] overflow-y-auto"
             >
               <h3 className="text-lg font-bold text-white mb-1">Add Page</h3>
               <p className="text-sm text-gray-500 mb-4">Choose a page type to add to this issue.</p>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {ALL_PAGE_TYPES.map((type) => (
+              {/* Original types */}
+              <p className="text-xs font-mono text-[#C9A84C] uppercase tracking-wider mb-2">Standard Pages</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
+                {(['cover', 'toc', 'article', 'spread', 'video', 'ad', 'artist', 'full-bleed', 'back-cover'] as PageType[]).map((type) => (
                   <button
                     key={type}
                     onClick={() => handleAddPage(type)}
-                    className="flex flex-col items-center gap-2 p-4 rounded-xl border border-white/[0.06] hover:border-[#C9A84C]/30 hover:bg-[#C9A84C]/5 active:bg-[#C9A84C]/10 transition-all touch-manipulation"
+                    className="flex flex-col items-center gap-2 p-4 rounded-xl border border-white/[0.06] hover:border-[#C9A84C]/30 hover:bg-[#C9A84C]/5 active:bg-[#C9A84C]/10 transition-all touch-manipulation min-h-[80px]"
                   >
                     <span className="text-2xl">{PAGE_TYPE_ICONS[type]}</span>
-                    <span className="text-xs font-medium text-gray-300">{PAGE_TYPE_LABELS[type]}</span>
+                    <span className="text-xs font-medium text-gray-300 text-center">{PAGE_TYPE_LABELS[type]}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* New rich types */}
+              <p className="text-xs font-mono text-[#C9A84C] uppercase tracking-wider mb-2">Rich / Interactive Pages</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {(['gallery', 'video-ad', 'interactive', 'audio', 'quote', 'credits', 'letter'] as PageType[]).map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => handleAddPage(type)}
+                    className="flex flex-col items-center gap-2 p-4 rounded-xl border border-[#C9A84C]/10 hover:border-[#C9A84C]/30 hover:bg-[#C9A84C]/5 active:bg-[#C9A84C]/10 transition-all touch-manipulation min-h-[80px] bg-[#C9A84C]/[0.02]"
+                  >
+                    <span className="text-2xl">{PAGE_TYPE_ICONS[type]}</span>
+                    <span className="text-xs font-medium text-gray-300 text-center">{PAGE_TYPE_LABELS[type]}</span>
                   </button>
                 ))}
               </div>
@@ -779,6 +1146,195 @@ function PageFieldEditor({
   value: any;
   onChange: (val: any) => void;
 }) {
+  // ─── Select dropdown ───
+  if (field.type === 'select') {
+    return (
+      <div>
+        <label className="block text-xs font-medium text-gray-400 mb-1">{field.label}</label>
+        <select
+          value={value || ''}
+          onChange={(e) => onChange(e.target.value)}
+          className="admin-input w-full text-sm bg-transparent appearance-none cursor-pointer"
+        >
+          <option value="" className="bg-gray-900">— Select —</option>
+          {(field.options || []).map((opt) => (
+            <option key={opt.value} value={opt.value} className="bg-gray-900">
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      </div>
+    );
+  }
+
+  // ─── Number input ───
+  if (field.type === 'number') {
+    return (
+      <div>
+        <label className="block text-xs font-medium text-gray-400 mb-1">{field.label}</label>
+        <div className="flex items-center gap-3">
+          <input
+            type="range"
+            min={field.min ?? 0}
+            max={field.max ?? 100}
+            step={field.step ?? 1}
+            value={value || field.min || 0}
+            onChange={(e) => onChange(parseFloat(e.target.value))}
+            className="flex-1 accent-[#C9A84C] h-2"
+          />
+          <input
+            type="number"
+            min={field.min}
+            max={field.max}
+            step={field.step}
+            value={value ?? ''}
+            onChange={(e) => onChange(e.target.value === '' ? '' : parseFloat(e.target.value))}
+            className="admin-input w-20 text-sm text-center"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Gallery Editor ───
+  if (field.type === 'gallery-editor') {
+    const images: GalleryImage[] = Array.isArray(value) ? value : [];
+
+    const addImage = () => {
+      onChange([...images, { image_url: '', caption: '', alt: '' }]);
+    };
+
+    const updateImage = (idx: number, key: string, val: string) => {
+      const updated = images.map((img, i) => i === idx ? { ...img, [key]: val } : img);
+      onChange(updated);
+    };
+
+    const removeImage = (idx: number) => {
+      onChange(images.filter((_, i) => i !== idx));
+    };
+
+    return (
+      <div>
+        <label className="block text-xs font-medium text-gray-400 mb-2">{field.label}</label>
+        <div className="space-y-3">
+          {images.map((img, idx) => (
+            <div key={idx} className="p-3 rounded-lg border border-white/[0.06] bg-white/[0.01] space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-500">Image {idx + 1}</span>
+                <button
+                  onClick={() => removeImage(idx)}
+                  className="p-1.5 text-gray-500 hover:text-red-400 transition-colors touch-manipulation"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <input
+                type="url"
+                value={img.image_url || ''}
+                onChange={(e) => updateImage(idx, 'image_url', e.target.value)}
+                placeholder="Image URL"
+                className="admin-input w-full text-sm"
+              />
+              {img.image_url && img.image_url.match(/\.(jpg|jpeg|png|gif|webp)/i) && (
+                <div className="max-w-[80px] rounded overflow-hidden bg-gray-800">
+                  <img src={img.image_url} alt="" className="w-full h-auto" />
+                </div>
+              )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <input
+                  type="text"
+                  value={img.caption || ''}
+                  onChange={(e) => updateImage(idx, 'caption', e.target.value)}
+                  placeholder="Caption"
+                  className="admin-input text-sm"
+                />
+                <input
+                  type="text"
+                  value={img.alt || ''}
+                  onChange={(e) => updateImage(idx, 'alt', e.target.value)}
+                  placeholder="Alt text"
+                  className="admin-input text-sm"
+                />
+              </div>
+            </div>
+          ))}
+          <button
+            onClick={addImage}
+            className="text-xs text-[#C9A84C] hover:text-[#d4b35a] transition-colors touch-manipulation flex items-center gap-1 py-2"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Add image
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Credits Editor ───
+  if (field.type === 'credits-editor') {
+    const entries: CreditEntry[] = Array.isArray(value) ? value : [];
+
+    const addEntry = () => {
+      onChange([...entries, { role: '', name: '' }]);
+    };
+
+    const updateEntry = (idx: number, key: string, val: string) => {
+      const updated = entries.map((e, i) => i === idx ? { ...e, [key]: val } : e);
+      onChange(updated);
+    };
+
+    const removeEntry = (idx: number) => {
+      onChange(entries.filter((_, i) => i !== idx));
+    };
+
+    return (
+      <div>
+        <label className="block text-xs font-medium text-gray-400 mb-2">{field.label}</label>
+        <div className="space-y-2">
+          {entries.map((entry, idx) => (
+            <div key={idx} className="flex gap-2 items-start">
+              <input
+                type="text"
+                value={entry.role || ''}
+                onChange={(e) => updateEntry(idx, 'role', e.target.value)}
+                placeholder="Role (e.g. Director)"
+                className="admin-input flex-1 text-sm"
+              />
+              <input
+                type="text"
+                value={entry.name || ''}
+                onChange={(e) => updateEntry(idx, 'name', e.target.value)}
+                placeholder="Name"
+                className="admin-input flex-1 text-sm"
+              />
+              <button
+                onClick={() => removeEntry(idx)}
+                className="p-2 text-gray-500 hover:text-red-400 transition-colors touch-manipulation flex-shrink-0"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          ))}
+          <button
+            onClick={addEntry}
+            className="text-xs text-[#C9A84C] hover:text-[#d4b35a] transition-colors touch-manipulation flex items-center gap-1 py-2"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Add credit
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // ─── TOC Entries ───
   if (field.type === 'toc-entries') {
     const entries: { title: string; page: number; category: string }[] = Array.isArray(value) ? value : [];
@@ -875,6 +1431,23 @@ function PageFieldEditor({
             </div>
           ))}
         </div>
+      </div>
+    );
+  }
+
+  // ─── Tags ───
+  if (field.type === 'tags') {
+    return (
+      <div>
+        <label className="block text-xs font-medium text-gray-400 mb-1">{field.label}</label>
+        <input
+          type="text"
+          value={value || ''}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={field.placeholder}
+          className="admin-input w-full text-sm"
+        />
+        <p className="text-xs text-gray-600 mt-1">Comma-separated</p>
       </div>
     );
   }
