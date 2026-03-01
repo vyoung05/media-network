@@ -24,10 +24,14 @@ const BRAND_CONFIG: Record<string, { name: string; color: string; icon: string; 
   },
 };
 
+type AIEngine = 'openai' | 'gemini';
+
 interface PipelineStatus {
   enabled: boolean;
   hasOpenAI: boolean;
+  hasGemini: boolean;
   hasBraveSearch: boolean;
+  activeEngine: string;
   brands: Record<string, {
     totalGenerated: number;
     recent: { id: string; title: string; status: string; created_at: string }[];
@@ -41,6 +45,7 @@ interface RunResult {
   source?: string;
   error?: string;
   query?: string;
+  engine?: string;
 }
 
 export default function AIPipelinePage() {
@@ -49,11 +54,19 @@ export default function AIPipelinePage() {
   const [running, setRunning] = useState(false);
   const [runningBrand, setRunningBrand] = useState<string | null>(null);
   const [lastRun, setLastRun] = useState<RunResult[] | null>(null);
+  const [selectedEngine, setSelectedEngine] = useState<AIEngine>('gemini');
 
   const fetchStatus = useCallback(async () => {
     try {
       const res = await fetch('/api/ai-pipeline');
-      if (res.ok) setStatus(await res.json());
+      if (res.ok) {
+        const data = await res.json();
+        setStatus(data);
+        // Sync engine selector with server default
+        if (data.activeEngine === 'openai' || data.activeEngine === 'gemini') {
+          setSelectedEngine(data.activeEngine);
+        }
+      }
     } catch {} finally {
       setLoading(false);
     }
@@ -69,7 +82,7 @@ export default function AIPipelinePage() {
       const res = await fetch('/api/ai-pipeline', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(brand ? { brand } : {}),
+        body: JSON.stringify({ ...(brand ? { brand } : {}), engine: selectedEngine }),
       });
       const data = await res.json();
       setLastRun(data.results || []);
@@ -120,25 +133,70 @@ export default function AIPipelinePage() {
         </motion.button>
       </motion.div>
 
-      {/* API Status */}
+      {/* Engine Toggle + API Status */}
       {status && (
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass-panel p-4"
+          className="glass-panel overflow-hidden"
         >
-          <div className="flex items-center gap-4 flex-wrap">
+          {/* Engine Selector */}
+          <div className="px-5 py-4 border-b border-white/[0.06]">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div>
+                <h3 className="text-sm font-semibold text-white">AI Engine</h3>
+                <p className="text-[10px] text-gray-500 mt-0.5">Choose which AI writes your articles</p>
+              </div>
+              <div className="flex items-center gap-1 bg-white/[0.04] rounded-xl p-1">
+                <button
+                  onClick={() => setSelectedEngine('gemini')}
+                  disabled={!status.hasGemini}
+                  className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${
+                    selectedEngine === 'gemini'
+                      ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                      : 'text-gray-400 hover:text-gray-300 hover:bg-white/[0.04]'
+                  } ${!status.hasGemini ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}`}
+                >
+                  <span className="flex items-center gap-1.5">
+                    <span className="text-sm">✨</span> Gemini
+                    {selectedEngine === 'gemini' && <span className="text-[9px] bg-blue-500/30 px-1.5 py-0.5 rounded-full">Active</span>}
+                  </span>
+                </button>
+                <button
+                  onClick={() => setSelectedEngine('openai')}
+                  disabled={!status.hasOpenAI}
+                  className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${
+                    selectedEngine === 'openai'
+                      ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                      : 'text-gray-400 hover:text-gray-300 hover:bg-white/[0.04]'
+                  } ${!status.hasOpenAI ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}`}
+                >
+                  <span className="flex items-center gap-1.5">
+                    <span className="text-sm">🧠</span> OpenAI
+                    {selectedEngine === 'openai' && <span className="text-[9px] bg-green-500/30 px-1.5 py-0.5 rounded-full">Active</span>}
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* API Keys Status */}
+          <div className="px-5 py-3 flex items-center gap-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <span className={`w-2 h-2 rounded-full ${status.hasGemini ? 'bg-green-500' : 'bg-red-500'}`} />
+              <span className="text-xs text-gray-400">Gemini API {status.hasGemini ? '✓' : '✗ Not set'}</span>
+            </div>
             <div className="flex items-center gap-2">
               <span className={`w-2 h-2 rounded-full ${status.hasOpenAI ? 'bg-green-500' : 'bg-red-500'}`} />
-              <span className="text-xs text-gray-400">OpenAI API {status.hasOpenAI ? '✓' : '✗ Not configured'}</span>
+              <span className="text-xs text-gray-400">OpenAI API {status.hasOpenAI ? '✓' : '✗ Not set'}</span>
             </div>
             <div className="flex items-center gap-2">
               <span className={`w-2 h-2 rounded-full ${status.hasBraveSearch ? 'bg-green-500' : 'bg-red-500'}`} />
-              <span className="text-xs text-gray-400">Brave Search {status.hasBraveSearch ? '✓' : '✗ Not configured'}</span>
+              <span className="text-xs text-gray-400">Brave Search {status.hasBraveSearch ? '✓' : '✗ Not set'}</span>
             </div>
             {!status.enabled && (
               <p className="text-xs text-amber-400 ml-auto">
-                ⚠️ Set OPENAI_API_KEY and BRAVE_SEARCH_API_KEY in Vercel env vars to enable
+                ⚠️ Set at least one AI key + BRAVE_SEARCH_API_KEY in Vercel env vars
               </p>
             )}
           </div>
@@ -263,7 +321,18 @@ export default function AIPipelinePage() {
                       result.status === 'all_duplicates' ? 'text-blue-400' :
                       'text-red-400'
                     }`}>
-                      {result.status === 'created' && `✅ Created: "${result.article?.title}"`}
+                      {result.status === 'created' && (
+                        <span>
+                          ✅ Created: &ldquo;{result.article?.title}&rdquo;
+                          {result.engine && (
+                            <span className={`ml-2 text-[10px] px-1.5 py-0.5 rounded-full ${
+                              result.engine === 'gemini' ? 'bg-blue-500/20 text-blue-400' : 'bg-green-500/20 text-green-400'
+                            }`}>
+                              via {result.engine === 'gemini' ? '✨ Gemini' : '🧠 OpenAI'}
+                            </span>
+                          )}
+                        </span>
+                      )}
                       {result.status === 'no_results' && `⚠️ No search results for "${result.query}"`}
                       {result.status === 'all_duplicates' && '🔄 All results already in database'}
                       {result.status === 'rewrite_failed' && `❌ Failed to rewrite: "${result.source}"`}
@@ -289,7 +358,7 @@ export default function AIPipelinePage() {
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           {[
             { step: '1', icon: '🔍', title: 'Search', desc: 'Brave Search finds trending news matching each brand' },
-            { step: '2', icon: '🤖', title: 'Rewrite', desc: 'AI rewrites articles in each brand\'s unique voice' },
+            { step: '2', icon: '🤖', title: 'Rewrite', desc: 'Gemini or OpenAI rewrites in each brand\'s voice — you choose' },
             { step: '3', icon: '📋', title: 'Queue', desc: 'Articles queued as drafts for admin review' },
             { step: '4', icon: '🚀', title: 'Publish', desc: 'Admin approves & publishes — or enable auto-publish' },
           ].map((item) => (

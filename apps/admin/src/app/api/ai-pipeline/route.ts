@@ -7,10 +7,12 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
     const brand = body.brand; // optional: run for specific brand only
+    const engine = body.engine; // optional: 'openai' or 'gemini'
 
-    // Call the cron endpoint internally
+    // Call the cron endpoint internally with engine param
     const baseUrl = request.nextUrl.origin;
-    const res = await fetch(`${baseUrl}/api/cron/ai-pipeline`, {
+    const engineParam = engine ? `?engine=${engine}` : '';
+    const res = await fetch(`${baseUrl}/api/cron/ai-pipeline${engineParam}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
     });
@@ -57,10 +59,22 @@ export async function GET() {
       };
     }
 
+    // Determine active engine
+    const preferred = (process.env.AI_ENGINE || '').toLowerCase();
+    const hasGemini = !!process.env.GEMINI_API_KEY;
+    const hasOpenAI = !!process.env.OPENAI_API_KEY;
+    let activeEngine = 'none';
+    if (preferred === 'gemini' && hasGemini) activeEngine = 'gemini';
+    else if (preferred === 'openai' && hasOpenAI) activeEngine = 'openai';
+    else if (hasGemini) activeEngine = 'gemini';
+    else if (hasOpenAI) activeEngine = 'openai';
+
     return NextResponse.json({
-      enabled: !!process.env.OPENAI_API_KEY && !!process.env.BRAVE_SEARCH_API_KEY,
-      hasOpenAI: !!process.env.OPENAI_API_KEY,
+      enabled: (hasOpenAI || hasGemini) && !!process.env.BRAVE_SEARCH_API_KEY,
+      hasOpenAI,
+      hasGemini,
       hasBraveSearch: !!process.env.BRAVE_SEARCH_API_KEY,
+      activeEngine,
       brands: stats,
     });
   } catch (err: any) {
