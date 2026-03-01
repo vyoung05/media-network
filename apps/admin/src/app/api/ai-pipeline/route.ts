@@ -59,10 +59,17 @@ export async function GET() {
       };
     }
 
-    // Determine active engine
+    // Check Supabase for dashboard-managed keys
+    let dbKeys: Record<string, boolean> = {};
+    try {
+      const { data: apiKeysData } = await supabase.from('api_keys').select('key_name');
+      (apiKeysData || []).forEach((k: any) => { dbKeys[k.key_name] = true; });
+    } catch {}
+
+    // Determine active engine (dashboard keys override env vars)
     const preferred = (process.env.AI_ENGINE || '').toLowerCase();
-    const hasGemini = !!process.env.GEMINI_API_KEY;
-    const hasOpenAI = !!process.env.OPENAI_API_KEY;
+    const hasGemini = !!(dbKeys['GEMINI_API_KEY'] || process.env.GEMINI_API_KEY);
+    const hasOpenAI = !!(dbKeys['OPENAI_API_KEY'] || process.env.OPENAI_API_KEY);
     let activeEngine = 'none';
     if (preferred === 'gemini' && hasGemini) activeEngine = 'gemini';
     else if (preferred === 'openai' && hasOpenAI) activeEngine = 'openai';

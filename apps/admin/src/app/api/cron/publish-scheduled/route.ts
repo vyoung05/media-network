@@ -67,13 +67,15 @@ export async function GET(request: NextRequest) {
       }).catch((err) => console.error(`TTS trigger failed for ${article.id}:`, err));
 
       // Create notification
-      await supabase.from('notifications').insert({
-        type: 'publish',
-        title: 'Scheduled Article Published',
-        message: `"${article.title}" was auto-published on schedule`,
-        brand: article.brand,
-        read: false,
-      }).catch(() => {});
+      try {
+        await supabase.from('notifications').insert({
+          type: 'publish',
+          title: 'Scheduled Article Published',
+          message: `"${article.title}" was auto-published on schedule`,
+          brand: article.brand,
+          read: false,
+        });
+      } catch {}
     }
 
     return NextResponse.json({

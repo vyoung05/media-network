@@ -11,6 +11,27 @@ function getSupabaseService() {
   );
 }
 
+// Cache for API keys loaded from Supabase (refresh per request)
+let _cachedKeys: Record<string, string> = {};
+
+async function loadApiKeys(): Promise<Record<string, string>> {
+  try {
+    const supabase = getSupabaseService();
+    const { data } = await supabase.from('api_keys').select('key_name, key_value');
+    const keys: Record<string, string> = {};
+    (data || []).forEach((row: any) => { keys[row.key_name] = row.key_value; });
+    _cachedKeys = keys;
+    return keys;
+  } catch {
+    return {};
+  }
+}
+
+// Get API key: Supabase first, then env var fallback
+function getApiKey(name: string): string | undefined {
+  return _cachedKeys[name] || process.env[name] || undefined;
+}
+
 const BRAND_SEARCH_QUERIES: Record<string, { queries: string[]; categories: string[]; voice: string }> = {
   saucewire: {
     queries: [
@@ -50,7 +71,7 @@ const BRAND_SEARCH_QUERIES: Record<string, { queries: string[]; categories: stri
 // ─── Brave Search ────────────────────────────────────────
 
 async function searchNews(query: string, count = 5): Promise<{ title: string; url: string; description: string; age?: string }[]> {
-  const apiKey = process.env.BRAVE_SEARCH_API_KEY;
+  const apiKey = getApiKey('BRAVE_SEARCH_API_KEY');
   if (!apiKey) {
     console.warn('BRAVE_SEARCH_API_KEY not set, using fallback');
     return [];
@@ -121,7 +142,7 @@ Rules:
 }
 
 async function rewriteWithOpenAI(prompt: string): Promise<string | null> {
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = getApiKey('OPENAI_API_KEY');
   if (!apiKey) return null;
 
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -148,7 +169,7 @@ async function rewriteWithOpenAI(prompt: string): Promise<string | null> {
 }
 
 async function rewriteWithGemini(prompt: string): Promise<string | null> {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = getApiKey('GEMINI_API_KEY');
   if (!apiKey) return null;
 
   const res = await fetch(
@@ -178,11 +199,11 @@ async function rewriteWithGemini(prompt: string): Promise<string | null> {
 function getActiveEngine(): AIEngine {
   // Check AI_ENGINE env var first, fallback to whichever key is available
   const preferred = (process.env.AI_ENGINE || '').toLowerCase();
-  if (preferred === 'gemini' && process.env.GEMINI_API_KEY) return 'gemini';
-  if (preferred === 'openai' && process.env.OPENAI_API_KEY) return 'openai';
+  if (preferred === 'gemini' && getApiKey('GEMINI_API_KEY')) return 'gemini';
+  if (preferred === 'openai' && getApiKey('OPENAI_API_KEY')) return 'openai';
   // Auto-detect: prefer whichever is configured
-  if (process.env.GEMINI_API_KEY) return 'gemini';
-  if (process.env.OPENAI_API_KEY) return 'openai';
+  if (getApiKey('GEMINI_API_KEY')) return 'gemini';
+  if (getApiKey('OPENAI_API_KEY')) return 'openai';
   return 'openai'; // fallback
 }
 
@@ -250,6 +271,8 @@ export async function GET(request: NextRequest) {
   const engineParam = request.nextUrl.searchParams.get('engine') as AIEngine | null;
 
   try {
+    // Load API keys from Supabase (dashboard-managed keys override env vars)
+    await loadApiKeys();
     const supabase = getSupabaseService();
 
     // Check which brands have AI pipeline enabled
