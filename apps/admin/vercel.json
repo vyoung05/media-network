@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/publish-magazine",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/ai-pipeline",
+      "schedule": "0 */3 * * *"
     }
   ]
 }

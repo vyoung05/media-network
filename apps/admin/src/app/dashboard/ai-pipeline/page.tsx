@@ -1,0 +1,306 @@
+'use client';
+
+import React, { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const BRAND_CONFIG: Record<string, { name: string; color: string; icon: string; description: string }> = {
+  saucewire: {
+    name: 'SauceWire',
+    color: '#E63946',
+    icon: '⚡',
+    description: 'Breaking music, entertainment, fashion, sports & tech news',
+  },
+  trapglow: {
+    name: 'TrapGlow',
+    color: '#8B5CF6',
+    icon: '✨',
+    description: 'New artist discoveries, music releases, streaming updates',
+  },
+  trapfrequency: {
+    name: 'TrapFrequency',
+    color: '#39FF14',
+    icon: '🎛️',
+    description: 'Production gear, DAW updates, tutorials, sample packs',
+  },
+};
+
+interface PipelineStatus {
+  enabled: boolean;
+  hasOpenAI: boolean;
+  hasBraveSearch: boolean;
+  brands: Record<string, {
+    totalGenerated: number;
+    recent: { id: string; title: string; status: string; created_at: string }[];
+  }>;
+}
+
+interface RunResult {
+  brand: string;
+  status: string;
+  article?: { id: string; title: string; slug: string };
+  source?: string;
+  error?: string;
+  query?: string;
+}
+
+export default function AIPipelinePage() {
+  const [status, setStatus] = useState<PipelineStatus | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [running, setRunning] = useState(false);
+  const [runningBrand, setRunningBrand] = useState<string | null>(null);
+  const [lastRun, setLastRun] = useState<RunResult[] | null>(null);
+
+  const fetchStatus = useCallback(async () => {
+    try {
+      const res = await fetch('/api/ai-pipeline');
+      if (res.ok) setStatus(await res.json());
+    } catch {} finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchStatus(); }, [fetchStatus]);
+
+  const runPipeline = async (brand?: string) => {
+    setRunning(true);
+    setRunningBrand(brand || 'all');
+    setLastRun(null);
+    try {
+      const res = await fetch('/api/ai-pipeline', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(brand ? { brand } : {}),
+      });
+      const data = await res.json();
+      setLastRun(data.results || []);
+      fetchStatus(); // refresh stats
+    } catch (err: any) {
+      setLastRun([{ brand: brand || 'all', status: 'error', error: err.message }]);
+    } finally {
+      setRunning(false);
+      setRunningBrand(null);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+      >
+        <div>
+          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+            🤖 AI Content Pipeline
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Auto-generate articles from trending news for each brand
+          </p>
+        </div>
+        <motion.button
+          whileTap={{ scale: 0.96 }}
+          onClick={() => runPipeline()}
+          disabled={running}
+          className="admin-btn-primary flex items-center gap-2 disabled:opacity-50"
+        >
+          {running && !runningBrand ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Generating...
+            </>
+          ) : (
+            <>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              Generate All Brands
+            </>
+          )}
+        </motion.button>
+      </motion.div>
+
+      {/* API Status */}
+      {status && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass-panel p-4"
+        >
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <span className={`w-2 h-2 rounded-full ${status.hasOpenAI ? 'bg-green-500' : 'bg-red-500'}`} />
+              <span className="text-xs text-gray-400">OpenAI API {status.hasOpenAI ? '✓' : '✗ Not configured'}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className={`w-2 h-2 rounded-full ${status.hasBraveSearch ? 'bg-green-500' : 'bg-red-500'}`} />
+              <span className="text-xs text-gray-400">Brave Search {status.hasBraveSearch ? '✓' : '✗ Not configured'}</span>
+            </div>
+            {!status.enabled && (
+              <p className="text-xs text-amber-400 ml-auto">
+                ⚠️ Set OPENAI_API_KEY and BRAVE_SEARCH_API_KEY in Vercel env vars to enable
+              </p>
+            )}
+          </div>
+        </motion.div>
+      )}
+
+      {/* Brand Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {Object.entries(BRAND_CONFIG).map(([brand, config], i) => {
+          const brandStats = status?.brands?.[brand];
+          const isRunningThis = running && (runningBrand === brand || runningBrand === 'all');
+
+          return (
+            <motion.div
+              key={brand}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.08 }}
+              className="glass-panel overflow-hidden"
+            >
+              {/* Header */}
+              <div
+                className="px-5 py-4 border-b border-white/[0.06]"
+                style={{ borderBottomColor: `${config.color}20` }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{config.icon}</span>
+                    <h3 className="text-sm font-semibold text-white">{config.name}</h3>
+                  </div>
+                  <span
+                    className="w-2.5 h-2.5 rounded-full"
+                    style={{ backgroundColor: config.color }}
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-1">{config.description}</p>
+              </div>
+
+              {/* Stats */}
+              <div className="px-5 py-3 border-b border-white/[0.04]">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">Articles generated</span>
+                  <span className="text-sm font-mono text-white">{brandStats?.totalGenerated || 0}</span>
+                </div>
+              </div>
+
+              {/* Recent articles */}
+              <div className="px-5 py-3 max-h-[200px] overflow-y-auto">
+                {brandStats?.recent && brandStats.recent.length > 0 ? (
+                  <div className="space-y-2">
+                    {brandStats.recent.map((article) => (
+                      <div key={article.id} className="flex items-start gap-2">
+                        <span className={`text-[10px] mt-0.5 ${article.status === 'published' ? 'text-green-400' : 'text-gray-500'}`}>
+                          {article.status === 'published' ? '🟢' : '⏳'}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-gray-300 truncate">{article.title}</p>
+                          <p className="text-[10px] text-gray-600">
+                            {new Date(article.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-600 text-center py-3">No articles generated yet</p>
+                )}
+              </div>
+
+              {/* Generate button */}
+              <div className="px-5 py-3 border-t border-white/[0.04]">
+                <button
+                  onClick={() => runPipeline(brand)}
+                  disabled={running}
+                  className="w-full py-2 rounded-lg text-xs font-medium transition-all disabled:opacity-50 hover:brightness-110 active:brightness-90 touch-manipulation"
+                  style={{
+                    backgroundColor: `${config.color}15`,
+                    color: config.color,
+                    border: `1px solid ${config.color}30`,
+                  }}
+                >
+                  {isRunningThis ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <div className="w-3 h-3 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: config.color, borderTopColor: 'transparent' }} />
+                      Generating...
+                    </span>
+                  ) : (
+                    `⚡ Generate ${config.name} Article`
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {/* Last Run Results */}
+      <AnimatePresence>
+        {lastRun && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="glass-panel overflow-hidden"
+          >
+            <div className="px-5 py-4 border-b border-white/[0.06]">
+              <h3 className="text-sm font-semibold text-white">📋 Last Run Results</h3>
+            </div>
+            <div className="divide-y divide-white/[0.04]">
+              {lastRun.map((result, i) => {
+                const config = BRAND_CONFIG[result.brand];
+                return (
+                  <div key={i} className="px-5 py-3 flex items-center gap-3">
+                    <span
+                      className="w-2 h-2 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: config?.color || '#888' }}
+                    />
+                    <span className="text-xs font-medium text-gray-300 w-28">{config?.name || result.brand}</span>
+                    <span className={`text-xs flex-1 ${
+                      result.status === 'created' ? 'text-green-400' :
+                      result.status === 'no_results' ? 'text-yellow-400' :
+                      result.status === 'all_duplicates' ? 'text-blue-400' :
+                      'text-red-400'
+                    }`}>
+                      {result.status === 'created' && `✅ Created: "${result.article?.title}"`}
+                      {result.status === 'no_results' && `⚠️ No search results for "${result.query}"`}
+                      {result.status === 'all_duplicates' && '🔄 All results already in database'}
+                      {result.status === 'rewrite_failed' && `❌ Failed to rewrite: "${result.source}"`}
+                      {result.status === 'insert_failed' && `❌ DB error: ${result.error}`}
+                      {result.status === 'error' && `❌ ${result.error}`}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* How it works */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="glass-panel p-5"
+      >
+        <h3 className="text-sm font-semibold text-white mb-3">How it works</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+          {[
+            { step: '1', icon: '🔍', title: 'Search', desc: 'Brave Search finds trending news matching each brand' },
+            { step: '2', icon: '🤖', title: 'Rewrite', desc: 'AI rewrites articles in each brand\'s unique voice' },
+            { step: '3', icon: '📋', title: 'Queue', desc: 'Articles queued as drafts for admin review' },
+            { step: '4', icon: '🚀', title: 'Publish', desc: 'Admin approves & publishes — or enable auto-publish' },
+          ].map((item) => (
+            <div key={item.step} className="text-center">
+              <span className="text-2xl">{item.icon}</span>
+              <p className="text-xs font-medium text-white mt-2">{item.title}</p>
+              <p className="text-[10px] text-gray-500 mt-1">{item.desc}</p>
+            </div>
+          ))}
+        </div>
+      </motion.div>
+    </div>
+  );
+}
