@@ -81,6 +81,12 @@ export const BRAND_FORM_CONFIGS: Record<Brand, BrandFormConfig> = {
     color: '#C9A84C',
     contentTypes: [
       {
+        id: 'magazine-issue',
+        label: 'Magazine Issue',
+        description: 'Create and manage full magazine issues with multiple pages',
+        fields: [], // No inline fields — redirects to /dashboard/magazine/new
+      },
+      {
         id: 'feature',
         label: 'Feature Article',
         description: 'Long-form feature for the magazine',
