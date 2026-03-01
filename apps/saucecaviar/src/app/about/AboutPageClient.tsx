@@ -26,11 +26,10 @@ export function AboutPageClient() {
     <div className="min-h-screen pt-24 pb-16">
       {/* Hero */}
       <div className="container-caviar mb-16">
-        <TextReveal>
-          <h1 className="text-5xl md:text-7xl font-headline font-bold text-white mb-6">
-            Culture Served <span className="text-primary italic">Premium</span>
-          </h1>
-        </TextReveal>
+        <h1 className="text-5xl md:text-7xl font-headline font-bold text-white mb-6">
+          <TextReveal as="span">Culture Served</TextReveal>{' '}
+          <span className="text-primary italic"><TextReveal as="span" delay={0.3}>Premium</TextReveal></span>
+        </h1>
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

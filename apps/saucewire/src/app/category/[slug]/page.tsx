@@ -1,7 +1,9 @@
 import { notFound } from 'next/navigation';
 import { SAUCEWIRE_CATEGORIES } from '@media-network/shared';
 import { CategoryPageClient } from './CategoryPageClient';
-import { getArticlesByCategory, getTrendingArticles } from '@/lib/mock-data';
+import { fetchArticlesByCategory, fetchTrendingArticles } from '@/lib/supabase';
+
+export const revalidate = 60;
 
 interface CategoryPageProps {
   params: { slug: string };
@@ -25,7 +27,7 @@ export function generateMetadata({ params }: CategoryPageProps) {
   };
 }
 
-export default function CategoryPage({ params }: CategoryPageProps) {
+export default async function CategoryPage({ params }: CategoryPageProps) {
   const category = SAUCEWIRE_CATEGORIES.find(
     (c) => c.toLowerCase() === params.slug.toLowerCase()
   );
@@ -34,8 +36,10 @@ export default function CategoryPage({ params }: CategoryPageProps) {
     notFound();
   }
 
-  const articles = getArticlesByCategory(category);
-  const trendingArticles = getTrendingArticles(5);
+  const [articles, trendingArticles] = await Promise.all([
+    fetchArticlesByCategory(category),
+    fetchTrendingArticles(5),
+  ]);
 
   return (
     <CategoryPageClient

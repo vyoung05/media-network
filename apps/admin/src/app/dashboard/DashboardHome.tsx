@@ -1,7 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useAuth } from '@/components/AuthProvider';
+import { getArticles, getSubmissions, getUsers, getAnalyticsSummary } from '@media-network/shared';
+import type { Article, Submission, Brand } from '@media-network/shared';
+import { timeAgo } from '@media-network/shared';
 
 interface StatCardProps {
   label: string;
@@ -40,18 +44,31 @@ function StatCard({ label, value, change, changeType, icon, color }: StatCardPro
   );
 }
 
-function RecentActivity() {
-  const activities = [
-    { action: 'Article published', detail: 'Drake Drops Surprise Album at Midnight', time: '2m ago', type: 'publish', brand: 'saucewire' },
-    { action: 'Submission received', detail: 'New artist feature request from @jayflow', time: '15m ago', type: 'submission', brand: 'trapglow' },
-    { action: 'Writer approved', detail: 'Maya Chen — Culture Editor', time: '1h ago', type: 'writer', brand: 'saucecaviar' },
-    { action: 'Article pending', detail: 'Nike x Pharrell Collection — AI Draft', time: '2h ago', type: 'pending', brand: 'saucewire' },
-    { action: 'Beat submitted', detail: 'Producer @808mafia — "Midnight Bounce"', time: '3h ago', type: 'submission', brand: 'trapfrequency' },
-    { action: 'Article rejected', detail: 'Duplicate story — already covered', time: '4h ago', type: 'rejected', brand: 'saucewire' },
-    { action: 'New writer application', detail: 'Jordan Davis — Sports Journalist', time: '5h ago', type: 'writer', brand: 'saucewire' },
-    { action: 'Issue drafted', detail: 'SauceCaviar Issue #7 — "The Glow Up Issue"', time: '6h ago', type: 'publish', brand: 'saucecaviar' },
-  ];
+interface DashboardStats {
+  totalArticles: number;
+  pendingReview: number;
+  activeWriters: number;
+  totalSubmissions: number;
+  pendingSubmissions: number;
+  totalViews: number;
+}
 
+interface RecentItem {
+  action: string;
+  detail: string;
+  time: string;
+  type: string;
+  brand: Brand;
+}
+
+const brandColors: Record<Brand, string> = {
+  saucecaviar: '#C9A84C',
+  trapglow: '#8B5CF6',
+  saucewire: '#E63946',
+  trapfrequency: '#39FF14',
+};
+
+function RecentActivity({ items, loading }: { items: RecentItem[]; loading: boolean }) {
   const typeColors: Record<string, string> = {
     publish: 'bg-emerald-500',
     submission: 'bg-blue-500',
@@ -60,12 +77,19 @@ function RecentActivity() {
     rejected: 'bg-red-500',
   };
 
-  const brandColors: Record<string, string> = {
-    saucecaviar: '#C9A84C',
-    trapglow: '#8B5CF6',
-    saucewire: '#E63946',
-    trapfrequency: '#39FF14',
-  };
+  if (loading) {
+    return (
+      <div className="glass-panel overflow-hidden">
+        <div className="px-6 py-4 border-b border-white/[0.06]">
+          <h3 className="text-sm font-semibold text-white">Recent Activity</h3>
+        </div>
+        <div className="p-8 text-center">
+          <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-xs text-gray-500 mt-3">Loading activity...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="glass-panel overflow-hidden">
@@ -73,30 +97,36 @@ function RecentActivity() {
         <h3 className="text-sm font-semibold text-white">Recent Activity</h3>
       </div>
       <div className="divide-y divide-white/[0.04]">
-        {activities.map((activity, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: i * 0.05 }}
-            className="px-6 py-3.5 hover:bg-white/[0.02] transition-colors"
-          >
-            <div className="flex items-start gap-3">
-              <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${typeColors[activity.type]}`} />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm text-gray-300">{activity.action}</p>
-                  <div
-                    className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: brandColors[activity.brand] }}
-                  />
+        {items.length === 0 ? (
+          <div className="px-6 py-8 text-center">
+            <p className="text-sm text-gray-500">No recent activity</p>
+          </div>
+        ) : (
+          items.map((activity, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: i * 0.05 }}
+              className="px-6 py-3.5 hover:bg-white/[0.02] transition-colors"
+            >
+              <div className="flex items-start gap-3">
+                <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${typeColors[activity.type] || 'bg-gray-500'}`} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm text-gray-300">{activity.action}</p>
+                    <div
+                      className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: brandColors[activity.brand] }}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 truncate">{activity.detail}</p>
                 </div>
-                <p className="text-xs text-gray-500 truncate">{activity.detail}</p>
+                <span className="text-xs font-mono text-gray-600 whitespace-nowrap">{activity.time}</span>
               </div>
-              <span className="text-xs font-mono text-gray-600 whitespace-nowrap">{activity.time}</span>
-            </div>
-          </motion.div>
-        ))}
+            </motion.div>
+          ))
+        )}
       </div>
     </div>
   );
@@ -104,7 +134,7 @@ function RecentActivity() {
 
 function QuickActions() {
   const actions = [
-    { label: 'New Article', icon: '✏️', href: '#' },
+    { label: 'New Article', icon: '✏️', href: '/dashboard/content/new' },
     { label: 'Review Queue', icon: '📋', href: '/dashboard/content' },
     { label: 'View Submissions', icon: '📥', href: '/dashboard/submissions' },
     { label: 'AI Pipeline', icon: '🤖', href: '#' },
@@ -131,12 +161,12 @@ function QuickActions() {
   );
 }
 
-function BrandOverview() {
-  const brands = [
-    { name: 'SauceWire', color: '#E63946', articles: 156, views: '23.4K', status: 'Active' },
-    { name: 'SauceCaviar', color: '#C9A84C', articles: 42, views: '8.1K', status: 'Active' },
-    { name: 'TrapGlow', color: '#8B5CF6', articles: 89, views: '15.2K', status: 'Active' },
-    { name: 'TrapFrequency', color: '#39FF14', articles: 34, views: '5.7K', status: 'Setup' },
+function BrandOverview({ brandData, loading }: { brandData: Record<Brand, { articles: number; views: string }>; loading: boolean }) {
+  const brands: { name: string; id: Brand; color: string }[] = [
+    { name: 'SauceWire', id: 'saucewire', color: '#E63946' },
+    { name: 'SauceCaviar', id: 'saucecaviar', color: '#C9A84C' },
+    { name: 'TrapGlow', id: 'trapglow', color: '#8B5CF6' },
+    { name: 'TrapFrequency', id: 'trapfrequency', color: '#39FF14' },
   ];
 
   return (
@@ -145,36 +175,88 @@ function BrandOverview() {
         <h3 className="text-sm font-semibold text-white">Brand Overview</h3>
       </div>
       <div className="divide-y divide-white/[0.04]">
-        {brands.map((brand) => (
-          <div key={brand.name} className="px-6 py-4 flex items-center gap-4 hover:bg-white/[0.02] transition-colors">
-            <div
-              className="w-3 h-3 rounded-full flex-shrink-0"
-              style={{ backgroundColor: brand.color }}
-            />
-            <div className="flex-1">
-              <p className="text-sm font-medium text-white">{brand.name}</p>
+        {brands.map((brand) => {
+          const data = brandData[brand.id];
+          return (
+            <div key={brand.name} className="px-6 py-4 flex items-center gap-4 hover:bg-white/[0.02] transition-colors">
+              <div
+                className="w-3 h-3 rounded-full flex-shrink-0"
+                style={{ backgroundColor: brand.color }}
+              />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-white">{brand.name}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-mono text-gray-300">
+                  {loading ? '...' : `${data?.articles || 0} articles`}
+                </p>
+                <p className="text-xs font-mono text-gray-500">
+                  {loading ? '...' : `${data?.views || '0'} views`}
+                </p>
+              </div>
+              <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400">
+                Active
+              </span>
             </div>
-            <div className="text-right">
-              <p className="text-sm font-mono text-gray-300">{brand.articles} articles</p>
-              <p className="text-xs font-mono text-gray-500">{brand.views} views</p>
-            </div>
-            <span
-              className={`text-xs px-2 py-0.5 rounded-full ${
-                brand.status === 'Active'
-                  ? 'bg-emerald-500/10 text-emerald-400'
-                  : 'bg-amber-500/10 text-amber-400'
-              }`}
-            >
-              {brand.status}
-            </span>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
 }
 
+function formatViews(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return n.toString();
+}
+
 export function DashboardHome() {
+  const { supabase } = useAuth();
+  const [stats, setStats] = useState<DashboardStats>({
+    totalArticles: 0,
+    pendingReview: 0,
+    activeWriters: 0,
+    totalSubmissions: 0,
+    pendingSubmissions: 0,
+    totalViews: 0,
+  });
+  const [recentActivity, setRecentActivity] = useState<RecentItem[]>([]);
+  const [brandData, setBrandData] = useState<Record<Brand, { articles: number; views: string }>>({
+    saucewire: { articles: 0, views: '0' },
+    saucecaviar: { articles: 0, views: '0' },
+    trapglow: { articles: 0, views: '0' },
+    trapfrequency: { articles: 0, views: '0' },
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchDashboardData() {
+      try {
+        // Use the server-side API route (uses service_role, bypasses RLS)
+        const res = await fetch('/api/dashboard');
+        if (!res.ok) throw new Error('Failed to fetch dashboard data');
+        const data = await res.json();
+
+        setStats(data.stats);
+        setBrandData(data.brands);
+
+        // Format recent activity times
+        const activityItems: RecentItem[] = (data.recentActivity || []).map((item: any) => ({
+          ...item,
+          time: item.time ? timeAgo(item.time) : '',
+        }));
+        setRecentActivity(activityItems);
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchDashboardData();
+  }, []);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -190,8 +272,8 @@ export function DashboardHome() {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }}>
           <StatCard
             label="Total Articles"
-            value="321"
-            change="12 this week"
+            value={loading ? '...' : stats.totalArticles}
+            change={loading ? '...' : `${stats.totalViews > 0 ? formatViews(stats.totalViews) + ' views' : '0 views'}`}
             changeType="up"
             color="#3B82F6"
             icon={
@@ -204,8 +286,8 @@ export function DashboardHome() {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
           <StatCard
             label="Pending Review"
-            value="8"
-            change="3 urgent"
+            value={loading ? '...' : stats.pendingReview}
+            change={loading ? '...' : `${stats.pendingSubmissions} submissions`}
             changeType="neutral"
             color="#F59E0B"
             icon={
@@ -218,8 +300,8 @@ export function DashboardHome() {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
           <StatCard
             label="Active Writers"
-            value="14"
-            change="2 new"
+            value={loading ? '...' : stats.activeWriters}
+            change="contributors"
             changeType="up"
             color="#10B981"
             icon={
@@ -232,8 +314,8 @@ export function DashboardHome() {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
           <StatCard
             label="Submissions"
-            value="12"
-            change="5 today"
+            value={loading ? '...' : stats.totalSubmissions}
+            change={loading ? '...' : `${stats.pendingSubmissions} pending`}
             changeType="up"
             color="#8B5CF6"
             icon={
@@ -248,11 +330,11 @@ export function DashboardHome() {
       {/* Two-column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <RecentActivity />
+          <RecentActivity items={recentActivity} loading={loading} />
         </div>
         <div className="space-y-6">
           <QuickActions />
-          <BrandOverview />
+          <BrandOverview brandData={brandData} loading={loading} />
         </div>
       </div>
     </div>

@@ -1,15 +1,24 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { useAuth } from '@/components/AuthProvider';
 
 export function LoginPage() {
   const router = useRouter();
+  const { supabase, session, loading: authLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!authLoading && session) {
+      router.push('/dashboard');
+    }
+  }, [session, authLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,24 +26,42 @@ export function LoginPage() {
     setLoading(true);
 
     try {
-      // In production: authenticate with Supabase
-      // const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      // if (error) throw error;
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-      // For now, simulate login
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
-      if (email && password) {
-        router.push('/dashboard');
-      } else {
-        setError('Please enter your credentials');
-      }
-    } catch (err) {
-      setError('Invalid credentials. Please try again.');
+      if (authError) throw authError;
+      router.push('/dashboard');
+    } catch (err: any) {
+      setError(err?.message || 'Invalid credentials. Please try again.');
     } finally {
       setLoading(false);
     }
   };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      const { error: authError } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+      if (authError) throw authError;
+    } catch (err: any) {
+      setError(err?.message || 'Google sign-in failed.');
+    }
+  };
+
+  // Don't show login form while checking auth state
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-admin-bg">
+        <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
@@ -146,10 +173,7 @@ export function LoginPage() {
           {/* Social login */}
           <button
             type="button"
-            onClick={() => {
-              // In production: supabase.auth.signInWithOAuth({ provider: 'google' });
-              router.push('/dashboard');
-            }}
+            onClick={handleGoogleSignIn}
             className="admin-btn-ghost w-full py-2.5 flex items-center justify-center gap-3 border border-admin-border"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">

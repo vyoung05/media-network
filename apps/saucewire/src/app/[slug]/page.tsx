@@ -1,19 +1,15 @@
 import { notFound } from 'next/navigation';
-import { getArticleBySlug, getTrendingArticles, mockArticles } from '@/lib/mock-data';
+import { fetchArticleBySlug, fetchTrendingArticles, fetchArticles, fetchAudioUrl } from '@/lib/supabase';
 import { ArticlePageClient } from './ArticlePageClient';
+
+export const revalidate = 60;
 
 interface ArticlePageProps {
   params: { slug: string };
 }
 
-export function generateStaticParams() {
-  return mockArticles.map((article) => ({
-    slug: article.slug,
-  }));
-}
-
-export function generateMetadata({ params }: ArticlePageProps) {
-  const article = getArticleBySlug(params.slug);
+export async function generateMetadata({ params }: ArticlePageProps) {
+  const article = await fetchArticleBySlug(params.slug);
   if (!article) return {};
 
   return {
@@ -36,24 +32,29 @@ export function generateMetadata({ params }: ArticlePageProps) {
   };
 }
 
-export default function ArticlePage({ params }: ArticlePageProps) {
-  const article = getArticleBySlug(params.slug);
+export default async function ArticlePage({ params }: ArticlePageProps) {
+  const article = await fetchArticleBySlug(params.slug);
 
   if (!article) {
     notFound();
   }
 
-  const relatedArticles = mockArticles
-    .filter(a => a.id !== article.id && a.category === article.category)
-    .slice(0, 4);
+  const [{ articles: allArticles }, trendingArticles, audioUrl] = await Promise.all([
+    fetchArticles({ category: article.category, per_page: 5 }),
+    fetchTrendingArticles(5),
+    fetchAudioUrl(article.id),
+  ]);
 
-  const trendingArticles = getTrendingArticles(5);
+  const relatedArticles = allArticles
+    .filter((a) => a.id !== article.id)
+    .slice(0, 4);
 
   return (
     <ArticlePageClient
       article={article}
       relatedArticles={relatedArticles}
       trendingArticles={trendingArticles}
+      audioUrl={audioUrl}
     />
   );
 }

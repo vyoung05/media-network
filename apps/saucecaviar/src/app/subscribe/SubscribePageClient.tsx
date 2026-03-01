@@ -66,11 +66,10 @@ export function SubscribePageClient() {
       <div className="container-caviar">
         {/* Hero */}
         <div className="text-center mb-16">
-          <TextReveal>
-            <h1 className="text-5xl md:text-7xl font-headline font-bold text-white mb-6">
-              Subscribe to <span className="text-primary italic">SauceCaviar</span>
-            </h1>
-          </TextReveal>
+          <h1 className="text-5xl md:text-7xl font-headline font-bold text-white mb-6">
+            <TextReveal as="span">Subscribe to</TextReveal>{' '}
+            <span className="text-primary italic"><TextReveal as="span" delay={0.3}>SauceCaviar</TextReveal></span>
+          </h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

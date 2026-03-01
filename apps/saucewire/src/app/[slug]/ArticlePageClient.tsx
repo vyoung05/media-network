@@ -14,12 +14,14 @@ interface ArticlePageClientProps {
   article: Article;
   relatedArticles: Article[];
   trendingArticles: Article[];
+  audioUrl?: string | null;
 }
 
 export function ArticlePageClient({
   article,
   relatedArticles,
   trendingArticles,
+  audioUrl,
 }: ArticlePageClientProps) {
   const router = useRouter();
 
@@ -88,6 +90,7 @@ export function ArticlePageClient({
           {/* Audio Player */}
           <div className="mb-8">
             <AudioPlayer
+              src={audioUrl || undefined}
               title={article.title}
               duration={`${article.reading_time_minutes} min listen`}
               brand="saucewire"
