@@ -3,7 +3,7 @@ import { Suspense } from 'react';
 import { ArchivePageClient } from './ArchivePageClient';
 import { fetchArticles } from '@/lib/supabase';
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Archive',

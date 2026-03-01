@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { fetchArticleBySlug, fetchArticles } from '@/lib/supabase';
 import { BlogPostClient } from './BlogPostClient';
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 interface BlogPostPageProps {
   params: { slug: string };

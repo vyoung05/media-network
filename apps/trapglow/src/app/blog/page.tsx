@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { BlogPageClient } from './BlogPageClient';
 import { fetchArticles } from '@/lib/supabase';
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Blog — Features, Interviews & Analysis',

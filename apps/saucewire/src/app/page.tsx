@@ -5,7 +5,7 @@ import {
   fetchTrendingArticles,
 } from '@/lib/supabase';
 
-export const revalidate = 60; // Revalidate every 60 seconds
+export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
   const [{ articles }, breakingArticles, trendingArticles] = await Promise.all([

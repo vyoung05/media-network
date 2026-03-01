@@ -3,16 +3,10 @@ import { SAUCEWIRE_CATEGORIES } from '@media-network/shared';
 import { CategoryPageClient } from './CategoryPageClient';
 import { fetchArticlesByCategory, fetchTrendingArticles } from '@/lib/supabase';
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 interface CategoryPageProps {
   params: { slug: string };
-}
-
-export function generateStaticParams() {
-  return SAUCEWIRE_CATEGORIES.map((cat) => ({
-    slug: cat.toLowerCase(),
-  }));
 }
 
 export function generateMetadata({ params }: CategoryPageProps) {
