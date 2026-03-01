@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { DiscoverPageClient } from './DiscoverPageClient';
-import { mockArtists } from '@/lib/mock-data';
+import { getArtists } from '@/lib/supabase';
+
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Discover Artists',
@@ -11,6 +13,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function DiscoverPage() {
-  return <DiscoverPageClient artists={mockArtists} />;
+export default async function DiscoverPage() {
+  const artists = await getArtists();
+  return <DiscoverPageClient artists={artists} />;
 }

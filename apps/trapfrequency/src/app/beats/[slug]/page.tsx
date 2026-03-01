@@ -1,14 +1,16 @@
-import { mockBeats } from '@/lib/mock-data';
+import { getBeatBySlug } from '@/lib/supabase';
 import { BeatDetailClient } from './BeatDetailClient';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+
+export const dynamic = 'force-dynamic';
 
 interface Props {
   params: { slug: string };
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const beat = mockBeats.find(b => b.slug === params.slug);
+  const beat = await getBeatBySlug(params.slug);
   if (!beat) return { title: 'Beat Not Found' };
 
   return {
@@ -17,12 +19,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export function generateStaticParams() {
-  return mockBeats.map(b => ({ slug: b.slug }));
-}
-
-export default function BeatPage({ params }: Props) {
-  const beat = mockBeats.find(b => b.slug === params.slug);
+export default async function BeatPage({ params }: Props) {
+  const beat = await getBeatBySlug(params.slug);
   if (!beat) notFound();
 
   return <BeatDetailClient beat={beat} />;

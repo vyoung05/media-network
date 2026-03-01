@@ -1,14 +1,16 @@
-import { mockProducers, getBeatsByProducer } from '@/lib/mock-data';
+import { getProducerBySlug, getBeatsByProducer } from '@/lib/supabase';
 import { ProducerProfile } from '@/components/ProducerProfile';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+
+export const dynamic = 'force-dynamic';
 
 interface Props {
   params: { slug: string };
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const producer = mockProducers.find(p => p.slug === params.slug);
+  const producer = await getProducerBySlug(params.slug);
   if (!producer) return { title: 'Producer Not Found' };
 
   return {
@@ -23,15 +25,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export function generateStaticParams() {
-  return mockProducers.map(p => ({ slug: p.slug }));
-}
-
-export default function ProducerPage({ params }: Props) {
-  const producer = mockProducers.find(p => p.slug === params.slug);
+export default async function ProducerPage({ params }: Props) {
+  const producer = await getProducerBySlug(params.slug);
   if (!producer) notFound();
 
-  const beats = getBeatsByProducer(producer.id);
+  const beats = await getBeatsByProducer(producer.id);
 
   return <ProducerProfile producer={producer} beats={beats} />;
 }

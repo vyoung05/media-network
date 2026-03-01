@@ -1,16 +1,23 @@
 import { HomePageClient } from '@/components/HomePageClient';
 import {
-  mockArtists,
+  getArtists,
   getFeaturedArtists,
   getDailyPicks,
   getGlowUpLeaderboard,
-  getTrendingPosts,
-} from '@/lib/mock-data';
+} from '@/lib/supabase';
+import { getTrendingPosts } from '@/lib/mock-data';
 
-export default function HomePage() {
-  const featuredArtists = getFeaturedArtists();
-  const dailyPicks = getDailyPicks();
-  const leaderboardArtists = getGlowUpLeaderboard();
+export const dynamic = 'force-dynamic';
+
+export default async function HomePage() {
+  const [allArtists, featuredArtists, dailyPicks, leaderboardArtists] = await Promise.all([
+    getArtists(),
+    getFeaturedArtists(),
+    getDailyPicks(),
+    getGlowUpLeaderboard(10),
+  ]);
+
+  // Blog posts still from mock data (they're not in the artists table)
   const trendingPosts = getTrendingPosts(5);
 
   return (
@@ -19,7 +26,7 @@ export default function HomePage() {
       dailyPicks={dailyPicks}
       leaderboardArtists={leaderboardArtists}
       trendingPosts={trendingPosts}
-      allArtists={mockArtists}
+      allArtists={allArtists}
     />
   );
 }

@@ -1,11 +1,14 @@
 import { TutorialsPageClient } from './TutorialsPageClient';
-import { mockTutorials } from '@/lib/mock-data';
+import { getTutorials } from '@/lib/supabase';
+
+export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: 'Tutorials',
   description: 'Step-by-step music production tutorials for FL Studio, Ableton Live, Logic Pro, and more. From beginner to master level.',
 };
 
-export default function TutorialsPage() {
-  return <TutorialsPageClient tutorials={mockTutorials} />;
+export default async function TutorialsPage() {
+  const tutorials = await getTutorials();
+  return <TutorialsPageClient tutorials={tutorials} />;
 }

@@ -1,19 +1,16 @@
 import { notFound } from 'next/navigation';
-import { getArtistBySlug, getPostsByArtist, mockArtists } from '@/lib/mock-data';
+import { getArtistBySlug } from '@/lib/supabase';
+import { getPostsByArtist } from '@/lib/mock-data';
 import { ArtistProfile } from '@/components/ArtistProfile';
+
+export const dynamic = 'force-dynamic';
 
 interface ArtistPageProps {
   params: { slug: string };
 }
 
-export function generateStaticParams() {
-  return mockArtists.map((artist) => ({
-    slug: artist.slug,
-  }));
-}
-
-export function generateMetadata({ params }: ArtistPageProps) {
-  const artist = getArtistBySlug(params.slug);
+export async function generateMetadata({ params }: ArtistPageProps) {
+  const artist = await getArtistBySlug(params.slug);
   if (!artist) return {};
 
   return {
@@ -34,13 +31,14 @@ export function generateMetadata({ params }: ArtistPageProps) {
   };
 }
 
-export default function ArtistPage({ params }: ArtistPageProps) {
-  const artist = getArtistBySlug(params.slug);
+export default async function ArtistPage({ params }: ArtistPageProps) {
+  const artist = await getArtistBySlug(params.slug);
 
   if (!artist) {
     notFound();
   }
 
+  // Blog posts are still from mock data
   const relatedPosts = getPostsByArtist(artist.id);
 
   return <ArtistProfile artist={artist} relatedPosts={relatedPosts} />;

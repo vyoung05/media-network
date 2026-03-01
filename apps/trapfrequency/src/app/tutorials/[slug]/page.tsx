@@ -1,14 +1,16 @@
-import { mockTutorials } from '@/lib/mock-data';
+import { getTutorialBySlug } from '@/lib/supabase';
 import { TutorialDetailClient } from './TutorialDetailClient';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+
+export const dynamic = 'force-dynamic';
 
 interface Props {
   params: { slug: string };
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const tutorial = mockTutorials.find(t => t.slug === params.slug);
+  const tutorial = await getTutorialBySlug(params.slug);
   if (!tutorial) return { title: 'Tutorial Not Found' };
 
   return {
@@ -23,12 +25,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export function generateStaticParams() {
-  return mockTutorials.map(t => ({ slug: t.slug }));
-}
-
-export default function TutorialPage({ params }: Props) {
-  const tutorial = mockTutorials.find(t => t.slug === params.slug);
+export default async function TutorialPage({ params }: Props) {
+  const tutorial = await getTutorialBySlug(params.slug);
   if (!tutorial) notFound();
 
   return <TutorialDetailClient tutorial={tutorial} />;

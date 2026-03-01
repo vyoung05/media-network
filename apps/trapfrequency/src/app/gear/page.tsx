@@ -1,11 +1,14 @@
 import { GearPageClient } from './GearPageClient';
-import { mockGearReviews } from '@/lib/mock-data';
+import { getGearReviews } from '@/lib/supabase';
+
+export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: 'Gear Reviews',
   description: 'In-depth reviews of music production gear — controllers, monitors, microphones, interfaces, and more.',
 };
 
-export default function GearPage() {
-  return <GearPageClient reviews={mockGearReviews} />;
+export default async function GearPage() {
+  const reviews = await getGearReviews();
+  return <GearPageClient reviews={reviews} />;
 }
