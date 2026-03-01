@@ -1,42 +1,44 @@
-# Newsletter + SEO Build Progress
+# Newsletter + SEO Build — COMPLETE ✅
 
 ## Database Setup
-- [x] Newsletter tables (subscribers, campaigns, settings)
+- [x] Newsletter tables (subscribers, campaigns, settings) — created via Supabase SQL Editor
 - [x] SEO columns on articles table (seo_title, seo_description, focus_keyword, seo_score)
+- [x] RLS policies and indexes
 
 ## Types (shared)
-- [x] Newsletter types in shared package (NewsletterSubscriber, NewsletterCampaign, NewsletterSettings, etc.)
-- [x] SEO types (SEOData, SEORule, SEOScoreResult)
+- [x] Newsletter types: NewsletterSubscriber, NewsletterCampaign, NewsletterSettings, CampaignStatus, DigestFrequency, NewsletterProvider
+- [x] SEO types: SEOData, SEORule, SEOScoreResult
 
 ## API Routes (admin)
-- [x] /api/newsletter/subscribers (GET/POST/PATCH/DELETE)
-- [x] /api/newsletter/campaigns (GET/POST)
-- [x] /api/newsletter/campaigns/[id]/send (POST)
-- [x] /api/newsletter/settings (GET/PUT)
-- [x] /api/newsletter/subscribe (public, CORS-enabled)
-- [x] /api/newsletter/unsubscribe (public, CORS-enabled)
-- [x] /api/seo/scores (GET — calculates scores for all articles)
-- [x] Updated articles publish endpoint for newsletter auto-trigger
+- [x] GET/POST/PATCH/DELETE /api/newsletter/subscribers
+- [x] GET/POST /api/newsletter/campaigns
+- [x] POST /api/newsletter/campaigns/[id]/send (Resend + SendGrid support)
+- [x] GET/PUT /api/newsletter/settings
+- [x] POST /api/newsletter/subscribe (public, CORS)
+- [x] POST /api/newsletter/unsubscribe (public, CORS)
+- [x] GET /api/seo/scores (calculates & caches scores)
+- [x] Updated articles publish endpoint — auto-triggers newsletter if enabled
 
 ## Admin Pages
-- [x] /dashboard/newsletter (hub with stats, campaigns list, quick actions)
-- [x] /dashboard/newsletter/subscribers (table with search, brand filter, export CSV, add/toggle)
-- [x] /dashboard/newsletter/campaigns/new (create campaign with article selection, preview, send)
-- [x] /dashboard/newsletter/settings (per-brand provider config, auto-send, digest frequency)
-- [x] /dashboard/seo (dashboard with scores, distribution, article checklist)
+- [x] /dashboard/newsletter — Hub with stats cards, campaigns list, quick actions
+- [x] /dashboard/newsletter/subscribers — Table with search, brand filter, export CSV, add/toggle
+- [x] /dashboard/newsletter/campaigns/new — Article selection, subject auto-gen, email preview, send/draft
+- [x] /dashboard/newsletter/settings — Per-brand provider config, API key, auto-send, digest frequency
+- [x] /dashboard/seo — Score distribution, average score bar, expandable article checklist
 
 ## Components
-- [x] SEOPanel component (reusable, with score circle, checklist, social previews)
-- [x] Email templates (brand-styled HTML generator)
-- [x] Newsletter signup component (shared, for brand sites)
-- [x] JsonLd component (shared, Article/Organization/Breadcrumb schemas)
+- [x] SEOPanel — Reusable: score circle, SEO fields, 9-rule checklist, Google/Twitter/Facebook previews
+- [x] Email templates — Brand-styled HTML generator (4 unique styles)
+- [x] NewsletterSignup — Shared client component with subscribe API integration
+- [x] JsonLd — Shared component for Article, Organization, BreadcrumbList schemas
 
-## Brand Sites
-- [x] Sitemap.xml for all 4 brands (saucewire, saucecaviar, trapglow, trapfrequency)
-- [x] Robots.txt for all 4 brands
-- [x] JSON-LD structured data on all 4 brand homepages (Organization)
-- [x] JSON-LD structured data on article pages (saucewire, trapglow)
-- [x] Newsletter signup in all 4 brand site footers
+## Brand Sites (all 4)
+- [x] sitemap.xml — Dynamic from Supabase (articles, issues, artists, producers, tutorials, beats, gear)
+- [x] robots.txt — With sitemap reference
+- [x] JSON-LD Organization schema on homepages
+- [x] JSON-LD Article + Breadcrumb schema on article pages
+- [x] Newsletter signup in footer components
 
-## Final
-- [ ] Git commit & push
+## Git
+- [x] Committed: `feat: email newsletter system + SEO auto-optimization`
+- [x] Pushed to main
