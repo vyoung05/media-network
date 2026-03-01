@@ -8,6 +8,9 @@ export async function GET(request: NextRequest) {
   const title = searchParams.get('title') || 'SauceCaviar';
   const subtitle = searchParams.get('subtitle') || 'Culture Served Premium';
   const issue = searchParams.get('issue') || '';
+  const category = searchParams.get('category') || '';
+  const author = searchParams.get('author') || '';
+  const image = searchParams.get('image') || '';
 
   return new ImageResponse(
     (
@@ -23,6 +26,34 @@ export async function GET(request: NextRequest) {
           position: 'relative',
         }}
       >
+        {/* Cover image background */}
+        {image && (
+          <img
+            src={image}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+            }}
+          />
+        )}
+        {/* Dark overlay for readability */}
+        {image && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              background: 'linear-gradient(180deg, rgba(10,10,10,0.6) 0%, rgba(26,10,46,0.85) 100%)',
+            }}
+          />
+        )}
+
         {/* Gold gradient accent */}
         <div
           style={{
@@ -44,6 +75,7 @@ export async function GET(request: NextRequest) {
             justifyContent: 'center',
             padding: '40px 60px',
             textAlign: 'center',
+            position: 'relative',
           }}
         >
           {/* Brand */}
@@ -78,10 +110,28 @@ export async function GET(request: NextRequest) {
             </div>
           )}
 
+          {/* Category badge */}
+          {category && !issue && (
+            <div
+              style={{
+                fontSize: '14px',
+                color: '#C9A84C',
+                border: '1px solid rgba(201, 168, 76, 0.4)',
+                padding: '4px 16px',
+                borderRadius: '20px',
+                marginBottom: '20px',
+                letterSpacing: '2px',
+                textTransform: 'uppercase',
+              }}
+            >
+              {category}
+            </div>
+          )}
+
           {/* Title */}
           <div
             style={{
-              fontSize: '52px',
+              fontSize: title.length > 80 ? '40px' : '52px',
               fontWeight: 700,
               color: '#FAFAF7',
               lineHeight: 1.2,
@@ -92,7 +142,7 @@ export async function GET(request: NextRequest) {
             {title}
           </div>
 
-          {/* Subtitle */}
+          {/* Subtitle / Author */}
           <div
             style={{
               fontSize: '20px',
@@ -100,7 +150,7 @@ export async function GET(request: NextRequest) {
               maxWidth: '600px',
             }}
           >
-            {subtitle}
+            {author ? `By ${author}` : subtitle}
           </div>
         </div>
 

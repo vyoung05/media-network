@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
   const category = searchParams.get('category') || '';
   const author = searchParams.get('author') || '';
   const date = searchParams.get('date') || '';
+  const image = searchParams.get('image') || '';
   const isBreaking = searchParams.get('breaking') === 'true';
 
   return new ImageResponse(
@@ -28,6 +29,34 @@ export async function GET(request: NextRequest) {
           overflow: 'hidden',
         }}
       >
+        {/* Cover image background */}
+        {image && (
+          <img
+            src={image}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+            }}
+          />
+        )}
+        {/* Dark overlay for readability */}
+        {image && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              background: 'linear-gradient(180deg, rgba(17,17,17,0.7) 0%, rgba(17,17,17,0.85) 50%, rgba(17,17,17,0.95) 100%)',
+            }}
+          />
+        )}
+
         {/* Background gradient accent */}
         <div
           style={{
@@ -53,7 +82,7 @@ export async function GET(request: NextRequest) {
         />
 
         {/* Top section */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', position: 'relative' }}>
           {/* Logo + Category */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'baseline' }}>
@@ -116,7 +145,7 @@ export async function GET(request: NextRequest) {
         </div>
 
         {/* Title */}
-        <div style={{ display: 'flex', flex: 1, alignItems: 'center', paddingTop: '20px', paddingBottom: '20px' }}>
+        <div style={{ display: 'flex', flex: 1, alignItems: 'center', paddingTop: '20px', paddingBottom: '20px', position: 'relative' }}>
           <h1
             style={{
               fontSize: title.length > 80 ? '42px' : title.length > 50 ? '52px' : '60px',
@@ -139,6 +168,7 @@ export async function GET(request: NextRequest) {
             justifyContent: 'space-between',
             borderTop: '1px solid rgba(255,255,255,0.1)',
             paddingTop: '24px',
+            position: 'relative',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>

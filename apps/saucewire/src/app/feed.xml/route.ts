@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { fetchArticles } from '@/lib/supabase';
+import { fetchArticles, fetchAudioUrl } from '@/lib/supabase';
 
 function escapeXml(str: string): string {
   return str
@@ -15,10 +15,26 @@ export async function GET() {
 
   let articles: any[] = [];
   try {
-    const result = await fetchArticles({ per_page: 20 });
+    const result = await fetchArticles({ per_page: 50 });
     articles = result.articles;
   } catch (err) {
     console.error('Error fetching articles for RSS feed:', err);
+  }
+
+  // Fetch audio URLs for all articles (in parallel, non-blocking)
+  const audioUrls: Record<string, string | null> = {};
+  try {
+    const audioPromises = articles.map(async (article) => {
+      try {
+        const url = await fetchAudioUrl(article.id);
+        if (url) audioUrls[article.id] = url;
+      } catch {
+        // Skip individual audio failures
+      }
+    });
+    await Promise.all(audioPromises);
+  } catch {
+    // Non-blocking
   }
 
   const buildDate = new Date().toUTCString();
@@ -33,7 +49,8 @@ export async function GET() {
       <description>${escapeXml(article.excerpt || '')}</description>
       <category>${escapeXml(article.category)}</category>
       <dc:creator>${escapeXml(article.author?.name || 'SauceWire')}</dc:creator>
-      <pubDate>${new Date(article.published_at || article.created_at).toUTCString()}</pubDate>
+      <pubDate>${new Date(article.published_at || article.created_at).toUTCString()}</pubDate>${audioUrls[article.id] ? `
+      <enclosure url="${escapeXml(audioUrls[article.id]!)}" type="audio/mpeg" />` : ''}
     </item>`
     )
     .join('');
@@ -45,7 +62,7 @@ export async function GET() {
   xmlns:atom="http://www.w3.org/2005/Atom"
 >
   <channel>
-    <title>SauceWire — Culture. Connected. Now.</title>
+    <title>SauceWire — Culture &amp; Hip-Hop News</title>
     <link>${siteUrl}</link>
     <description>Breaking news and culture coverage — hip-hop, fashion, entertainment, sports, and tech. Always on, always plugged in.</description>
     <language>en-us</language>

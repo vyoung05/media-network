@@ -5,6 +5,7 @@ import {
   getArticleBySlug,
   getBreakingNews,
   getTrendingArticles,
+  getArticleAudioUrl,
 } from '@media-network/shared';
 import type { Article, Brand } from '@media-network/shared';
 import type { Artist } from './mock-data';
@@ -97,6 +98,12 @@ export async function fetchArticlesByCategory(category: string): Promise<Article
     per_page: 50,
   });
   return res.data;
+}
+
+export async function fetchAudioUrl(articleId: string): Promise<string | null> {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+  return getArticleAudioUrl(supabase, articleId);
 }
 
 // ======================== ARTISTS ========================

@@ -1,14 +1,39 @@
-import { fetchArticles } from '@/lib/supabase';
+import { fetchArticles, fetchAudioUrl } from '@/lib/supabase';
+
+function escapeXml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
 
 export async function GET() {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://trapglow.com';
 
   let articles: any[] = [];
   try {
-    const result = await fetchArticles({ per_page: 20 });
+    const result = await fetchArticles({ per_page: 50 });
     articles = result.articles;
   } catch (err) {
     console.error('Error fetching articles for RSS feed:', err);
+  }
+
+  // Fetch audio URLs for all articles (in parallel, non-blocking)
+  const audioUrls: Record<string, string | null> = {};
+  try {
+    const audioPromises = articles.map(async (article) => {
+      try {
+        const url = await fetchAudioUrl(article.id);
+        if (url) audioUrls[article.id] = url;
+      } catch {
+        // Skip individual audio failures
+      }
+    });
+    await Promise.all(audioPromises);
+  } catch {
+    // Non-blocking
   }
 
   const items = articles
@@ -19,10 +44,11 @@ export async function GET() {
       <link>${siteUrl}/blog/${article.slug}</link>
       <guid isPermaLink="true">${siteUrl}/blog/${article.slug}</guid>
       <description><![CDATA[${article.excerpt || ''}]]></description>
-      <category>${article.category}</category>
-      <dc:creator>${article.author?.name || 'TrapGlow'}</dc:creator>
-      <pubDate>${new Date(article.published_at || article.created_at).toUTCString()}</pubDate>
-      ${article.cover_image ? `<enclosure url="${article.cover_image}" type="image/jpeg" />` : ''}
+      <category>${escapeXml(article.category)}</category>
+      <dc:creator>${escapeXml(article.author?.name || 'TrapGlow')}</dc:creator>
+      <pubDate>${new Date(article.published_at || article.created_at).toUTCString()}</pubDate>${article.cover_image ? `
+      <enclosure url="${escapeXml(article.cover_image)}" type="image/jpeg" />` : ''}${audioUrls[article.id] ? `
+      <enclosure url="${escapeXml(audioUrls[article.id]!)}" type="audio/mpeg" />` : ''}
     </item>`
     )
     .join('');
@@ -33,7 +59,7 @@ export async function GET() {
   xmlns:atom="http://www.w3.org/2005/Atom"
 >
   <channel>
-    <title>TrapGlow — Shining Light on What's Next</title>
+    <title>TrapGlow — Artist Discovery</title>
     <link>${siteUrl}</link>
     <description>Emerging artist discovery, features, and music culture. TrapGlow shines light on what's next.</description>
     <language>en-us</language>

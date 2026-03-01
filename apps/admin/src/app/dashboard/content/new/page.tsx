@@ -29,6 +29,8 @@ export default function NewArticlePage() {
   const [brand, setBrand] = useState<Brand>(activeBrand === 'all' ? 'saucewire' : activeBrand);
   const [contentTypeId, setContentTypeId] = useState(BRAND_FORM_CONFIGS[brand].contentTypes[0].id);
   const [status, setStatus] = useState<ArticleStatus>('draft');
+  const [scheduleEnabled, setScheduleEnabled] = useState(false);
+  const [scheduledDate, setScheduledDate] = useState('');
 
   // Form data (common + metadata)
   const [formData, setFormData] = useState<Record<string, any>>({
@@ -97,6 +99,17 @@ export default function NewArticlePage() {
         .map((t: string) => t.trim())
         .filter(Boolean);
 
+      // Determine effective status and published_at for scheduling
+      const effectiveStatus = scheduleEnabled && scheduledDate ? 'pending_review' : status;
+      const effectivePublishedAt = status === 'published' && !scheduleEnabled
+        ? new Date().toISOString()
+        : null;
+
+      // Add scheduling metadata if applicable
+      if (scheduleEnabled && scheduledDate) {
+        metadata.scheduled = true;
+      }
+
       const res = await fetch('/api/articles', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -109,12 +122,15 @@ export default function NewArticlePage() {
           brand,
           category: category || brandConfig.contentTypes[0].label,
           tags,
-          status,
+          status: effectiveStatus,
           is_breaking: formData.is_breaking || false,
           is_ai_generated: false,
           source_url: formData.source_url || null,
           reading_time_minutes: estimateReadingTime(formData.body),
-          published_at: status === 'published' ? new Date().toISOString() : null,
+          published_at: effectivePublishedAt,
+          scheduled_publish_at: scheduleEnabled && scheduledDate
+            ? new Date(scheduledDate).toISOString()
+            : null,
           metadata,
         }),
       });
@@ -438,7 +454,13 @@ export default function NewArticlePage() {
                 <label className="block text-xs font-medium text-gray-400 mb-1">Save as</label>
                 <select
                   value={status}
-                  onChange={(e) => setStatus(e.target.value as ArticleStatus)}
+                  onChange={(e) => {
+                    setStatus(e.target.value as ArticleStatus);
+                    if (e.target.value !== 'published') {
+                      setScheduleEnabled(false);
+                      setScheduledDate('');
+                    }
+                  }}
                   className="admin-input text-sm"
                 >
                   <option value="draft">Draft</option>
@@ -446,6 +468,64 @@ export default function NewArticlePage() {
                   <option value="published">Published (immediate)</option>
                 </select>
               </div>
+            </div>
+
+            {/* Schedule Publish Option */}
+            <div className="border-t border-white/5 pt-4">
+              <div className="flex items-center gap-3 mb-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setScheduleEnabled(!scheduleEnabled);
+                    if (!scheduleEnabled) {
+                      setStatus('published');
+                    } else {
+                      setScheduledDate('');
+                    }
+                  }}
+                  className={`relative w-10 h-5 rounded-full transition-colors ${scheduleEnabled ? 'bg-blue-500' : 'bg-gray-700'}`}
+                >
+                  <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${scheduleEnabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                </button>
+                <div>
+                  <span className="text-xs font-medium text-gray-300 flex items-center gap-1.5">
+                    🕐 Schedule Publish
+                  </span>
+                  <p className="text-[10px] text-gray-600">Set a future date/time for auto-publishing</p>
+                </div>
+              </div>
+
+              {scheduleEnabled && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="ml-13"
+                >
+                  <label className="block text-xs font-medium text-gray-400 mb-1">Publish Date & Time</label>
+                  <input
+                    type="datetime-local"
+                    value={scheduledDate}
+                    onChange={(e) => setScheduledDate(e.target.value)}
+                    min={new Date().toISOString().slice(0, 16)}
+                    className="admin-input text-sm"
+                    required={scheduleEnabled}
+                  />
+                  {scheduledDate && (
+                    <p className="text-[10px] text-blue-400 mt-1 flex items-center gap-1">
+                      🕐 Will publish on {new Date(scheduledDate).toLocaleString('en-US', {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true,
+                      })}
+                    </p>
+                  )}
+                </motion.div>
+              )}
             </div>
           </div>
 
@@ -462,7 +542,7 @@ export default function NewArticlePage() {
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   Saving...
                 </>
-              ) : status === 'published' ? '🚀 Publish' : '💾 Save Article'}
+              ) : scheduleEnabled && scheduledDate ? '🕐 Schedule Publish' : status === 'published' ? '🚀 Publish' : '💾 Save Article'}
             </button>
           </div>
         </form>

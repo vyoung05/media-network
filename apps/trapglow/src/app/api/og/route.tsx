@@ -7,9 +7,12 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
 
   const title = searchParams.get('title') || 'TrapGlow — Shining Light on What\'s Next';
+  const category = searchParams.get('category') || '';
   const artist = searchParams.get('artist') || '';
+  const author = searchParams.get('author') || '';
   const genre = searchParams.get('genre') || '';
   const score = searchParams.get('score') || '';
+  const image = searchParams.get('image') || '';
   const type = searchParams.get('type') || 'default'; // default | artist | blog
 
   return new ImageResponse(
@@ -28,6 +31,34 @@ export async function GET(request: NextRequest) {
           overflow: 'hidden',
         }}
       >
+        {/* Cover image background */}
+        {image && (
+          <img
+            src={image}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+            }}
+          />
+        )}
+        {/* Dark overlay */}
+        {image && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              background: 'linear-gradient(180deg, rgba(15,11,46,0.7) 0%, rgba(15,11,46,0.9) 100%)',
+            }}
+          />
+        )}
+
         {/* Background gradient orbs */}
         <div
           style={{
@@ -64,7 +95,7 @@ export async function GET(request: NextRequest) {
         />
 
         {/* Top section */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', position: 'relative' }}>
           {/* Logo */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
@@ -104,8 +135,8 @@ export async function GET(request: NextRequest) {
             )}
           </div>
 
-          {/* Genre/Type tag */}
-          {(genre || type === 'artist') && (
+          {/* Genre/Category/Type tag */}
+          {(genre || category || type === 'artist') && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div
                 style={{
@@ -124,14 +155,14 @@ export async function GET(request: NextRequest) {
                   textTransform: 'uppercase',
                 }}
               >
-                {type === 'artist' ? 'Artist Spotlight' : genre}
+                {type === 'artist' ? 'Artist Spotlight' : category || genre}
               </span>
             </div>
           )}
         </div>
 
         {/* Title */}
-        <div style={{ display: 'flex', flex: 1, alignItems: 'center', paddingTop: '20px', paddingBottom: '20px' }}>
+        <div style={{ display: 'flex', flex: 1, alignItems: 'center', paddingTop: '20px', paddingBottom: '20px', position: 'relative' }}>
           <h1
             style={{
               fontSize: title.length > 80 ? '40px' : title.length > 50 ? '50px' : '58px',
@@ -154,12 +185,14 @@ export async function GET(request: NextRequest) {
             justifyContent: 'space-between',
             borderTop: '1px solid rgba(255,255,255,0.06)',
             paddingTop: '24px',
+            position: 'relative',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            {artist && (
+            {(artist || author) && (
               <span style={{ fontSize: '16px', color: 'rgba(248,248,255,0.5)' }}>
-                Featuring <span style={{ color: '#8B5CF6', fontWeight: 700 }}>{artist}</span>
+                {artist ? 'Featuring' : 'By'}{' '}
+                <span style={{ color: '#8B5CF6', fontWeight: 700 }}>{artist || author}</span>
               </span>
             )}
           </div>

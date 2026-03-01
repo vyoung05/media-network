@@ -1,14 +1,39 @@
-import { fetchArticles } from '@/lib/supabase';
+import { fetchArticles, fetchAudioUrl } from '@/lib/supabase';
+
+function escapeXml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
 
 export async function GET() {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://trapfrequency.com';
 
   let articles: any[] = [];
   try {
-    const result = await fetchArticles({ per_page: 20 });
+    const result = await fetchArticles({ per_page: 50 });
     articles = result.articles;
   } catch (err) {
     console.error('Error fetching articles for RSS feed:', err);
+  }
+
+  // Fetch audio URLs for all articles (in parallel, non-blocking)
+  const audioUrls: Record<string, string | null> = {};
+  try {
+    const audioPromises = articles.map(async (article) => {
+      try {
+        const url = await fetchAudioUrl(article.id);
+        if (url) audioUrls[article.id] = url;
+      } catch {
+        // Skip individual audio failures
+      }
+    });
+    await Promise.all(audioPromises);
+  } catch {
+    // Non-blocking
   }
 
   const items = articles
@@ -19,9 +44,10 @@ export async function GET() {
       <link>${siteUrl}/tutorials/${article.slug}</link>
       <guid isPermaLink="true">${siteUrl}/tutorials/${article.slug}</guid>
       <description><![CDATA[${article.excerpt || ''}]]></description>
-      <category>${article.category}</category>
-      <dc:creator>${article.author?.name || 'TrapFrequency'}</dc:creator>
-      <pubDate>${new Date(article.published_at || article.created_at).toUTCString()}</pubDate>
+      <category>${escapeXml(article.category)}</category>
+      <dc:creator>${escapeXml(article.author?.name || 'TrapFrequency')}</dc:creator>
+      <pubDate>${new Date(article.published_at || article.created_at).toUTCString()}</pubDate>${audioUrls[article.id] ? `
+      <enclosure url="${escapeXml(audioUrls[article.id]!)}" type="audio/mpeg" />` : ''}
     </item>`
     )
     .join('');
@@ -32,7 +58,7 @@ export async function GET() {
   xmlns:atom="http://www.w3.org/2005/Atom"
 >
   <channel>
-    <title>TrapFrequency — Tune Into The Craft</title>
+    <title>TrapFrequency — Music Production</title>
     <link>${siteUrl}</link>
     <description>Music production tutorials, beat reviews, gear guides, and producer interviews.</description>
     <language>en-us</language>

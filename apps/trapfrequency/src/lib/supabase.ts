@@ -4,6 +4,7 @@ import {
   getArticles,
   getArticleBySlug,
   getTrendingArticles,
+  getArticleAudioUrl,
 } from '@media-network/shared';
 import type { Article, Brand } from '@media-network/shared';
 import type { Producer, Tutorial, Beat, GearReview, SamplePack } from './mock-data';
@@ -167,6 +168,12 @@ export async function fetchTrendingArticles(limit = 8): Promise<Article[]> {
   const supabase = getSupabase();
   if (!supabase) return [];
   return getTrendingArticles(supabase, BRAND, limit);
+}
+
+export async function fetchAudioUrl(articleId: string): Promise<string | null> {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+  return getArticleAudioUrl(supabase, articleId);
 }
 
 // ======================== PRODUCERS ========================

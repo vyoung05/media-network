@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
   const title = searchParams.get('title') || 'TrapFrequency — Tune Into The Craft';
   const category = searchParams.get('category') || '';
   const author = searchParams.get('author') || '';
+  const image = searchParams.get('image') || '';
   const type = searchParams.get('type') || 'article'; // article, beat, gear, producer
 
   return new ImageResponse(
@@ -27,6 +28,34 @@ export async function GET(request: NextRequest) {
           overflow: 'hidden',
         }}
       >
+        {/* Cover image background */}
+        {image && (
+          <img
+            src={image}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+            }}
+          />
+        )}
+        {/* Dark overlay */}
+        {image && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              background: 'linear-gradient(180deg, rgba(13,13,13,0.7) 0%, rgba(13,13,13,0.92) 100%)',
+            }}
+          />
+        )}
+
         {/* Grid background */}
         <div
           style={{
@@ -61,35 +90,8 @@ export async function GET(request: NextRequest) {
           }}
         />
 
-        {/* Waveform decoration */}
-        <div
-          style={{
-            position: 'absolute',
-            bottom: '100px',
-            left: '60px',
-            right: '60px',
-            height: '60px',
-            display: 'flex',
-            alignItems: 'flex-end',
-            gap: '3px',
-            opacity: 0.08,
-          }}
-        >
-          {Array.from({ length: 80 }).map((_, i) => (
-            <div
-              key={i}
-              style={{
-                flex: 1,
-                height: `${Math.sin(i * 0.15) * 40 + Math.random() * 50 + 10}%`,
-                backgroundColor: '#39FF14',
-                borderRadius: '2px',
-              }}
-            />
-          ))}
-        </div>
-
         {/* Top section */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', position: 'relative' }}>
           {/* Logo */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'baseline' }}>
@@ -132,7 +134,7 @@ export async function GET(request: NextRequest) {
         </div>
 
         {/* Title */}
-        <div style={{ display: 'flex', flex: 1, alignItems: 'center', paddingTop: '20px', paddingBottom: '20px' }}>
+        <div style={{ display: 'flex', flex: 1, alignItems: 'center', paddingTop: '20px', paddingBottom: '20px', position: 'relative' }}>
           <h1
             style={{
               fontSize: title.length > 80 ? '42px' : title.length > 50 ? '52px' : '60px',
@@ -155,6 +157,7 @@ export async function GET(request: NextRequest) {
             justifyContent: 'space-between',
             borderTop: '1px solid rgba(57, 255, 20, 0.15)',
             paddingTop: '24px',
+            position: 'relative',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>

@@ -189,6 +189,17 @@ export function ContentQueuePage() {
                             🤖 AI
                           </span>
                         )}
+                        {(article as any).scheduled_publish_at && (
+                          <span className="text-xs px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 font-mono flex items-center gap-1">
+                            🕐 Scheduled {new Date((article as any).scheduled_publish_at).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              hour: 'numeric',
+                              minute: '2-digit',
+                              hour12: true,
+                            })}
+                          </span>
+                        )}
                       </div>
                       <h3 className="text-base font-semibold text-white mb-1">{article.title}</h3>
                       <p className="text-sm text-gray-500 line-clamp-2 sm:line-clamp-1">{article.excerpt}</p>

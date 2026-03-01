@@ -16,20 +16,28 @@ export function generateMetadata({ params }: Props): Metadata {
   const issue = mockIssues.find((i) => i.slug === params.slug);
   if (!issue) return { title: 'Issue Not Found' };
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://saucecaviar.com';
+  const ogParams = new URLSearchParams({
+    title: issue.title,
+    issue: `Issue #${issue.issueNumber}`,
+    ...(issue.coverImage && { image: issue.coverImage }),
+  });
+  const ogImageUrl = `${siteUrl}/api/og?${ogParams.toString()}`;
+
   return {
     title: `${issue.title} — Issue #${issue.issueNumber}`,
     description: issue.description,
     openGraph: {
       title: `SauceCaviar — ${issue.title}`,
       description: issue.description,
-      images: [issue.coverImage],
+      images: [{ url: ogImageUrl, width: 1200, height: 630, alt: issue.title }],
       type: 'article',
     },
     twitter: {
       card: 'summary_large_image',
       title: issue.title,
       description: issue.description,
-      images: [issue.coverImage],
+      images: [ogImageUrl],
     },
   };
 }

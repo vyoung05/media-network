@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
       is_ai_generated = false,
       source_url,
       metadata = {},
+      scheduled_publish_at,
     } = body;
 
     if (!title || !articleBody || !brand || !category) {
@@ -36,26 +37,33 @@ export async function POST(request: NextRequest) {
     const reading_time_minutes = estimateReadingTime(articleBody);
 
     // Insert directly to include metadata column
+    const insertData: Record<string, any> = {
+      title,
+      slug,
+      body: articleBody,
+      excerpt: excerpt || null,
+      cover_image: cover_image || null,
+      brand: brand as Brand,
+      category,
+      tags,
+      author_id: author_id || null,
+      status,
+      is_breaking,
+      is_ai_generated,
+      source_url: source_url || null,
+      reading_time_minutes,
+      published_at: status === 'published' ? new Date().toISOString() : null,
+      metadata,
+    };
+
+    // Add scheduled_publish_at if provided
+    if (scheduled_publish_at) {
+      insertData.scheduled_publish_at = scheduled_publish_at;
+    }
+
     const { data: article, error: insertError } = await supabase
       .from('articles')
-      .insert({
-        title,
-        slug,
-        body: articleBody,
-        excerpt: excerpt || null,
-        cover_image: cover_image || null,
-        brand: brand as Brand,
-        category,
-        tags,
-        author_id: author_id || null,
-        status,
-        is_breaking,
-        is_ai_generated,
-        source_url: source_url || null,
-        reading_time_minutes,
-        published_at: status === 'published' ? new Date().toISOString() : null,
-        metadata,
-      })
+      .insert(insertData)
       .select('*, author:users!author_id(*)')
       .single();
 

@@ -12,13 +12,23 @@ export async function generateMetadata({ params }: ArticlePageProps) {
   const article = await fetchArticleBySlug(params.slug);
   if (!article) return {};
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://saucewire.com';
+  const ogParams = new URLSearchParams({
+    title: article.title,
+    ...(article.category && { category: article.category }),
+    ...(article.author?.name && { author: article.author.name }),
+    ...(article.cover_image && { image: article.cover_image }),
+    ...(article.is_breaking && { breaking: 'true' }),
+  });
+  const ogImageUrl = `${siteUrl}/api/og?${ogParams.toString()}`;
+
   return {
     title: article.title,
     description: article.excerpt || article.title,
     openGraph: {
       title: article.title,
       description: article.excerpt || article.title,
-      images: article.cover_image ? [article.cover_image] : [],
+      images: [{ url: ogImageUrl, width: 1200, height: 630, alt: article.title }],
       type: 'article',
       publishedTime: article.published_at || undefined,
       authors: article.author ? [article.author.name] : [],
@@ -27,7 +37,7 @@ export async function generateMetadata({ params }: ArticlePageProps) {
       card: 'summary_large_image',
       title: article.title,
       description: article.excerpt || article.title,
-      images: article.cover_image ? [article.cover_image] : [],
+      images: [ogImageUrl],
     },
   };
 }
