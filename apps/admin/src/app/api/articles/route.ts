@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
       is_breaking = false,
       is_ai_generated = false,
       source_url,
+      metadata = {},
     } = body;
 
     if (!title || !articleBody || !brand || !category) {
@@ -34,23 +35,31 @@ export async function POST(request: NextRequest) {
     const slug = slugify(title);
     const reading_time_minutes = estimateReadingTime(articleBody);
 
-    const article = await createArticle(supabase, {
-      title,
-      slug,
-      body: articleBody,
-      excerpt: excerpt || null,
-      cover_image: cover_image || null,
-      brand: brand as Brand,
-      category,
-      tags,
-      author_id: author_id || null,
-      status,
-      is_breaking,
-      is_ai_generated,
-      source_url: source_url || null,
-      reading_time_minutes,
-      published_at: status === 'published' ? new Date().toISOString() : null,
-    });
+    // Insert directly to include metadata column
+    const { data: article, error: insertError } = await supabase
+      .from('articles')
+      .insert({
+        title,
+        slug,
+        body: articleBody,
+        excerpt: excerpt || null,
+        cover_image: cover_image || null,
+        brand: brand as Brand,
+        category,
+        tags,
+        author_id: author_id || null,
+        status,
+        is_breaking,
+        is_ai_generated,
+        source_url: source_url || null,
+        reading_time_minutes,
+        published_at: status === 'published' ? new Date().toISOString() : null,
+        metadata,
+      })
+      .select('*, author:users!author_id(*)')
+      .single();
+
+    if (insertError) throw insertError;
 
     return NextResponse.json(article, { status: 201 });
   } catch (error: any) {

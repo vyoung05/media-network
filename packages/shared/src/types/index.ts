@@ -54,6 +54,7 @@ export interface Article {
   source_url: string | null;
   reading_time_minutes: number;
   view_count: number;
+  metadata?: Record<string, any>;
   published_at: string | null;
   created_at: string;
   updated_at: string;
