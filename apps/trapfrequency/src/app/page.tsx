@@ -7,6 +7,7 @@ import {
   getSamplePacks,
   getFeaturedBeats,
 } from '@/lib/supabase';
+import { JsonLd } from '@media-network/shared';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,13 +30,21 @@ export default async function HomePage() {
   }));
 
   return (
-    <HomePageClient
-      tutorials={tutorials}
-      beats={beats}
-      gearReviews={gearReviews}
-      producers={producers}
-      chartEntries={chartEntries}
-      samplePacks={samplePacks}
-    />
+    <>
+      <JsonLd
+        type="organization"
+        name="TrapFrequency"
+        url="https://trapfrequency.com"
+        description="Tune Into The Craft. Tutorials, beats, gear reviews, and producer spotlights for music creators."
+      />
+      <HomePageClient
+        tutorials={tutorials}
+        beats={beats}
+        gearReviews={gearReviews}
+        producers={producers}
+        chartEntries={chartEntries}
+        samplePacks={samplePacks}
+      />
+    </>
   );
 }

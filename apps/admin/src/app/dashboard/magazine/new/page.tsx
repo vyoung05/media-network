@@ -7,6 +7,7 @@ export default function NewMagazineIssuePage() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [scheduleEnabled, setScheduleEnabled] = useState(false);
   const [form, setForm] = useState({
     title: '',
     subtitle: '',
@@ -15,6 +16,7 @@ export default function NewMagazineIssuePage() {
     season: '',
     featured_color: '#C9A84C',
     cover_image: '',
+    scheduled_publish_at: '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -28,7 +30,7 @@ export default function NewMagazineIssuePage() {
     setError(null);
 
     try {
-      const payload = {
+      const payload: Record<string, any> = {
         ...form,
         issue_number: parseInt(form.issue_number, 10),
         slug: form.title
@@ -36,6 +38,9 @@ export default function NewMagazineIssuePage() {
           .replace(/[^a-z0-9]+/g, '-')
           .replace(/^-|-$/g, ''),
       };
+      if (!scheduleEnabled || !form.scheduled_publish_at) {
+        delete payload.scheduled_publish_at;
+      }
 
       const res = await fetch('/api/magazine-issues', {
         method: 'POST',
@@ -185,6 +190,41 @@ export default function NewMagazineIssuePage() {
                 className="admin-input flex-1"
               />
             </div>
+          </div>
+
+          {/* Scheduled Publish */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-sm font-medium text-gray-300">Schedule Publication</label>
+              <button
+                type="button"
+                onClick={() => setScheduleEnabled(!scheduleEnabled)}
+                className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${
+                  scheduleEnabled ? 'bg-[#C9A84C]' : 'bg-gray-700'
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-all ${
+                    scheduleEnabled ? 'left-[22px]' : 'left-[2px]'
+                  }`}
+                />
+              </button>
+            </div>
+            {scheduleEnabled && (
+              <div className="mt-2">
+                <input
+                  type="datetime-local"
+                  name="scheduled_publish_at"
+                  value={form.scheduled_publish_at}
+                  onChange={handleChange}
+                  className="admin-input w-full"
+                  min={new Date().toISOString().slice(0, 16)}
+                />
+                <p className="text-[10px] text-gray-600 mt-1">
+                  ⏰ Issue will auto-publish at this date and time (your timezone)
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Cover Image URL */}

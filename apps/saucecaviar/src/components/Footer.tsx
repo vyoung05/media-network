@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { NewsletterSignup } from '@media-network/shared';
 
 export function Footer() {
   return (
@@ -95,6 +96,15 @@ export function Footer() {
               ))}
             </ul>
           </div>
+        </div>
+
+        {/* Newsletter Signup */}
+        <div className="mt-12 pt-8 border-t border-surface/20">
+          <NewsletterSignup
+            brand="saucecaviar"
+            brandName="SauceCaviar"
+            primaryColor="#C9A84C"
+          />
         </div>
 
         {/* Bottom bar */}

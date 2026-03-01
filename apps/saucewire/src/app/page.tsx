@@ -4,6 +4,7 @@ import {
   fetchBreakingArticles,
   fetchTrendingArticles,
 } from '@/lib/supabase';
+import { JsonLd } from '@media-network/shared';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,10 +16,18 @@ export default async function HomePage() {
   ]);
 
   return (
-    <HomePageClient
-      articles={articles}
-      breakingArticles={breakingArticles}
-      trendingArticles={trendingArticles}
-    />
+    <>
+      <JsonLd
+        type="organization"
+        name="SauceWire"
+        url="https://saucewire.com"
+        description="Culture. Connected. Now. Breaking news and culture coverage — hip-hop, fashion, entertainment, sports, and tech."
+      />
+      <HomePageClient
+        articles={articles}
+        breakingArticles={breakingArticles}
+        trendingArticles={trendingArticles}
+      />
+    </>
   );
 }

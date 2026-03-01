@@ -1,6 +1,7 @@
 import { HomePageClient } from '@/components/HomePageClient';
 import { fetchAllIssues, fetchLatestIssue } from '@/lib/supabase';
 import { getAllIssues, getLatestIssue } from '@/lib/mock-data';
+import { JsonLd } from '@media-network/shared';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,5 +14,15 @@ export default async function HomePage() {
   if (!latestIssue) latestIssue = getLatestIssue();
   if (allIssues.length === 0) allIssues = getAllIssues();
 
-  return <HomePageClient latestIssue={latestIssue} allIssues={allIssues} />;
+  return (
+    <>
+      <JsonLd
+        type="organization"
+        name="SauceCaviar"
+        url="https://saucecaviar.com"
+        description="Culture Served Premium. Fashion, music, art, culture, and lifestyle — the finest editorial experience."
+      />
+      <HomePageClient latestIssue={latestIssue} allIssues={allIssues} />
+    </>
+  );
 }

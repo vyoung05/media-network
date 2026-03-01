@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { NewsletterSignup } from '@media-network/shared';
 
 export function Footer() {
   return (
@@ -99,19 +100,13 @@ export function Footer() {
               </li>
             </ul>
 
-            {/* Newsletter mini */}
+            {/* Newsletter */}
             <div className="mt-6">
-              <p className="text-xs text-white/30 mb-2 font-body">Stay in the glow ✨</p>
-              <div className="flex gap-2">
-                <input
-                  type="email"
-                  placeholder="your@email.com"
-                  className="flex-1 px-3 py-2 text-xs bg-surface border border-white/10 rounded-lg text-white placeholder-white/20 focus:outline-none focus:border-primary"
-                />
-                <button className="px-3 py-2 text-xs bg-primary text-white font-bold rounded-lg hover:bg-primary/80 transition-colors">
-                  Go
-                </button>
-              </div>
+              <NewsletterSignup
+                brand="trapglow"
+                brandName="TrapGlow"
+                primaryColor="#8B5CF6"
+              />
             </div>
           </div>
         </div>

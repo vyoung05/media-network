@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { fetchArticleBySlug, fetchTrendingArticles, fetchArticles, fetchAudioUrl } from '@/lib/supabase';
 import { ArticlePageClient } from './ArticlePageClient';
+import { JsonLd } from '@media-network/shared';
 
 export const revalidate = 60;
 
@@ -59,12 +60,35 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     .filter((a) => a.id !== article.id)
     .slice(0, 4);
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://saucewire.com';
+
   return (
-    <ArticlePageClient
-      article={article}
-      relatedArticles={relatedArticles}
-      trendingArticles={trendingArticles}
-      audioUrl={audioUrl}
-    />
+    <>
+      <JsonLd
+        type="article"
+        headline={article.title}
+        description={article.excerpt || article.title}
+        image={article.cover_image || undefined}
+        datePublished={article.published_at || undefined}
+        dateModified={article.updated_at || article.published_at || undefined}
+        author={article.author ? { name: article.author.name } : undefined}
+        publisher={{ name: 'SauceWire', url: siteUrl }}
+        url={`${siteUrl}/${article.slug}`}
+      />
+      <JsonLd
+        type="breadcrumb"
+        items={[
+          { name: 'Home', url: siteUrl },
+          { name: article.category || 'Article', url: `${siteUrl}/category/${(article.category || 'news').toLowerCase()}` },
+          { name: article.title, url: `${siteUrl}/${article.slug}` },
+        ]}
+      />
+      <ArticlePageClient
+        article={article}
+        relatedArticles={relatedArticles}
+        trendingArticles={trendingArticles}
+        audioUrl={audioUrl}
+      />
+    </>
   );
 }

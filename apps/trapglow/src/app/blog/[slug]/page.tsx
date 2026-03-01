@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { fetchArticleBySlug, fetchArticles } from '@/lib/supabase';
 import { BlogPostClient } from './BlogPostClient';
+import { JsonLd } from '@media-network/shared';
 
 export const dynamic = 'force-dynamic';
 
@@ -99,10 +100,33 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       created_at: a.created_at,
     }));
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://trapglow.com';
+
   return (
-    <BlogPostClient
-      post={post}
-      relatedPosts={relatedPosts}
-    />
+    <>
+      <JsonLd
+        type="article"
+        headline={article.title}
+        description={article.excerpt || article.title}
+        image={article.cover_image || undefined}
+        datePublished={article.published_at || undefined}
+        dateModified={article.updated_at || article.published_at || undefined}
+        author={article.author ? { name: article.author.name } : undefined}
+        publisher={{ name: 'TrapGlow', url: siteUrl }}
+        url={`${siteUrl}/blog/${article.slug}`}
+      />
+      <JsonLd
+        type="breadcrumb"
+        items={[
+          { name: 'Home', url: siteUrl },
+          { name: 'Blog', url: `${siteUrl}/blog` },
+          { name: article.title, url: `${siteUrl}/blog/${article.slug}` },
+        ]}
+      />
+      <BlogPostClient
+        post={post}
+        relatedPosts={relatedPosts}
+      />
+    </>
   );
 }

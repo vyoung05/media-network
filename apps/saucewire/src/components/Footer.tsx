@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { SAUCEWIRE_CATEGORIES } from '@media-network/shared';
+import { NewsletterSignup } from '@media-network/shared';
 
 export function Footer() {
   return (
@@ -81,6 +82,15 @@ export function Footer() {
               </li>
             </ul>
           </div>
+        </div>
+
+        {/* Newsletter Signup */}
+        <div className="mt-10 pt-8 border-t border-gray-800">
+          <NewsletterSignup
+            brand="saucewire"
+            brandName="SauceWire"
+            primaryColor="#E63946"
+          />
         </div>
 
         {/* Bottom bar */}

@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { NewsletterSignup } from '@media-network/shared';
 
 export function Footer() {
   return (
@@ -101,6 +102,15 @@ export function Footer() {
               </li>
             </ul>
           </div>
+        </div>
+
+        {/* Newsletter Signup */}
+        <div className="mt-10 pt-8 border-t border-primary/10">
+          <NewsletterSignup
+            brand="trapfrequency"
+            brandName="TrapFrequency"
+            primaryColor="#39FF14"
+          />
         </div>
 
         {/* Bottom */}

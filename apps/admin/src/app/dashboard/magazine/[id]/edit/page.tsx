@@ -788,6 +788,12 @@ export default function EditMagazineIssuePage() {
           </div>
         </div>
         <div className="flex gap-2">
+          <button
+            onClick={() => router.push(`/dashboard/magazine/${params.id}/preview`)}
+            className="admin-btn-ghost flex items-center gap-2 touch-manipulation text-sm"
+          >
+            👁️ Preview
+          </button>
           {issue.status !== 'published' && (
             <button
               onClick={handlePublish}
