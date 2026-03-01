@@ -212,9 +212,9 @@ function FieldRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
       <label className="text-sm text-gray-300 font-medium flex-shrink-0">{label}</label>
-      <div className="flex-1 max-w-sm">{children}</div>
+      <div className="flex-1 sm:max-w-sm">{children}</div>
     </div>
   );
 }
@@ -257,7 +257,7 @@ export function SettingsPage() {
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-3"
       >
         <div>
           <h1 className="text-2xl font-bold text-white">Settings</h1>
@@ -287,7 +287,7 @@ export function SettingsPage() {
       </motion.div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-white/[0.06] pb-px">
+      <div className="flex gap-1 border-b border-white/[0.06] pb-px overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.key;
           return (
@@ -387,7 +387,7 @@ export function SettingsPage() {
       {activeTab === 'brands' && (
         <div className="space-y-6">
           {/* Brand selector */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             {(Object.keys(BRAND_CONFIGS) as Brand[]).map((brand) => {
               const config = BRAND_CONFIGS[brand];
               const isActive = activeBrandTab === brand;

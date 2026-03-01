@@ -101,7 +101,7 @@ function SubmissionDetail({
         </div>
 
         <div className="p-6 space-y-6">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <p className="text-xs font-mono text-gray-500 uppercase tracking-wider mb-1">From</p>
               <p className="text-sm text-white">
@@ -291,7 +291,7 @@ export function SubmissionsPage() {
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-3"
       >
         <div>
           <h1 className="text-2xl font-bold text-white">Submissions</h1>
@@ -300,7 +300,7 @@ export function SubmissionsPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="relative">
+          <div className="relative flex-1 sm:flex-initial">
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
@@ -309,14 +309,14 @@ export function SubmissionsPage() {
               placeholder="Search submissions..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="admin-input pl-10 w-64 text-sm"
+              className="admin-input pl-10 w-full sm:w-64 text-sm"
             />
           </div>
         </div>
       </motion.div>
 
       {/* Status tabs */}
-      <div className="flex gap-1 border-b border-white/[0.06] pb-px">
+      <div className="flex gap-1 border-b border-white/[0.06] pb-px overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
         {([
           { key: 'all' as const, label: 'All' },
           { key: 'pending' as const, label: 'Pending' },
@@ -355,13 +355,13 @@ export function SubmissionsPage() {
       </div>
 
       {/* Filters bar */}
-      <div className="glass-panel p-3 flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-2">
+      <div className="glass-panel p-3 flex flex-wrap items-center gap-3 overflow-x-auto">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs font-mono text-gray-500">Type:</span>
-          <div className="flex gap-1">
+          <div className="flex gap-1 flex-wrap">
             <button
               onClick={() => setFilterType('all')}
-              className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+              className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors min-h-[36px] ${
                 filterType === 'all' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'
               }`}
             >
@@ -371,7 +371,7 @@ export function SubmissionsPage() {
               <button
                 key={type}
                 onClick={() => setFilterType(type)}
-                className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+                className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors whitespace-nowrap min-h-[36px] ${
                   filterType === type ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'
                 }`}
               >

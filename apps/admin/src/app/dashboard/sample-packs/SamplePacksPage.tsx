@@ -46,12 +46,12 @@ export function SamplePacksPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-white">Sample Packs</h1>
           <p className="text-sm text-gray-500 mt-1">{loading ? 'Loading...' : `${totalCount} packs`}</p>
         </div>
-        <button onClick={() => router.push('/dashboard/sample-packs/new')} className="admin-btn-primary flex items-center gap-2">
+        <button onClick={() => router.push('/dashboard/sample-packs/new')} className="admin-btn-primary flex items-center justify-center gap-2 w-full sm:w-auto">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
           New Pack
         </button>
@@ -72,7 +72,8 @@ export function SamplePacksPage() {
 
       {!loading && !error && (
         <div className="glass-panel overflow-hidden">
-          <table className="w-full">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[900px]">
             <thead>
               <tr className="border-b border-white/[0.06]">
                 <th className="text-left text-xs font-mono text-gray-500 uppercase tracking-wider px-5 py-3">Title</th>
@@ -123,6 +124,7 @@ export function SamplePacksPage() {
               </AnimatePresence>
             </tbody>
           </table>
+          </div>
 
           {packs.length === 0 && (
             <div className="p-12 text-center">

@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import type { Brand } from '@media-network/shared';
 import { useBrand } from '@/contexts/BrandContext';
 import { useAuth } from '@/components/AuthProvider';
@@ -29,11 +29,21 @@ interface NavItem {
   badge?: number;
 }
 
-export function Sidebar() {
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { activeBrand, setActiveBrand } = useBrand();
   const { user, signOut } = useAuth();
   const router = useRouter();
+
+  const handleNavClick = () => {
+    // Close sidebar on mobile when navigating
+    if (onClose) onClose();
+  };
 
   const navItems: NavItem[] = [
     {
@@ -168,8 +178,8 @@ export function Sidebar() {
     return pathname?.startsWith(href);
   };
 
-  return (
-    <aside className="fixed left-0 top-0 bottom-0 w-64 glass-sidebar flex flex-col z-40">
+  const sidebarContent = (
+    <>
       {/* Logo */}
       <div className="px-6 py-5 border-b border-white/[0.06]">
         <div className="flex items-center gap-3">
@@ -178,10 +188,20 @@ export function Sidebar() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           </div>
-          <div>
+          <div className="flex-1 min-w-0">
             <h1 className="text-sm font-bold text-white">Media Network</h1>
             <p className="text-xs text-gray-500">Admin Dashboard</p>
           </div>
+          {/* Close button — mobile only */}
+          <button
+            onClick={onClose}
+            className="md:hidden p-1.5 -mr-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+            aria-label="Close menu"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -254,6 +274,7 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={handleNavClick}
               className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 group ${
                 active
                   ? 'bg-white/10 text-white'
@@ -287,6 +308,7 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={handleNavClick}
               className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 group ${
                 active
                   ? 'bg-white/10 text-white'
@@ -321,6 +343,7 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={handleNavClick}
               className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 group ${
                 active
                   ? 'bg-white/10 text-white'
@@ -375,6 +398,42 @@ export function Sidebar() {
           </button>
         </div>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Desktop sidebar — always visible */}
+      <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-64 glass-sidebar flex-col z-40">
+        {sidebarContent}
+      </aside>
+
+      {/* Mobile sidebar — overlay drawer */}
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 md:hidden"
+              onClick={onClose}
+            />
+            {/* Drawer */}
+            <motion.aside
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              className="fixed left-0 top-0 bottom-0 w-72 max-w-[85vw] glass-sidebar flex flex-col z-50 md:hidden"
+            >
+              {sidebarContent}
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

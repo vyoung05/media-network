@@ -90,7 +90,7 @@ export function ContentQueuePage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-white">Content Queue</h1>
           <p className="text-sm text-gray-500 mt-1">
@@ -99,7 +99,7 @@ export function ContentQueuePage() {
         </div>
         <button
           onClick={() => router.push('/dashboard/content/new')}
-          className="admin-btn-primary flex items-center gap-2"
+          className="admin-btn-primary flex items-center justify-center gap-2 w-full sm:w-auto"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -166,45 +166,47 @@ export function ContentQueuePage() {
                 transition={{ delay: i * 0.03 }}
                 className="glass-panel p-5 hover:bg-admin-hover/30 transition-colors"
               >
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 mt-1">
-                    <div
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: BRAND_COLORS[article.brand] }}
-                    />
-                  </div>
+                <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+                  <div className="flex items-start gap-4 flex-1 min-w-0">
+                    <div className="flex-shrink-0 mt-1">
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: BRAND_COLORS[article.brand] }}
+                      />
+                    </div>
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-mono text-gray-500 uppercase tracking-wider">
-                        {article.category}
-                      </span>
-                      <span className="text-xs text-gray-700">•</span>
-                      <span className="text-xs font-mono" style={{ color: BRAND_COLORS[article.brand] }}>
-                        {BRAND_NAMES[article.brand]}
-                      </span>
-                      {article.is_ai_generated && (
-                        <span className="text-xs px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 font-mono">
-                          🤖 AI
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span className="text-xs font-mono text-gray-500 uppercase tracking-wider">
+                          {article.category}
                         </span>
-                      )}
-                    </div>
-                    <h3 className="text-base font-semibold text-white mb-1">{article.title}</h3>
-                    <p className="text-sm text-gray-500 line-clamp-1">{article.excerpt}</p>
-                    <div className="flex items-center gap-3 mt-2 text-xs text-gray-600">
-                      <span>By {article.author?.name || 'Unknown'}</span>
-                      <span>•</span>
-                      <span className="font-mono">
-                        {article.created_at ? timeAgo(article.created_at) : ''}
-                      </span>
+                        <span className="text-xs text-gray-700">•</span>
+                        <span className="text-xs font-mono" style={{ color: BRAND_COLORS[article.brand] }}>
+                          {BRAND_NAMES[article.brand]}
+                        </span>
+                        {article.is_ai_generated && (
+                          <span className="text-xs px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 font-mono">
+                            🤖 AI
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="text-base font-semibold text-white mb-1">{article.title}</h3>
+                      <p className="text-sm text-gray-500 line-clamp-2 sm:line-clamp-1">{article.excerpt}</p>
+                      <div className="flex items-center gap-3 mt-2 text-xs text-gray-600">
+                        <span>By {article.author?.name || 'Unknown'}</span>
+                        <span>•</span>
+                        <span className="font-mono">
+                          {article.created_at ? timeAgo(article.created_at) : ''}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className="flex items-center gap-2 flex-shrink-0 sm:ml-0 ml-7">
                     <button
                       onClick={() => handleStatusChange(article.id, 'published')}
                       disabled={actionLoading === article.id}
-                      className="admin-btn-success px-4 py-2 text-xs flex items-center gap-1.5 disabled:opacity-50"
+                      className="admin-btn-success px-4 py-2 text-xs flex items-center justify-center gap-1.5 disabled:opacity-50 flex-1 sm:flex-initial min-h-[44px] sm:min-h-0"
                     >
                       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -214,7 +216,7 @@ export function ContentQueuePage() {
                     <button
                       onClick={() => handleStatusChange(article.id, 'archived')}
                       disabled={actionLoading === article.id}
-                      className="admin-btn-danger px-4 py-2 text-xs flex items-center gap-1.5 disabled:opacity-50"
+                      className="admin-btn-danger px-4 py-2 text-xs flex items-center justify-center gap-1.5 disabled:opacity-50 flex-1 sm:flex-initial min-h-[44px] sm:min-h-0"
                     >
                       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -223,7 +225,7 @@ export function ContentQueuePage() {
                     </button>
                     <button
                       onClick={() => router.push(`/dashboard/content/${article.id}/edit`)}
-                      className="admin-btn-ghost px-3 py-2 text-xs"
+                      className="admin-btn-ghost px-3 py-2 text-xs min-h-[44px] sm:min-h-0"
                     >
                       Edit
                     </button>

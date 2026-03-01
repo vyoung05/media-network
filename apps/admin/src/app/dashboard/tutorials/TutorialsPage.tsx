@@ -57,12 +57,12 @@ export function TutorialsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-white">Tutorials</h1>
           <p className="text-sm text-gray-500 mt-1">{loading ? 'Loading...' : `${totalCount} tutorials`}</p>
         </div>
-        <button onClick={() => router.push('/dashboard/tutorials/new')} className="admin-btn-primary flex items-center gap-2">
+        <button onClick={() => router.push('/dashboard/tutorials/new')} className="admin-btn-primary flex items-center justify-center gap-2 w-full sm:w-auto">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
           New Tutorial
         </button>
@@ -70,23 +70,23 @@ export function TutorialsPage() {
 
       {/* Filters */}
       <div className="glass-panel p-4 flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-mono text-gray-500">DAW:</span>
-          <select value={filterDaw} onChange={(e) => setFilterDaw(e.target.value)} className="admin-input text-xs py-1 w-36">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <span className="text-xs font-mono text-gray-500 flex-shrink-0">DAW:</span>
+          <select value={filterDaw} onChange={(e) => setFilterDaw(e.target.value)} className="admin-input text-xs py-1 w-full sm:w-36 min-h-[36px]">
             <option value="">All</option>
             {DAWS.map((d) => <option key={d} value={d}>{d}</option>)}
           </select>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-mono text-gray-500">Skill:</span>
-          <select value={filterSkill} onChange={(e) => setFilterSkill(e.target.value)} className="admin-input text-xs py-1 w-32">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <span className="text-xs font-mono text-gray-500 flex-shrink-0">Skill:</span>
+          <select value={filterSkill} onChange={(e) => setFilterSkill(e.target.value)} className="admin-input text-xs py-1 w-full sm:w-32 min-h-[36px]">
             <option value="">All</option>
             {SKILL_LEVELS.map((s) => <option key={s} value={s} className="capitalize">{s}</option>)}
           </select>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-mono text-gray-500">Category:</span>
-          <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="admin-input text-xs py-1 w-40">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <span className="text-xs font-mono text-gray-500 flex-shrink-0">Category:</span>
+          <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="admin-input text-xs py-1 w-full sm:w-40 min-h-[36px]">
             <option value="">All</option>
             {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
@@ -109,7 +109,8 @@ export function TutorialsPage() {
 
       {!loading && !error && (
         <div className="glass-panel overflow-hidden">
-          <table className="w-full">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[800px]">
             <thead>
               <tr className="border-b border-white/[0.06]">
                 <th className="text-left text-xs font-mono text-gray-500 uppercase tracking-wider px-5 py-3">Title</th>
@@ -160,6 +161,7 @@ export function TutorialsPage() {
               </AnimatePresence>
             </tbody>
           </table>
+          </div>
 
           {tutorials.length === 0 && (
             <div className="p-12 text-center">

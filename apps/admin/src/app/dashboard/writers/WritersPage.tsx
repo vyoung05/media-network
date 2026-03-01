@@ -83,7 +83,7 @@ export function WritersPage() {
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-3"
       >
         <div>
           <h1 className="text-2xl font-bold text-white">Writers</h1>
@@ -92,7 +92,7 @@ export function WritersPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="relative">
+          <div className="relative flex-1 sm:flex-initial">
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
@@ -101,13 +101,13 @@ export function WritersPage() {
               placeholder="Search writers..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="admin-input pl-10 w-56 text-sm"
+              className="admin-input pl-10 w-full sm:w-56 text-sm"
             />
           </div>
-          <div className="flex rounded-lg border border-admin-border overflow-hidden">
+          <div className="flex rounded-lg border border-admin-border overflow-hidden flex-shrink-0">
             <button
               onClick={() => setViewMode('grid')}
-              className={`px-3 py-2 text-xs transition-colors ${
+              className={`px-3 py-2 text-xs transition-colors min-h-[44px] sm:min-h-0 ${
                 viewMode === 'grid' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'
               }`}
             >
@@ -118,7 +118,7 @@ export function WritersPage() {
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`px-3 py-2 text-xs transition-colors ${
+              className={`px-3 py-2 text-xs transition-colors min-h-[44px] sm:min-h-0 ${
                 viewMode === 'list' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'
               }`}
             >
