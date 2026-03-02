@@ -351,6 +351,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         })}
 
         {/* SauceCaviar Brand Section */}
+        {(activeBrand === 'all' || activeBrand === 'saucecaviar') && (<>
         <div className="pt-4 pb-1">
           <p className="text-xs font-mono uppercase tracking-wider mb-2 px-2" style={{ color: '#C9A84C' }}>
             SauceCaviar
@@ -413,8 +414,10 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             </Link>
           );
         })}
+        </>)}
 
         {/* TrapFrequency Brand Section */}
+        {(activeBrand === 'all' || activeBrand === 'trapfrequency') && (<>
         <div className="pt-4 pb-1">
           <p className="text-xs font-mono uppercase tracking-wider mb-2 px-2" style={{ color: '#39FF14' }}>
             TrapFrequency
@@ -448,8 +451,10 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             </Link>
           );
         })}
+        </>)}
 
         {/* TrapGlow Brand Section */}
+        {(activeBrand === 'all' || activeBrand === 'trapglow') && (<>
         <div className="pt-4 pb-1">
           <p className="text-xs font-mono uppercase tracking-wider mb-2 px-2" style={{ color: '#8B5CF6' }}>
             TrapGlow
@@ -483,6 +488,32 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             </Link>
           );
         })}
+        </>)}
+
+        {/* SauceWire Brand Section */}
+        {(activeBrand === 'all' || activeBrand === 'saucewire') && (<>
+        <div className="pt-4 pb-1">
+          <p className="text-xs font-mono uppercase tracking-wider mb-2 px-2" style={{ color: '#E63946' }}>
+            SauceWire
+          </p>
+        </div>
+        <Link
+          href="/dashboard/content"
+          onClick={handleNavClick}
+          className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 group ${
+            isActive('/dashboard/content')
+              ? 'bg-white/10 text-white'
+              : 'text-gray-400 hover:text-white hover:bg-white/5'
+          }`}
+        >
+          <span className="text-gray-500 group-hover:text-gray-300">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6v-3z" />
+            </svg>
+          </span>
+          <span className="font-medium">News Feed</span>
+        </Link>
+        </>)}
       </nav>
 
       {/* Footer */}
