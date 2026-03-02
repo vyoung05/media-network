@@ -79,7 +79,7 @@ export function WritePageClient() {
             <div>
               <label className="block text-xs text-white/50 font-body mb-1.5 uppercase tracking-wider">Portfolio / Website</label>
               <input
-                type="url"
+                type="text"
                 value={formData.portfolio_url}
                 onChange={(e) => setFormData({ ...formData, portfolio_url: e.target.value })}
                 placeholder="https://yoursite.com"
@@ -140,7 +140,7 @@ export function WritePageClient() {
           <div>
             <label className="block text-xs text-white/50 font-body mb-1.5 uppercase tracking-wider">Sample Work (link)</label>
             <input
-              type="url"
+              type="text"
               value={formData.sample_work}
               onChange={(e) => setFormData({ ...formData, sample_work: e.target.value })}
               placeholder="Link to a published piece"

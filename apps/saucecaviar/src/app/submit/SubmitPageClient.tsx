@@ -2,12 +2,14 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { createBrowserClient } from '@supabase/ssr';
 
 type SubmissionType = 'writer' | 'artist';
 
 export function SubmitPageClient() {
   const [type, setType] = useState<SubmissionType>('writer');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '', email: '', portfolio: '', category: '', pitch: '', samples: '',
   });
@@ -15,10 +17,52 @@ export function SubmitPageClient() {
   const updateField = (field: string, value: string) =>
     setFormData(prev => ({ ...prev, [field]: value }));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     setStatus('loading');
-    setTimeout(() => setStatus('success'), 2000);
+
+    try {
+      const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+
+      // Build content from pitch + category + type
+      const contentParts = [
+        `Submission Type: ${type === 'writer' ? 'Writer' : 'Artist'}`,
+        `Category: ${formData.category}`,
+        formData.portfolio ? `Portfolio: ${formData.portfolio}` : '',
+        `\n${type === 'writer' ? 'Pitch' : 'About Their Work'}:\n${formData.pitch}`,
+      ].filter(Boolean);
+
+      // Parse sample links into media_urls
+      const media_urls = formData.samples
+        .split('\n')
+        .map(s => s.trim())
+        .filter(Boolean);
+
+      const { error: insertError } = await supabase.from('submissions').insert({
+        user_id: null,
+        brand: 'saucecaviar' as const,
+        type: type === 'writer' ? ('article_pitch' as const) : ('artist_feature' as const),
+        title: `${type === 'writer' ? 'Writer Pitch' : 'Artist Application'}: ${formData.name}`,
+        content: contentParts.join('\n'),
+        media_urls,
+        contact_email: formData.email,
+        contact_name: formData.name,
+        is_anonymous: true,
+      });
+
+      if (insertError) {
+        throw new Error(insertError.message);
+      }
+
+      setStatus('success');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Submission failed. Please try again.');
+      setStatus('idle');
+    }
   };
 
   if (status === 'success') {
@@ -120,9 +164,9 @@ export function SubmitPageClient() {
               Portfolio / Website
             </label>
             <input
-              type="url" value={formData.portfolio}
+              type="text" value={formData.portfolio}
               onChange={e => updateField('portfolio', e.target.value)}
-              className="input-caviar" placeholder="https://your-portfolio.com"
+              className="input-caviar" placeholder="your-portfolio.com or https://your-portfolio.com"
             />
           </div>
 
@@ -183,6 +227,13 @@ export function SubmitPageClient() {
               rows={3}
             />
           </div>
+
+          {/* Error message */}
+          {error && (
+            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded text-red-400 text-sm">
+              {error}
+            </div>
+          )}
 
           <motion.button
             type="submit"

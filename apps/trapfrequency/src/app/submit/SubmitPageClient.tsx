@@ -4,12 +4,43 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { GlassMorphCard } from '@/components/GlassMorphCard';
 import { TextReveal } from '@/components/TextReveal';
+import { createBrowserClient } from '@supabase/ssr';
 
-type SubmissionType = 'beat' | 'tutorial' | 'gear_review' | 'writer';
+type SubmissionTab = 'beat' | 'tutorial' | 'gear_review' | 'writer';
 
 export function SubmitPageClient() {
-  const [activeTab, setActiveTab] = useState<SubmissionType>('beat');
+  const [activeTab, setActiveTab] = useState<SubmissionTab>('beat');
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Common fields
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [description, setDescription] = useState('');
+  const [instagramUrl, setInstagramUrl] = useState('');
+  const [youtubeUrl, setYoutubeUrl] = useState('');
+
+  // Beat fields
+  const [beatTitle, setBeatTitle] = useState('');
+  const [bpm, setBpm] = useState('');
+  const [musicalKey, setMusicalKey] = useState('');
+  const [genre, setGenre] = useState('');
+  const [audioLink, setAudioLink] = useState('');
+
+  // Tutorial fields
+  const [tutorialTitle, setTutorialTitle] = useState('');
+  const [daw, setDaw] = useState('FL Studio');
+  const [skillLevel, setSkillLevel] = useState('Beginner');
+
+  // Gear review fields
+  const [productName, setProductName] = useState('');
+  const [gearBrand, setGearBrand] = useState('');
+  const [rating, setRating] = useState('5 — Exceptional');
+
+  // Writer fields
+  const [portfolioUrl, setPortfolioUrl] = useState('');
+  const [expertise, setExpertise] = useState('');
 
   const tabs = [
     { id: 'beat' as const, label: 'Submit a Beat', icon: '🎵', description: 'Share your instrumental with the community' },
@@ -18,9 +49,96 @@ export function SubmitPageClient() {
     { id: 'writer' as const, label: 'Write for Us', icon: '✍️', description: 'Apply to become a TrapFrequency contributor' },
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const resetForm = () => {
+    setName(''); setEmail(''); setDescription('');
+    setInstagramUrl(''); setYoutubeUrl('');
+    setBeatTitle(''); setBpm(''); setMusicalKey(''); setGenre(''); setAudioLink('');
+    setTutorialTitle(''); setDaw('FL Studio'); setSkillLevel('Beginner');
+    setProductName(''); setGearBrand(''); setRating('5 — Exceptional');
+    setPortfolioUrl(''); setExpertise('');
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+
+      let title = '';
+      let content = '';
+      const media_urls: string[] = [];
+      let submissionType: 'beat_submission' | 'article_pitch' = 'beat_submission';
+
+      if (activeTab === 'beat') {
+        submissionType = 'beat_submission';
+        title = `Beat: ${beatTitle}`;
+        const parts = [
+          bpm ? `BPM: ${bpm}` : '',
+          musicalKey ? `Key: ${musicalKey}` : '',
+          genre ? `Genre: ${genre}` : '',
+          description ? `\nDescription:\n${description}` : '',
+        ].filter(Boolean);
+        content = parts.join('\n');
+        if (audioLink) media_urls.push(audioLink);
+      } else if (activeTab === 'tutorial') {
+        submissionType = 'article_pitch';
+        title = `Tutorial: ${tutorialTitle}`;
+        content = [
+          `DAW: ${daw}`,
+          `Skill Level: ${skillLevel}`,
+          description ? `\nOutline:\n${description}` : '',
+        ].filter(Boolean).join('\n');
+      } else if (activeTab === 'gear_review') {
+        submissionType = 'article_pitch';
+        title = `Gear Review: ${productName} (${gearBrand})`;
+        content = [
+          `Product: ${productName}`,
+          `Brand: ${gearBrand}`,
+          `Rating: ${rating}`,
+          description ? `\nReview:\n${description}` : '',
+        ].filter(Boolean).join('\n');
+      } else if (activeTab === 'writer') {
+        submissionType = 'article_pitch';
+        title = `Writer Application: ${name}`;
+        content = [
+          expertise ? `Areas of Expertise: ${expertise}` : '',
+          portfolioUrl ? `Portfolio: ${portfolioUrl}` : '',
+          description ? `\nAbout:\n${description}` : '',
+        ].filter(Boolean).join('\n');
+        if (portfolioUrl) media_urls.push(portfolioUrl);
+      }
+
+      // Add social links to media_urls
+      if (instagramUrl) media_urls.push(instagramUrl);
+      if (youtubeUrl) media_urls.push(youtubeUrl);
+
+      const { error: insertError } = await supabase.from('submissions').insert({
+        user_id: null,
+        brand: 'trapfrequency' as const,
+        type: submissionType,
+        title,
+        content,
+        media_urls,
+        contact_email: email,
+        contact_name: name,
+        is_anonymous: true,
+      });
+
+      if (insertError) {
+        throw new Error(insertError.message);
+      }
+
+      setSubmitted(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Submission failed. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (submitted) {
@@ -52,7 +170,10 @@ export function SubmitPageClient() {
                 Thanks for your submission. Our team will review it and get back to you within 48 hours.
               </p>
               <button
-                onClick={() => setSubmitted(false)}
+                onClick={() => {
+                  setSubmitted(false);
+                  resetForm();
+                }}
                 className="btn-ghost"
               >
                 Submit Another
@@ -120,13 +241,19 @@ export function SubmitPageClient() {
                   <label className="text-xs font-mono text-neutral/50 uppercase tracking-wider mb-2 block">
                     Your Name *
                   </label>
-                  <input type="text" required className="input-freq" placeholder="Producer name..." />
+                  <input
+                    type="text" required className="input-freq" placeholder="Producer name..."
+                    value={name} onChange={(e) => setName(e.target.value)}
+                  />
                 </div>
                 <div>
                   <label className="text-xs font-mono text-neutral/50 uppercase tracking-wider mb-2 block">
                     Email *
                   </label>
-                  <input type="email" required className="input-freq" placeholder="your@email.com" />
+                  <input
+                    type="email" required className="input-freq" placeholder="your@email.com"
+                    value={email} onChange={(e) => setEmail(e.target.value)}
+                  />
                 </div>
               </div>
 
@@ -137,27 +264,42 @@ export function SubmitPageClient() {
                     <label className="text-xs font-mono text-neutral/50 uppercase tracking-wider mb-2 block">
                       Beat Title *
                     </label>
-                    <input type="text" required className="input-freq" placeholder="Name your beat..." />
+                    <input
+                      type="text" required className="input-freq" placeholder="Name your beat..."
+                      value={beatTitle} onChange={(e) => setBeatTitle(e.target.value)}
+                    />
                   </div>
                   <div className="grid grid-cols-3 gap-4">
                     <div>
                       <label className="text-xs font-mono text-neutral/50 uppercase tracking-wider mb-2 block">BPM</label>
-                      <input type="number" className="input-freq" placeholder="140" />
+                      <input
+                        type="number" className="input-freq" placeholder="140"
+                        value={bpm} onChange={(e) => setBpm(e.target.value)}
+                      />
                     </div>
                     <div>
                       <label className="text-xs font-mono text-neutral/50 uppercase tracking-wider mb-2 block">Key</label>
-                      <input type="text" className="input-freq" placeholder="C minor" />
+                      <input
+                        type="text" className="input-freq" placeholder="C minor"
+                        value={musicalKey} onChange={(e) => setMusicalKey(e.target.value)}
+                      />
                     </div>
                     <div>
                       <label className="text-xs font-mono text-neutral/50 uppercase tracking-wider mb-2 block">Genre</label>
-                      <input type="text" className="input-freq" placeholder="Trap" />
+                      <input
+                        type="text" className="input-freq" placeholder="Trap"
+                        value={genre} onChange={(e) => setGenre(e.target.value)}
+                      />
                     </div>
                   </div>
                   <div>
                     <label className="text-xs font-mono text-neutral/50 uppercase tracking-wider mb-2 block">
                       Audio Link (SoundCloud, BeatStars, etc.) *
                     </label>
-                    <input type="url" required className="input-freq" placeholder="https://..." />
+                    <input
+                      type="text" required className="input-freq" placeholder="https://..."
+                      value={audioLink} onChange={(e) => setAudioLink(e.target.value)}
+                    />
                   </div>
                 </>
               )}
@@ -169,12 +311,15 @@ export function SubmitPageClient() {
                     <label className="text-xs font-mono text-neutral/50 uppercase tracking-wider mb-2 block">
                       Tutorial Title *
                     </label>
-                    <input type="text" required className="input-freq" placeholder="How to..." />
+                    <input
+                      type="text" required className="input-freq" placeholder="How to..."
+                      value={tutorialTitle} onChange={(e) => setTutorialTitle(e.target.value)}
+                    />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="text-xs font-mono text-neutral/50 uppercase tracking-wider mb-2 block">DAW</label>
-                      <select className="input-freq">
+                      <select className="input-freq" value={daw} onChange={(e) => setDaw(e.target.value)}>
                         <option>FL Studio</option>
                         <option>Ableton Live</option>
                         <option>Logic Pro</option>
@@ -184,7 +329,7 @@ export function SubmitPageClient() {
                     </div>
                     <div>
                       <label className="text-xs font-mono text-neutral/50 uppercase tracking-wider mb-2 block">Skill Level</label>
-                      <select className="input-freq">
+                      <select className="input-freq" value={skillLevel} onChange={(e) => setSkillLevel(e.target.value)}>
                         <option>Beginner</option>
                         <option>Intermediate</option>
                         <option>Advanced</option>
@@ -203,20 +348,26 @@ export function SubmitPageClient() {
                       <label className="text-xs font-mono text-neutral/50 uppercase tracking-wider mb-2 block">
                         Product Name *
                       </label>
-                      <input type="text" required className="input-freq" placeholder="e.g., MPC Live II" />
+                      <input
+                        type="text" required className="input-freq" placeholder="e.g., MPC Live II"
+                        value={productName} onChange={(e) => setProductName(e.target.value)}
+                      />
                     </div>
                     <div>
                       <label className="text-xs font-mono text-neutral/50 uppercase tracking-wider mb-2 block">
                         Brand *
                       </label>
-                      <input type="text" required className="input-freq" placeholder="e.g., Akai" />
+                      <input
+                        type="text" required className="input-freq" placeholder="e.g., Akai"
+                        value={gearBrand} onChange={(e) => setGearBrand(e.target.value)}
+                      />
                     </div>
                   </div>
                   <div>
                     <label className="text-xs font-mono text-neutral/50 uppercase tracking-wider mb-2 block">
                       Your Rating
                     </label>
-                    <select className="input-freq w-auto">
+                    <select className="input-freq w-auto" value={rating} onChange={(e) => setRating(e.target.value)}>
                       <option>5 — Exceptional</option>
                       <option>4 — Great</option>
                       <option>3 — Good</option>
@@ -234,13 +385,19 @@ export function SubmitPageClient() {
                     <label className="text-xs font-mono text-neutral/50 uppercase tracking-wider mb-2 block">
                       Portfolio / Website
                     </label>
-                    <input type="url" className="input-freq" placeholder="https://your-portfolio.com" />
+                    <input
+                      type="text" className="input-freq" placeholder="https://your-portfolio.com"
+                      value={portfolioUrl} onChange={(e) => setPortfolioUrl(e.target.value)}
+                    />
                   </div>
                   <div>
                     <label className="text-xs font-mono text-neutral/50 uppercase tracking-wider mb-2 block">
                       Areas of Expertise
                     </label>
-                    <input type="text" className="input-freq" placeholder="e.g., FL Studio, Mixing, Sound Design" />
+                    <input
+                      type="text" className="input-freq" placeholder="e.g., FL Studio, Mixing, Sound Design"
+                      value={expertise} onChange={(e) => setExpertise(e.target.value)}
+                    />
                   </div>
                 </>
               )}
@@ -253,6 +410,8 @@ export function SubmitPageClient() {
                 <textarea
                   rows={5}
                   className="input-freq resize-none"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
                   placeholder={
                     activeTab === 'beat' ? 'Describe your beat, inspiration, process...' :
                     activeTab === 'tutorial' ? 'Outline what the tutorial covers...' :
@@ -267,12 +426,39 @@ export function SubmitPageClient() {
                 <label className="text-xs font-mono text-neutral/50 uppercase tracking-wider mb-2 block">
                   Social Links (optional)
                 </label>
-                <input type="url" className="input-freq mb-2" placeholder="Instagram URL" />
-                <input type="url" className="input-freq" placeholder="YouTube / SoundCloud URL" />
+                <input
+                  type="text" className="input-freq mb-2" placeholder="Instagram URL"
+                  value={instagramUrl} onChange={(e) => setInstagramUrl(e.target.value)}
+                />
+                <input
+                  type="text" className="input-freq" placeholder="YouTube / SoundCloud URL"
+                  value={youtubeUrl} onChange={(e) => setYoutubeUrl(e.target.value)}
+                />
               </div>
 
-              <button type="submit" className="btn-primary w-full">
-                Submit {activeTab === 'beat' ? 'Beat' : activeTab === 'tutorial' ? 'Tutorial' : activeTab === 'gear_review' ? 'Review' : 'Application'}
+              {/* Error message */}
+              {error && (
+                <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? (
+                  <span className="inline-flex items-center gap-2 justify-center">
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Submitting...
+                  </span>
+                ) : (
+                  `Submit ${activeTab === 'beat' ? 'Beat' : activeTab === 'tutorial' ? 'Tutorial' : activeTab === 'gear_review' ? 'Review' : 'Application'}`
+                )}
               </button>
             </form>
           </GlassMorphCard>

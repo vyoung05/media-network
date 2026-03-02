@@ -1,88 +1,95 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BrandProvider, useBrand } from '@/contexts/BrandContext';
+import { createBrowserClient } from '@supabase/ssr';
+import type { Brand } from '@media-network/shared';
 import { Sidebar } from './Sidebar';
-import { NotificationBell } from './NotificationBell';
+import { NotificationDropdown } from './NotificationDropdown';
+import { SearchDropdown } from './SearchDropdown';
 
-const BRAND_COLORS: Record<string, string> = {
-  saucecaviar: '#C9A84C',
-  trapglow: '#8B5CF6',
-  saucewire: '#E63946',
-  trapfrequency: '#39FF14',
-};
-
-const BRAND_NAMES: Record<string, string> = {
-  saucecaviar: 'SauceCaviar',
-  trapglow: 'TrapGlow',
-  saucewire: 'SauceWire',
-  trapfrequency: 'TrapFrequency',
-  all: 'All Brands',
-};
+const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
-function DashboardLayoutInner({ children }: DashboardLayoutProps) {
-  const { activeBrand } = useBrand();
+export function DashboardLayout({ children }: DashboardLayoutProps) {
+  const router = useRouter();
+  const [activeBrand, setActiveBrand] = useState<Brand>('saucewire');
+  const [authChecked, setAuthChecked] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        router.replace('/');
+      } else {
+        setAuthChecked(true);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        router.replace('/');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [router]);
+
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-admin-bg">
+        <div className="animate-pulse text-gray-400">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <div className="flex-1 ml-0 md:ml-64 min-w-0">
+      <Sidebar activeBrand={activeBrand} onBrandChange={setActiveBrand} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div className="flex-1 lg:ml-64">
         {/* Top bar */}
-        <header className="sticky top-0 z-30 h-16 glass-panel-solid flex items-center justify-between px-4 md:px-8 border-b border-admin-border rounded-none">
-          <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
-            {/* Hamburger — mobile only */}
+        <header className="sticky top-0 z-20 h-14 lg:h-16 glass-panel-solid flex items-center justify-between px-4 lg:px-8 border-b border-admin-border rounded-none">
+          <div className="flex items-center gap-3 lg:gap-4">
+            {/* Mobile hamburger */}
             <button
               onClick={() => setSidebarOpen(true)}
-              className="md:hidden p-2 -ml-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors flex-shrink-0"
-              aria-label="Open menu"
+              className="lg:hidden p-1.5 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-
-            <div className="relative hidden sm:block flex-1 max-w-xs md:max-w-sm lg:max-w-md">
-              <svg
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-              <input
-                type="text"
-                placeholder="Search articles, submissions..."
-                className="admin-input pl-10 w-full text-sm"
-              />
-            </div>
+            <SearchDropdown />
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+          <div className="flex items-center gap-4">
             {/* Notifications */}
-            <NotificationBell />
+            <NotificationDropdown />
 
             {/* Brand indicator */}
-            <div className="flex items-center gap-2 px-2 sm:px-3 py-1.5 rounded-lg bg-white/5">
-              {activeBrand !== 'all' && (
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: BRAND_COLORS[activeBrand] || '#888' }}
-                />
-              )}
-              <span className="text-xs font-mono text-gray-400 hidden sm:inline">
-                {BRAND_NAMES[activeBrand] || 'All Brands'}
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5">
+              <div
+                className="w-2 h-2 rounded-full"
+                style={{
+                  backgroundColor:
+                    activeBrand === 'saucecaviar' ? '#C9A84C'
+                    : activeBrand === 'trapglow' ? '#8B5CF6'
+                    : activeBrand === 'saucewire' ? '#E63946'
+                    : '#39FF14',
+                }}
+              />
+              <span className="text-xs font-mono text-gray-400">
+                {activeBrand === 'saucecaviar' ? 'SauceCaviar'
+                  : activeBrand === 'trapglow' ? 'TrapGlow'
+                  : activeBrand === 'saucewire' ? 'SauceWire'
+                  : 'TrapFrequency'}
               </span>
             </div>
           </div>
@@ -96,20 +103,12 @@ function DashboardLayoutInner({ children }: DashboardLayoutProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
-            className="p-4 md:p-8"
+            className="p-4 lg:p-8"
           >
             {children}
           </motion.main>
         </AnimatePresence>
       </div>
     </div>
-  );
-}
-
-export function DashboardLayout({ children }: DashboardLayoutProps) {
-  return (
-    <BrandProvider>
-      <DashboardLayoutInner>{children}</DashboardLayoutInner>
-    </BrandProvider>
   );
 }

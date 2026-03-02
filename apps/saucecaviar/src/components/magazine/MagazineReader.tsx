@@ -274,11 +274,12 @@ export function MagazineReader({ issue }: MagazineReaderProps) {
             </motion.div>
           </AnimatePresence>
 
-          {/* Click zones for page navigation */}
-          <div className="absolute inset-0 z-20 flex">
+          {/* Click zones for page navigation — cursor:none inherited, no stacking context isolation */}
+          <div className="absolute inset-0 z-20 flex" style={{ cursor: 'none' }}>
             <button
               onClick={prevPage}
-              className="w-1/4 h-full cursor-w-resize opacity-0 hover:opacity-100 transition-opacity"
+              className="w-1/4 h-full opacity-0 hover:opacity-100 transition-opacity"
+              style={{ cursor: 'none' }}
               aria-label="Previous page"
               data-cursor="Prev"
             >
@@ -287,7 +288,8 @@ export function MagazineReader({ issue }: MagazineReaderProps) {
             <div className="flex-1" />
             <button
               onClick={nextPage}
-              className="w-1/4 h-full cursor-e-resize opacity-0 hover:opacity-100 transition-opacity"
+              className="w-1/4 h-full opacity-0 hover:opacity-100 transition-opacity"
+              style={{ cursor: 'none' }}
               aria-label="Next page"
               data-cursor="Next"
             >

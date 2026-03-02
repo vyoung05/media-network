@@ -44,3 +44,6 @@ next-env.d.ts
 # SQL deploy parts (temp)
 supabase/deploy-part*.sql
 supabase/schema_escaped.txt
+
+.vercel
+.env*.local

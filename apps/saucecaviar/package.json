@@ -9,8 +9,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@media-network/shared": "*",
-    "@media-network/ui": "*",
     "@studio-freight/lenis": "^1.0.42",
     "@supabase/ssr": "^0.3.0",
     "@supabase/supabase-js": "^2.42.0",
@@ -32,3 +30,4 @@
     "typescript": "^5.4.5"
   }
 }
+

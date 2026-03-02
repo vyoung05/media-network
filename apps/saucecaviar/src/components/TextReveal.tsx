@@ -4,7 +4,7 @@ import React, { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
 
 interface TextRevealProps {
-  children: string;
+  children: React.ReactNode;
   className?: string;
   as?: 'h1' | 'h2' | 'h3' | 'h4' | 'p' | 'span';
   delay?: number;
@@ -22,6 +22,25 @@ export function TextReveal({
 }: TextRevealProps) {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once, margin: '-50px' });
+
+  // If children is not a string (e.g. JSX), animate as a single block
+  if (typeof children !== 'string') {
+    return (
+      <div ref={ref} className={className}>
+        <motion.div
+          initial={{ y: '100%', opacity: 0 }}
+          animate={isInView ? { y: '0%', opacity: 1 } : { y: '100%', opacity: 0 }}
+          transition={{
+            duration: 0.5,
+            delay,
+            ease: [0.25, 0.46, 0.45, 0.94],
+          }}
+        >
+          {children}
+        </motion.div>
+      </div>
+    );
+  }
 
   const units = splitBy === 'char' ? children.split('') : children.split(' ');
 

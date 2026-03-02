@@ -6,6 +6,7 @@ import { LenisProvider } from '@/components/LenisProvider';
 import { ScrollProgress } from '@/components/ScrollProgress';
 import { PageTransition } from '@/components/PageTransition';
 import { CustomCursor } from '@/components/CustomCursor';
+import { PageViewTracker } from '@/components/PageViewTracker';
 
 export const metadata: Metadata = {
   title: {
@@ -63,6 +64,7 @@ export default function RootLayout({
             <PageTransition>{children}</PageTransition>
           </main>
           <Footer />
+          <PageViewTracker brand="trapfrequency" />
         </LenisProvider>
       </body>
     </html>

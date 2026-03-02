@@ -16,11 +16,16 @@ export function CustomCursor() {
     x: 0, y: 0, visible: false, hovering: false, clicking: false, text: null,
   });
 
+  const dotRef = useRef<HTMLDivElement>(null);
   const trailRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number>(0);
   const targetRef = useRef({ x: 0, y: 0 });
   const currentRef = useRef({ x: 0, y: 0 });
+  const cursorStateRef = useRef(cursor);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
+
+  // Keep ref in sync for use in rAF loop
+  cursorStateRef.current = cursor;
 
   useEffect(() => {
     setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0);
@@ -30,9 +35,17 @@ export function CustomCursor() {
     const lerp = 0.12;
     currentRef.current.x += (targetRef.current.x - currentRef.current.x) * lerp;
     currentRef.current.y += (targetRef.current.y - currentRef.current.y) * lerp;
+
+    // Update trail ring position
     if (trailRef.current) {
       trailRef.current.style.transform = `translate(${currentRef.current.x}px, ${currentRef.current.y}px)`;
     }
+
+    // Also update dot position directly from target for zero-lag feel
+    if (dotRef.current) {
+      dotRef.current.style.transform = `translate(${targetRef.current.x}px, ${targetRef.current.y}px)`;
+    }
+
     rafRef.current = requestAnimationFrame(animate);
   }, []);
 
@@ -47,7 +60,10 @@ export function CustomCursor() {
 
     const handleMouseMove = (e: MouseEvent) => {
       targetRef.current = { x: e.clientX, y: e.clientY };
-      setCursor(prev => ({ ...prev, x: e.clientX, y: e.clientY, visible: true }));
+      setCursor(prev => {
+        if (prev.visible && prev.x === e.clientX && prev.y === e.clientY) return prev;
+        return { ...prev, x: e.clientX, y: e.clientY, visible: true };
+      });
     };
     const handleMouseDown = () => setCursor(prev => ({ ...prev, clicking: true }));
     const handleMouseUp = () => setCursor(prev => ({ ...prev, clicking: false }));
@@ -64,26 +80,30 @@ export function CustomCursor() {
       }
     };
 
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mousedown', handleMouseDown);
-    document.addEventListener('mouseup', handleMouseUp);
+    // Use capture phase so we get events before any z-index stacking contexts can interfere
+    document.addEventListener('mousemove', handleMouseMove, true);
+    document.addEventListener('mousedown', handleMouseDown, true);
+    document.addEventListener('mouseup', handleMouseUp, true);
     document.addEventListener('mouseleave', handleMouseLeave);
     document.addEventListener('mouseenter', handleMouseEnter);
-    document.addEventListener('mouseover', handleMouseOver);
+    document.addEventListener('mouseover', handleMouseOver, true);
 
     document.documentElement.style.cursor = 'none';
     const styleEl = document.createElement('style');
     styleEl.id = 'custom-cursor-styles';
-    styleEl.textContent = '*, *::before, *::after { cursor: none !important; }';
+    styleEl.textContent = `
+      *, *::before, *::after { cursor: none !important; }
+      .custom-cursor-dot, .custom-cursor-ring { pointer-events: none !important; }
+    `;
     document.head.appendChild(styleEl);
 
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mousedown', handleMouseDown);
-      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('mousemove', handleMouseMove, true);
+      document.removeEventListener('mousedown', handleMouseDown, true);
+      document.removeEventListener('mouseup', handleMouseUp, true);
       document.removeEventListener('mouseleave', handleMouseLeave);
       document.removeEventListener('mouseenter', handleMouseEnter);
-      document.removeEventListener('mouseover', handleMouseOver);
+      document.removeEventListener('mouseover', handleMouseOver, true);
       document.documentElement.style.cursor = '';
       document.getElementById('custom-cursor-styles')?.remove();
     };
@@ -93,13 +113,16 @@ export function CustomCursor() {
 
   return (
     <>
-      {/* Gold dot */}
+      {/* Gold dot — no blend mode, uses outline for visibility on any background */}
       <div
-        className="fixed top-0 left-0 pointer-events-none z-[9999] mix-blend-difference"
+        ref={dotRef}
+        className="custom-cursor-dot fixed top-0 left-0 pointer-events-none"
         style={{
+          zIndex: 2147483647, // max z-index, above everything including fullscreen
           transform: `translate(${cursor.x}px, ${cursor.y}px)`,
           opacity: cursor.visible ? 1 : 0,
           transition: 'opacity 0.2s ease',
+          willChange: 'transform',
         }}
       >
         <div
@@ -107,6 +130,7 @@ export function CustomCursor() {
           style={{
             width: cursor.clicking ? '5px' : '7px',
             height: cursor.clicking ? '5px' : '7px',
+            boxShadow: '0 0 0 1px rgba(0,0,0,0.3), 0 0 6px rgba(201,168,76,0.4)',
           }}
         />
       </div>
@@ -114,10 +138,12 @@ export function CustomCursor() {
       {/* Gold ring (trails with lerp) */}
       <div
         ref={trailRef}
-        className="fixed top-0 left-0 pointer-events-none z-[9998]"
+        className="custom-cursor-ring fixed top-0 left-0 pointer-events-none"
         style={{
+          zIndex: 2147483646,
           opacity: cursor.visible ? 1 : 0,
           transition: 'opacity 0.3s ease',
+          willChange: 'transform',
         }}
       >
         <div
@@ -128,6 +154,7 @@ export function CustomCursor() {
             borderColor: 'rgba(201, 168, 76, 0.6)',
             borderWidth: cursor.hovering ? '1.5px' : '1px',
             backgroundColor: cursor.hovering ? 'rgba(201, 168, 76, 0.08)' : 'transparent',
+            boxShadow: cursor.hovering ? '0 0 12px rgba(201,168,76,0.15)' : 'none',
           }}
         >
           {cursor.text && cursor.hovering && (

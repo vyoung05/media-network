@@ -1,44 +1,31 @@
-# Newsletter + SEO Build — COMPLETE ✅
+# RSS Feed Management — Progress
 
-## Database Setup
-- [x] Newsletter tables (subscribers, campaigns, settings) — created via Supabase SQL Editor
-- [x] SEO columns on articles table (seo_title, seo_description, focus_keyword, seo_score)
-- [x] RLS policies and indexes
+## Status: ✅ Complete — Build Verified
 
-## Types (shared)
-- [x] Newsletter types: NewsletterSubscriber, NewsletterCampaign, NewsletterSettings, CampaignStatus, DigestFrequency, NewsletterProvider
-- [x] SEO types: SEOData, SEORule, SEOScoreResult
+### Completed
+- [x] Created `supabase/deploy-rss-feeds.sql` — migration for `rss_feeds` table with RLS policies + auto-updated_at trigger
+- [x] Created `apps/admin/src/app/api/rss-feeds/route.ts` — full CRUD API (GET/POST/PATCH/DELETE) + feed URL testing endpoint
+- [x] Modified `apps/admin/src/app/api/news-feed/route.ts` — merges enabled custom Supabase feeds with hardcoded defaults (custom overrides matching URLs)
+- [x] Modified `apps/admin/src/app/dashboard/settings/SettingsPage.tsx` — added "📡 News Feeds" tab between AI Pipeline and API Keys
+- [x] Build verified: `npx next build` — **✓ Compiled successfully** (0 errors)
 
-## API Routes (admin)
-- [x] GET/POST/PATCH/DELETE /api/newsletter/subscribers
-- [x] GET/POST /api/newsletter/campaigns
-- [x] POST /api/newsletter/campaigns/[id]/send (Resend + SendGrid support)
-- [x] GET/PUT /api/newsletter/settings
-- [x] POST /api/newsletter/subscribe (public, CORS)
-- [x] POST /api/newsletter/unsubscribe (public, CORS)
-- [x] GET /api/seo/scores (calculates & caches scores)
-- [x] Updated articles publish endpoint — auto-triggers newsletter if enabled
+### Files Changed
+| File | Action | Description |
+|------|--------|-------------|
+| `supabase/deploy-rss-feeds.sql` | CREATE | Supabase migration — rss_feeds table, RLS, trigger |
+| `apps/admin/src/app/api/rss-feeds/route.ts` | CREATE | RSS feeds CRUD API with URL test endpoint |
+| `apps/admin/src/app/api/news-feed/route.ts` | MODIFY | Added Supabase import + custom feed merge logic |
+| `apps/admin/src/app/dashboard/settings/SettingsPage.tsx` | MODIFY | Added RssFeed interface, feeds state, CRUD functions, full feeds tab UI |
 
-## Admin Pages
-- [x] /dashboard/newsletter — Hub with stats cards, campaigns list, quick actions
-- [x] /dashboard/newsletter/subscribers — Table with search, brand filter, export CSV, add/toggle
-- [x] /dashboard/newsletter/campaigns/new — Article selection, subject auto-gen, email preview, send/draft
-- [x] /dashboard/newsletter/settings — Per-brand provider config, API key, auto-send, digest frequency
-- [x] /dashboard/seo — Score distribution, average score bar, expandable article checklist
+### Features in the Feeds Tab
+- Add/Edit/Delete custom RSS feeds
+- Test Feed button (validates URL & counts items)
+- Per-feed enable/disable toggle
+- Category dropdown (Music, Sports, Entertainment, Celebrity, Hip-Hop, R&B, Fashion, Culture, Tech, Gear, Tutorials)
+- Brand assignment with colored dot selectors (SauceCaviar, TrapGlow, SauceWire, TrapFrequency)
+- Toast notifications for success/error states
+- Glass-panel styling consistent with other settings tabs
+- Framer-motion animations
 
-## Components
-- [x] SEOPanel — Reusable: score circle, SEO fields, 9-rule checklist, Google/Twitter/Facebook previews
-- [x] Email templates — Brand-styled HTML generator (4 unique styles)
-- [x] NewsletterSignup — Shared client component with subscribe API integration
-- [x] JsonLd — Shared component for Article, Organization, BreadcrumbList schemas
-
-## Brand Sites (all 4)
-- [x] sitemap.xml — Dynamic from Supabase (articles, issues, artists, producers, tutorials, beats, gear)
-- [x] robots.txt — With sitemap reference
-- [x] JSON-LD Organization schema on homepages
-- [x] JSON-LD Article + Breadcrumb schema on article pages
-- [x] Newsletter signup in footer components
-
-## Git
-- [x] Committed: `feat: email newsletter system + SEO auto-optimization`
-- [x] Pushed to main
+### Remaining: Deploy SQL Migration
+Run `deploy-rss-feeds.sql` against the Supabase database to create the `rss_feeds` table before using the feature.

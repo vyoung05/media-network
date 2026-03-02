@@ -9,8 +9,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@media-network/shared": "*",
-    "@media-network/ui": "*",
     "@supabase/ssr": "^0.3.0",
     "@supabase/supabase-js": "^2.42.0",
     "framer-motion": "^11.0.0",

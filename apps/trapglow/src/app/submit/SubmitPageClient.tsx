@@ -4,9 +4,12 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { GlassMorphCard } from '@/components/GlassMorphCard';
 import { GENRES } from '@/lib/mock-data';
+import { createBrowserClient } from '@supabase/ssr';
 
 export function SubmitPageClient() {
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     artist_name: '',
     email: '',
@@ -20,10 +23,55 @@ export function SubmitPageClient() {
     why_feature: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In production, this would submit to Supabase
-    setSubmitted(true);
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+
+      // Build media_urls from music links
+      const media_urls = [
+        formData.spotify_url,
+        formData.soundcloud_url,
+        formData.apple_music_url,
+      ].filter(Boolean);
+
+      // Combine text fields into content
+      const contentParts = [
+        `Genre: ${formData.genre}`,
+        formData.city ? `City: ${formData.city}` : '',
+        formData.instagram ? `Instagram: ${formData.instagram}` : '',
+        `\nBio:\n${formData.bio}`,
+        formData.why_feature ? `\nWhy Feature:\n${formData.why_feature}` : '',
+      ].filter(Boolean);
+
+      const { error: insertError } = await supabase.from('submissions').insert({
+        user_id: null,
+        brand: 'trapglow' as const,
+        type: 'artist_feature' as const,
+        title: `Artist Feature: ${formData.artist_name}`,
+        content: contentParts.join('\n'),
+        media_urls,
+        contact_email: formData.email,
+        contact_name: formData.artist_name,
+        is_anonymous: true,
+      });
+
+      if (insertError) {
+        throw new Error(insertError.message);
+      }
+
+      setSubmitted(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Submission failed. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (submitted) {
@@ -40,7 +88,14 @@ export function SubmitPageClient() {
             We&apos;ll review your music and get back to you within 48 hours. Keep creating.
           </p>
           <button
-            onClick={() => setSubmitted(false)}
+            onClick={() => {
+              setSubmitted(false);
+              setFormData({
+                artist_name: '', email: '', genre: '', city: '',
+                spotify_url: '', soundcloud_url: '', apple_music_url: '',
+                instagram: '', bio: '', why_feature: '',
+              });
+            }}
             className="btn-ghost text-sm"
           >
             Submit Another
@@ -112,21 +167,21 @@ export function SubmitPageClient() {
           <div className="space-y-3">
             <p className="text-xs text-white/50 font-body uppercase tracking-wider">Music Links (at least one required)</p>
             <input
-              type="url"
+              type="text"
               value={formData.spotify_url}
               onChange={(e) => setFormData({ ...formData, spotify_url: e.target.value })}
               placeholder="Spotify profile or track URL"
               className="input-glow"
             />
             <input
-              type="url"
+              type="text"
               value={formData.soundcloud_url}
               onChange={(e) => setFormData({ ...formData, soundcloud_url: e.target.value })}
               placeholder="SoundCloud profile or track URL"
               className="input-glow"
             />
             <input
-              type="url"
+              type="text"
               value={formData.apple_music_url}
               onChange={(e) => setFormData({ ...formData, apple_music_url: e.target.value })}
               placeholder="Apple Music profile or track URL"
@@ -171,8 +226,29 @@ export function SubmitPageClient() {
             />
           </div>
 
-          <button type="submit" className="btn-glow w-full text-center justify-center">
-            Submit for Review ✨
+          {/* Error message */}
+          {error && (
+            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="btn-glow w-full text-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? (
+              <span className="inline-flex items-center gap-2">
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Submitting...
+              </span>
+            ) : (
+              'Submit for Review ✨'
+            )}
           </button>
 
           <p className="text-center text-[11px] text-white/30 font-body">
