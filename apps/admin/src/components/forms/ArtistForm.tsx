@@ -26,8 +26,8 @@ export function ArtistForm({ initialData, onSubmit, saving }: ArtistFormProps) {
     avatar: artist?.avatar || '',
     cover_image: artist?.cover_image || '',
     bio: artist?.bio || '',
-    genre: artist?.genre || [],
-    mood: artist?.mood || [],
+    genres: artist?.genres || [],
+    moods: artist?.moods || [],
     region: artist?.region || '',
     city: artist?.city || '',
     monthly_listeners: artist?.monthly_listeners || 0,
@@ -54,7 +54,7 @@ export function ArtistForm({ initialData, onSubmit, saving }: ArtistFormProps) {
     }
   };
 
-  const toggleArrayItem = (field: 'genre' | 'mood', item: string) => {
+  const toggleArrayItem = (field: 'genres' | 'moods', item: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: prev[field].includes(item)
@@ -115,8 +115,8 @@ export function ArtistForm({ initialData, onSubmit, saving }: ArtistFormProps) {
         <label className={labelClass}>Genres</label>
         <div className="flex flex-wrap gap-2">
           {GENRES.map(g => (
-            <button key={g} type="button" onClick={() => toggleArrayItem('genre', g)}
-              className={`px-3 py-1 rounded-full text-xs transition-all ${formData.genre.includes(g) ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : 'bg-white/5 text-white/40 border border-white/10 hover:border-white/20'}`}>
+            <button key={g} type="button" onClick={() => toggleArrayItem('genres', g)}
+              className={`px-3 py-1 rounded-full text-xs transition-all ${formData.genres.includes(g) ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : 'bg-white/5 text-white/40 border border-white/10 hover:border-white/20'}`}>
               {g}
             </button>
           ))}
@@ -127,8 +127,8 @@ export function ArtistForm({ initialData, onSubmit, saving }: ArtistFormProps) {
         <label className={labelClass}>Moods</label>
         <div className="flex flex-wrap gap-2">
           {MOODS.map(m => (
-            <button key={m} type="button" onClick={() => toggleArrayItem('mood', m)}
-              className={`px-3 py-1 rounded-full text-xs transition-all ${formData.mood.includes(m) ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40' : 'bg-white/5 text-white/40 border border-white/10 hover:border-white/20'}`}>
+            <button key={m} type="button" onClick={() => toggleArrayItem('moods', m)}
+              className={`px-3 py-1 rounded-full text-xs transition-all ${formData.moods.includes(m) ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40' : 'bg-white/5 text-white/40 border border-white/10 hover:border-white/20'}`}>
               {m}
             </button>
           ))}
