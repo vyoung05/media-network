@@ -5,8 +5,8 @@ import { createClient } from '@supabase/supabase-js';
 export const dynamic = 'force-dynamic';
 
 // ======================== CRON: AUTO-GENERATE ========================
-// Vercel Cron endpoint — runs every 6 hours
-// Checks if auto-pilot is enabled, then generates articles for all brands
+// Dual-trigger: Vercel Cron (daily safety net) OR external call from Vector/Clawdbot
+// Auth: accepts Vercel's `authorization: Bearer <CRON_SECRET>` OR `x-cron-secret` header
 
 const BRAND_NAMES: Record<string, string> = {
   saucecaviar: 'SauceCaviar',
@@ -43,11 +43,19 @@ async function logCronResult(
 
 export async function GET(request: Request) {
   try {
-    // Verify this is a legitimate cron request (Vercel sends this header)
-    const authHeader = request.headers.get('authorization');
+    // Auth: allow Vercel cron (Bearer header) OR external callers (x-cron-secret header)
+    // If CRON_SECRET is not set, endpoint is open (dev mode)
     const cronSecret = process.env.CRON_SECRET;
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (cronSecret) {
+      const bearerHeader = request.headers.get('authorization');  // Vercel cron sends this
+      const externalHeader = request.headers.get('x-cron-secret'); // Vector/Clawdbot sends this
+      const authorized =
+        bearerHeader === `Bearer ${cronSecret}` ||
+        externalHeader === cronSecret;
+
+      if (!authorized) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
     }
 
     const supabase = getSupabase();

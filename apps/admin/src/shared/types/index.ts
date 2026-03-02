@@ -54,6 +54,7 @@ export interface Article {
   source_url: string | null;
   reading_time_minutes: number;
   view_count: number;
+  metadata: Record<string, unknown>;
   published_at: string | null;
   created_at: string;
   updated_at: string;
@@ -377,3 +378,161 @@ export function truncate(str: string, maxLength: number): string {
   if (str.length <= maxLength) return str;
   return str.slice(0, maxLength - 3) + '...';
 }
+
+// ======================== SOCIAL MEDIA ========================
+
+export type SocialPlatform = 'twitter' | 'instagram' | 'facebook' | 'tiktok' | 'threads' | 'bluesky' | 'linkedin';
+
+export interface SocialMediaSettings {
+  id?: string;
+  brand: Brand | string;
+  platform: SocialPlatform;
+  enabled: boolean;
+  auto_share: boolean;
+  auto_share_on_publish?: boolean;
+  credentials: Record<string, string>;
+  share_template: string;
+  default_template: string;
+  hashtags: string[];
+  default_hashtags?: string[];
+  max_length?: number;
+  created_at?: string;
+  updated_at?: string;
+  [key: string]: unknown;
+}
+
+export interface SocialShareLog {
+  id: string;
+  article_id: string;
+  brand: Brand;
+  platform: SocialPlatform;
+  status: 'success' | 'failed' | 'pending';
+  post_url?: string;
+  error_message?: string;
+  shared_at: string;
+}
+
+export const SOCIAL_PLATFORMS: { id: SocialPlatform; name: string; icon: string; color: string; maxChars?: number; supportsImages?: boolean }[] = [
+  { id: 'twitter', name: 'X / Twitter', icon: '𝕏', color: '#000000', maxChars: 280, supportsImages: true },
+  { id: 'instagram', name: 'Instagram', icon: '📸', color: '#E4405F', supportsImages: true },
+  { id: 'facebook', name: 'Facebook', icon: '📘', color: '#1877F2', maxChars: 63206, supportsImages: true },
+  { id: 'tiktok', name: 'TikTok', icon: '🎵', color: '#000000', supportsImages: true },
+  { id: 'threads', name: 'Threads', icon: '🧵', color: '#000000', maxChars: 500, supportsImages: true },
+  { id: 'bluesky', name: 'Bluesky', icon: '🦋', color: '#0085FF', maxChars: 300, supportsImages: true },
+  { id: 'linkedin', name: 'LinkedIn', icon: '💼', color: '#0A66C2', maxChars: 3000, supportsImages: true },
+];
+
+export const PLATFORM_CREDENTIAL_FIELDS: Record<SocialPlatform, { key: string; label: string; type: string }[]> = {
+  twitter: [
+    { key: 'api_key', label: 'API Key', type: 'password' },
+    { key: 'api_secret', label: 'API Secret', type: 'password' },
+    { key: 'access_token', label: 'Access Token', type: 'password' },
+    { key: 'access_secret', label: 'Access Token Secret', type: 'password' },
+  ],
+  instagram: [
+    { key: 'access_token', label: 'Access Token', type: 'password' },
+    { key: 'business_account_id', label: 'Business Account ID', type: 'text' },
+  ],
+  facebook: [
+    { key: 'page_access_token', label: 'Page Access Token', type: 'password' },
+    { key: 'page_id', label: 'Page ID', type: 'text' },
+  ],
+  tiktok: [
+    { key: 'access_token', label: 'Access Token', type: 'password' },
+  ],
+  threads: [
+    { key: 'access_token', label: 'Access Token', type: 'password' },
+    { key: 'user_id', label: 'User ID', type: 'text' },
+  ],
+  bluesky: [
+    { key: 'handle', label: 'Handle', type: 'text' },
+    { key: 'app_password', label: 'App Password', type: 'password' },
+  ],
+  linkedin: [
+    { key: 'access_token', label: 'Access Token', type: 'password' },
+    { key: 'organization_id', label: 'Organization ID', type: 'text' },
+  ],
+};
+
+// ======================== NEWSLETTER ========================
+
+export interface NewsletterSubscriber {
+  id: string;
+  email: string;
+  brand: Brand | string;
+  name?: string;
+  subscribed_at: string;
+  unsubscribed_at?: string;
+  status: 'active' | 'unsubscribed' | 'bounced';
+  is_active: boolean;
+  source?: string;
+  created_at?: string;
+  [key: string]: unknown;
+}
+
+export interface NewsletterCampaign {
+  id: string;
+  brand: Brand;
+  subject: string;
+  body: string;
+  status: 'draft' | 'scheduled' | 'sent' | 'failed';
+  scheduled_at?: string;
+  sent_at?: string;
+  recipients: number;
+  sent_count: number;
+  opens: number;
+  clicks: number;
+  open_rate?: number;
+  click_rate?: number;
+  articles?: string[];
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface NewsletterSettings {
+  id?: string;
+  brand: Brand | string;
+  from_name: string;
+  from_email: string;
+  reply_to?: string;
+  provider: 'resend' | 'sendgrid' | 'mailgun';
+  api_key: string;
+  api_key_encrypted?: string;
+  enabled: boolean;
+  auto_newsletter: boolean;
+  auto_send_on_publish?: boolean;
+  send_frequency: 'daily' | 'weekly' | 'monthly';
+  digest_frequency?: string;
+  digest_day?: number;
+  digest_hour?: number;
+  send_day?: string;
+  send_time?: string;
+  articles_per_newsletter?: number;
+  template_id?: string;
+  template_style?: string;
+  footer_text?: string;
+  header_image?: string;
+  // Allow additional dynamic fields from remote code
+  [key: string]: unknown;
+}
+
+// ======================== SEO ========================
+
+export interface SEORule {
+  id: string;
+  // DB rule fields
+  brand?: Brand | string;
+  rule_type?: string;
+  pattern?: string;
+  value?: string;
+  enabled?: boolean;
+  created_at?: string;
+  // SEO check result fields (used by SEOPanel component)
+  label?: string;
+  description?: string;
+  passed?: boolean;
+  suggestion?: string;
+  [key: string]: unknown;
+}
+
+// Note: isValidEmail is exported from ../utils/index.ts

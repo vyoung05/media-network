@@ -104,6 +104,8 @@ export function SocialMediaSettingsTab() {
     facebook: {},
     tiktok: {},
     linkedin: {},
+    threads: {},
+    bluesky: {},
   });
   const [saving, setSaving] = useState<string | null>(null);
   const [testing, setTesting] = useState<string | null>(null);

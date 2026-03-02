@@ -57,12 +57,24 @@ async function postToLinkedIn(text: string, _credentials: Record<string, string>
   return { success: true, post_url: `https://linkedin.com/feed/update/placeholder_${Date.now()}` };
 }
 
+async function postToThreads(text: string, _credentials: Record<string, string>): Promise<{ success: boolean; post_url?: string; error?: string }> {
+  console.log('[Social] Threads post (placeholder):', text.substring(0, 100));
+  return { success: true, post_url: `https://threads.net/placeholder_${Date.now()}` };
+}
+
+async function postToBluesky(text: string, _credentials: Record<string, string>): Promise<{ success: boolean; post_url?: string; error?: string }> {
+  console.log('[Social] Bluesky post (placeholder):', text.substring(0, 100));
+  return { success: true, post_url: `https://bsky.app/placeholder_${Date.now()}` };
+}
+
 const PLATFORM_POSTERS: Record<SocialPlatform, (text: string, creds: Record<string, string>) => Promise<{ success: boolean; post_url?: string; error?: string }>> = {
   twitter: postToTwitter,
   facebook: postToFacebook,
   instagram: postToInstagram,
   tiktok: postToTikTok,
   linkedin: postToLinkedIn,
+  threads: postToThreads,
+  bluesky: postToBluesky,
 };
 
 // POST /api/social/share — Share an article to selected platforms
