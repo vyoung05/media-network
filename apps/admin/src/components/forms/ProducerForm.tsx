@@ -20,8 +20,8 @@ export function ProducerForm({ initialData, onSubmit, saving }: ProducerFormProp
   const [slug, setSlug] = useState(initialData?.slug || '');
   const [bio, setBio] = useState(initialData?.bio || '');
   const [location, setLocation] = useState(initialData?.location || '');
-  const [avatarUrl, setAvatarUrl] = useState(initialData?.avatar_url || '');
-  const [coverImageUrl, setCoverImageUrl] = useState(initialData?.cover_image_url || '');
+  const [avatarUrl, setAvatarUrl] = useState(initialData?.avatar || '');
+  const [coverImageUrl, setCoverImageUrl] = useState(initialData?.cover_image || '');
   const [daws, setDaws] = useState<string[]>(initialData?.daws || []);
   const [genres, setGenres] = useState<string[]>(initialData?.genres || []);
   const [credits, setCredits] = useState<string[]>(initialData?.credits || []);
@@ -29,7 +29,7 @@ export function ProducerForm({ initialData, onSubmit, saving }: ProducerFormProp
   const [links, setLinks] = useState<Record<string, string>>(initialData?.links || {});
   const [beatCount, setBeatCount] = useState(initialData?.beat_count || 0);
   const [followerCount, setFollowerCount] = useState(initialData?.follower_count || 0);
-  const [isFeatured, setIsFeatured] = useState(initialData?.is_featured || false);
+  const [isFeatured, setIsFeatured] = useState(initialData?.featured || false);
   const [status, setStatus] = useState(initialData?.status || 'draft');
 
   const handleNameChange = (val: string) => {
@@ -59,15 +59,15 @@ export function ProducerForm({ initialData, onSubmit, saving }: ProducerFormProp
       slug: slug || slugify(name),
       bio,
       location,
-      avatar_url: avatarUrl || null,
-      cover_image_url: coverImageUrl || null,
+      avatar: avatarUrl || null,
+      cover_image: coverImageUrl || null,
       daws,
       genres,
       credits,
       links,
       beat_count: beatCount,
       follower_count: followerCount,
-      is_featured: isFeatured,
+      featured: isFeatured,
       status,
     });
   };

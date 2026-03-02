@@ -23,7 +23,7 @@ export function SamplePackForm({ initialData, onSubmit, saving }: SamplePackForm
   const [sampleCount, setSampleCount] = useState(initialData?.sample_count || 0);
   const [genres, setGenres] = useState<string[]>(initialData?.genres || []);
   const [description, setDescription] = useState(initialData?.description || '');
-  const [coverImage, setCoverImage] = useState(initialData?.cover_image_url || '');
+  const [coverImage, setCoverImage] = useState(initialData?.cover_image || '');
   const [rating, setRating] = useState(initialData?.rating || 0);
   const [status, setStatus] = useState(initialData?.status || 'draft');
 
@@ -42,7 +42,7 @@ export function SamplePackForm({ initialData, onSubmit, saving }: SamplePackForm
       sample_count: sampleCount,
       genres,
       description,
-      cover_image_url: coverImage || null,
+      cover_image: coverImage || null,
       rating,
       status,
     });

@@ -147,7 +147,7 @@ export function TutorialsPage() {
                       }`}>{t.skill_level || '—'}</span>
                     </td>
                     <td className="px-5 py-4 text-sm text-gray-400">{t.category || '—'}</td>
-                    <td className="px-5 py-4 text-sm text-gray-400 font-mono">{(t.views || 0).toLocaleString()}</td>
+                    <td className="px-5 py-4 text-sm text-gray-400 font-mono">{(t.view_count || 0).toLocaleString()}</td>
                     <td className="px-5 py-4">
                       <span className={`text-xs px-2 py-1 rounded-full font-medium ${STATUS_COLORS[t.status] || STATUS_COLORS.draft}`}>
                         {t.status || 'draft'}

@@ -24,7 +24,7 @@ export function GearForm({ initialData, onSubmit, saving }: GearFormProps) {
   const [rating, setRating] = useState(initialData?.rating || 3);
   const [excerpt, setExcerpt] = useState(initialData?.excerpt || '');
   const [body, setBody] = useState(initialData?.body || '');
-  const [coverImage, setCoverImage] = useState(initialData?.cover_image_url || '');
+  const [coverImage, setCoverImage] = useState(initialData?.cover_image || '');
   const [pros, setPros] = useState<string[]>(initialData?.pros || []);
   const [cons, setCons] = useState<string[]>(initialData?.cons || []);
   const [newPro, setNewPro] = useState('');
@@ -54,7 +54,7 @@ export function GearForm({ initialData, onSubmit, saving }: GearFormProps) {
       rating,
       excerpt,
       body,
-      cover_image_url: coverImage || null,
+      cover_image: coverImage || null,
       pros,
       cons,
       verdict,

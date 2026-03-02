@@ -18,7 +18,7 @@ interface BeatFormProps {
 export function BeatForm({ initialData, onSubmit, saving }: BeatFormProps) {
   const [title, setTitle] = useState(initialData?.title || '');
   const [slug, setSlug] = useState(initialData?.slug || '');
-  const [coverImage, setCoverImage] = useState(initialData?.cover_image_url || '');
+  const [coverImage, setCoverImage] = useState(initialData?.cover_image || '');
   const [audioUrl, setAudioUrl] = useState(initialData?.audio_url || '');
   const [producerId, setProducerId] = useState(initialData?.producer_id || '');
   const [bpm, setBpm] = useState(initialData?.bpm || '');
@@ -39,7 +39,7 @@ export function BeatForm({ initialData, onSubmit, saving }: BeatFormProps) {
     onSubmit({
       title,
       slug: slug || slugify(title),
-      cover_image_url: coverImage || null,
+      cover_image: coverImage || null,
       audio_url: audioUrl || null,
       producer_id: producerId || null,
       bpm: bpm ? parseInt(bpm) : null,

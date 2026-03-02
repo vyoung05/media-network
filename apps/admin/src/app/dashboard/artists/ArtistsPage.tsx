@@ -118,8 +118,8 @@ export function ArtistsPage() {
                   >
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
-                        {artist.avatar_url ? (
-                          <img src={artist.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover" />
+                        {artist.avatar ? (
+                          <img src={artist.avatar} alt="" className="w-8 h-8 rounded-full object-cover" />
                         ) : (
                           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center text-xs font-bold text-white">
                             {artist.name?.[0]?.toUpperCase() || '?'}

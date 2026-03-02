@@ -21,7 +21,7 @@ export function TutorialForm({ initialData, onSubmit, saving }: TutorialFormProp
   const [slug, setSlug] = useState(initialData?.slug || '');
   const [excerpt, setExcerpt] = useState(initialData?.excerpt || '');
   const [body, setBody] = useState(initialData?.body || '');
-  const [coverImage, setCoverImage] = useState(initialData?.cover_image_url || '');
+  const [coverImage, setCoverImage] = useState(initialData?.cover_image || '');
   const [daw, setDaw] = useState(initialData?.daw || '');
   const [skillLevel, setSkillLevel] = useState(initialData?.skill_level || 'beginner');
   const [category, setCategory] = useState(initialData?.category || '');
@@ -47,7 +47,7 @@ export function TutorialForm({ initialData, onSubmit, saving }: TutorialFormProp
       slug: slug || slugify(title),
       excerpt,
       body,
-      cover_image_url: coverImage || null,
+      cover_image: coverImage || null,
       daw,
       skill_level: skillLevel,
       category,

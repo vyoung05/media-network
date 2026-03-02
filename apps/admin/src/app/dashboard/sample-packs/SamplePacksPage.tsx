@@ -112,7 +112,7 @@ export function SamplePacksPage() {
                         ))}
                       </div>
                     </td>
-                    <td className="px-5 py-4 text-sm text-gray-400 font-mono">{(pack.downloads || 0).toLocaleString()}</td>
+                    <td className="px-5 py-4 text-sm text-gray-400 font-mono">{(pack.download_count || 0).toLocaleString()}</td>
                     <td className="px-5 py-4">
                       <span className={`text-xs px-2 py-1 rounded-full font-medium ${STATUS_COLORS[pack.status] || STATUS_COLORS.draft}`}>{pack.status || 'draft'}</span>
                     </td>

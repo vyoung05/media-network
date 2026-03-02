@@ -12,9 +12,9 @@ interface Producer {
   genres: string[];
   beat_count: number;
   follower_count: number;
-  is_featured: boolean;
+  featured: boolean;
   status: string;
-  avatar_url: string;
+  avatar: string;
   created_at: string;
 }
 
@@ -144,8 +144,8 @@ export function ProducersPage() {
                   >
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
-                        {producer.avatar_url ? (
-                          <img src={producer.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover" />
+                        {producer.avatar ? (
+                          <img src={producer.avatar} alt="" className="w-8 h-8 rounded-full object-cover" />
                         ) : (
                           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-xs font-bold text-white">
                             {producer.name?.[0]?.toUpperCase() || '?'}
@@ -153,7 +153,7 @@ export function ProducersPage() {
                         )}
                         <div>
                           <span className="text-sm font-medium text-white">{producer.name}</span>
-                          {producer.is_featured && (
+                          {producer.featured && (
                             <span className="ml-2 text-xs px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400">⭐ Featured</span>
                           )}
                         </div>
