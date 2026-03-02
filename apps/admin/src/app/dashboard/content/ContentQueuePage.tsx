@@ -56,6 +56,7 @@ const BRAND_NAMES: Record<Brand, string> = {
 const STATUS_LABELS: Record<ArticleStatus, { label: string; color: string }> = {
   draft: { label: 'Draft', color: 'text-gray-400 bg-gray-400/10' },
   pending_review: { label: 'Pending Review', color: 'text-amber-400 bg-amber-400/10' },
+  saved: { label: 'Saved for Later', color: 'text-amber-300 bg-amber-300/10' },
   published: { label: 'Published', color: 'text-emerald-400 bg-emerald-400/10' },
   archived: { label: 'Archived', color: 'text-red-400 bg-red-400/10' },
 };
@@ -835,6 +836,7 @@ function CreateArticleModal({
                   >
                     <option value="draft">Draft</option>
                     <option value="pending_review">Pending Review</option>
+                    <option value="saved">Saved for Later</option>
                     <option value="published">Published</option>
                   </select>
                 </div>
@@ -1129,6 +1131,7 @@ export function ContentQueuePage() {
     all: articles.length,
     draft: articles.filter(a => a.status === 'draft').length,
     pending_review: articles.filter(a => a.status === 'pending_review').length,
+    saved: articles.filter(a => a.status === 'saved').length,
     published: articles.filter(a => a.status === 'published').length,
     archived: articles.filter(a => a.status === 'archived').length,
   };
@@ -1170,6 +1173,7 @@ export function ContentQueuePage() {
         {([
           { key: 'all' as const, label: 'All' },
           { key: 'pending_review' as const, label: 'Pending Review' },
+          { key: 'saved' as const, label: '🔖 Saved' },
           { key: 'draft' as const, label: 'Drafts' },
           { key: 'published' as const, label: 'Published' },
           { key: 'archived' as const, label: 'Archived' },
@@ -1377,6 +1381,13 @@ export function ContentQueuePage() {
                             Publish
                           </button>
                           <button
+                            onClick={() => handleStatusChange(article.id, 'saved')}
+                            disabled={isActioning}
+                            className="px-4 py-2 text-xs flex items-center gap-1.5 rounded-lg bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/20 transition-colors"
+                          >
+                            🔖 Save for Later
+                          </button>
+                          <button
                             onClick={() => handleStatusChange(article.id, 'archived')}
                             disabled={isActioning}
                             className="admin-btn-danger px-4 py-2 text-xs flex items-center gap-1.5"
@@ -1385,6 +1396,27 @@ export function ContentQueuePage() {
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
                             Reject
+                          </button>
+                        </>
+                      )}
+                      {article.status === 'saved' && (
+                        <>
+                          <button
+                            onClick={() => handleStatusChange(article.id, 'published')}
+                            disabled={isActioning}
+                            className="admin-btn-success px-4 py-2 text-xs flex items-center gap-1.5"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Publish
+                          </button>
+                          <button
+                            onClick={() => handleStatusChange(article.id, 'pending_review')}
+                            disabled={isActioning}
+                            className="px-4 py-2 text-xs flex items-center gap-1.5 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/20 transition-colors"
+                          >
+                            📋 Move to Queue
                           </button>
                         </>
                       )}
