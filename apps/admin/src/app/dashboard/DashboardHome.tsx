@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/components/AuthProvider';
 import { useBrand } from '@/contexts/BrandContext';
@@ -60,6 +61,8 @@ interface RecentItem {
   time: string;
   type: string;
   brand: Brand;
+  id?: string;
+  href?: string;
 }
 
 const brandColors: Record<Brand, string> = {
@@ -103,30 +106,41 @@ function RecentActivity({ items, loading }: { items: RecentItem[]; loading: bool
             <p className="text-sm text-gray-500">No recent activity</p>
           </div>
         ) : (
-          items.map((activity, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.05 }}
-              className="px-6 py-3.5 hover:bg-white/[0.02] transition-colors"
-            >
-              <div className="flex items-start gap-3">
-                <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${typeColors[activity.type] || 'bg-gray-500'}`} />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm text-gray-300">{activity.action}</p>
-                    <div
-                      className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: brandColors[activity.brand] }}
-                    />
+          items.map((activity, i) => {
+            const Wrapper = activity.href ? Link : 'div';
+            const wrapperProps = activity.href ? { href: activity.href } : {};
+            return (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.05 }}
+              >
+                <Wrapper
+                  {...wrapperProps as any}
+                  className={`block px-6 py-3.5 hover:bg-white/[0.04] transition-colors ${activity.href ? 'cursor-pointer' : ''}`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${typeColors[activity.type] || 'bg-gray-500'}`} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm text-gray-300">{activity.action}</p>
+                        <div
+                          className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: brandColors[activity.brand] }}
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500 truncate">{activity.detail}</p>
+                    </div>
+                    {activity.href && (
+                      <span className="text-xs text-gray-600 hover:text-cyan-400 transition-colors">Edit →</span>
+                    )}
+                    <span className="text-xs font-mono text-gray-600 whitespace-nowrap">{activity.time}</span>
                   </div>
-                  <p className="text-xs text-gray-500 truncate">{activity.detail}</p>
-                </div>
-                <span className="text-xs font-mono text-gray-600 whitespace-nowrap">{activity.time}</span>
-              </div>
-            </motion.div>
-          ))
+                </Wrapper>
+              </motion.div>
+            );
+          })
         )}
       </div>
     </div>

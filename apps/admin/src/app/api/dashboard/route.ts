@@ -76,11 +76,13 @@ export async function GET(request: NextRequest) {
     };
 
     const recentActivity = (recentRes.data || []).map((article: any) => ({
-      action: 'Article published',
+      action: article.status === 'published' ? 'Article published' : `Article ${article.status}`,
       detail: article.title,
       time: article.published_at || article.created_at,
       type: 'publish',
       brand: article.brand,
+      id: article.id,
+      href: `/dashboard/content/${article.id}/edit`,
     }));
 
     return NextResponse.json({ stats, brands, recentActivity });
