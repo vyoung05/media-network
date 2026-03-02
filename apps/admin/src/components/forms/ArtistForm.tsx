@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { ImageUpload } from '@/components/ImageUpload';
 
 const GENRES = ['Hip-Hop', 'R&B', 'Pop', 'Electronic', 'Alternative', 'Latin', 'Afrobeats', 'Neo-Soul', 'Indie', 'Trap', 'Drill', 'Rage'];
 const MOODS = ['Chill', 'Hype', 'Emotional', 'Dark', 'Feel-Good', 'Experimental', 'Melodic', 'Aggressive', 'Dreamy', 'Late Night'];
@@ -101,14 +102,18 @@ export function ArtistForm({ initialData, onSubmit, saving }: ArtistFormProps) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className={labelClass}>Avatar URL</label>
-          <input name="avatar" value={formData.avatar} onChange={handleChange} className={inputClass} />
-        </div>
-        <div>
-          <label className={labelClass}>Cover Image URL</label>
-          <input name="cover_image" value={formData.cover_image} onChange={handleChange} className={inputClass} />
-        </div>
+        <ImageUpload
+          label="Avatar"
+          value={formData.avatar}
+          onChange={(url) => setFormData(prev => ({ ...prev, avatar: url }))}
+          folder="artists/avatars"
+        />
+        <ImageUpload
+          label="Cover Image"
+          value={formData.cover_image}
+          onChange={(url) => setFormData(prev => ({ ...prev, cover_image: url }))}
+          folder="artists/covers"
+        />
       </div>
 
       <div>

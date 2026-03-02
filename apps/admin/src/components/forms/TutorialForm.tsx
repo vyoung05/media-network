@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { ImageUpload } from '@/components/ImageUpload';
 
 const DAWS = ['FL Studio', 'Ableton Live', 'Logic Pro', 'Pro Tools', 'Studio One', 'Reason', 'Cubase', 'Reaper'];
 const SKILL_LEVELS = ['beginner', 'intermediate', 'advanced'];
@@ -68,10 +69,13 @@ export function TutorialForm({ initialData, onSubmit, saving }: TutorialFormProp
             <input type="text" value={title} onChange={(e) => handleTitleChange(e.target.value)} className="admin-input text-sm" required />
             {title && <p className="text-[10px] text-gray-600 mt-0.5 font-mono">Slug: {slug || slugify(title)}</p>}
           </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1">Cover Image URL</label>
-            <input type="url" value={coverImage} onChange={(e) => setCoverImage(e.target.value)} className="admin-input text-sm" />
-          </div>
+          <ImageUpload
+            label="Cover Image"
+            value={coverImage}
+            onChange={(url) => setCoverImage(url)}
+            folder="tutorials/covers"
+            compact
+          />
         </div>
         <div>
           <label className="block text-xs font-medium text-gray-400 mb-1">Excerpt</label>

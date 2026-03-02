@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/components/AuthProvider';
+import { ImageUpload } from '@/components/ImageUpload';
 import { getArticleById, updateArticle, updateArticleStatus } from '@media-network/shared';
 import { slugify, estimateReadingTime, BRAND_CONFIGS } from '@media-network/shared';
 import type { Article, Brand, ArticleStatus } from '@media-network/shared';
@@ -230,15 +231,12 @@ export default function EditArticlePage() {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1.5">Cover Image URL</label>
-            <input
-              type="url"
-              value={coverImage}
-              onChange={(e) => setCoverImage(e.target.value)}
-              className="admin-input text-sm"
-            />
-          </div>
+          <ImageUpload
+            label="Cover Image"
+            value={coverImage}
+            onChange={(url) => setCoverImage(url)}
+            folder={`content/${brand}`}
+          />
 
           <label className="flex items-center gap-2 cursor-pointer">
             <input

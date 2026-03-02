@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ImageUpload, GalleryUpload } from '@/components/ImageUpload';
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -147,13 +148,14 @@ const STATUS_COLORS: Record<string, string> = {
 type FieldDef = {
   key: string;
   label: string;
-  type: 'text' | 'textarea' | 'url' | 'color' | 'tags' | 'toc-entries' | 'artist-links' | 'select' | 'number' | 'gallery-editor' | 'credits-editor';
+  type: 'text' | 'textarea' | 'url' | 'color' | 'tags' | 'toc-entries' | 'artist-links' | 'select' | 'number' | 'gallery-editor' | 'credits-editor' | 'image-upload';
   placeholder?: string;
   options?: { value: string; label: string }[];
   min?: number;
   max?: number;
   step?: number;
   group?: string;
+  folder?: string;
 };
 
 // ─── Common field groups appended to every page type ─────
@@ -230,7 +232,7 @@ const PAGE_TYPE_FIELDS: Record<PageType, FieldDef[]> = {
   'cover': [
     { key: 'title', label: 'Title', type: 'text', placeholder: 'Cover title', group: 'Content' },
     { key: 'subtitle', label: 'Subtitle', type: 'text', placeholder: 'Cover subtitle', group: 'Content' },
-    { key: 'image_url', label: 'Image URL', type: 'url', placeholder: 'https://...', group: 'Media' },
+    { key: 'image_url', label: 'Cover Image', type: 'image-upload', folder: 'magazine/covers', group: 'Media' },
     { key: 'youtube_url', label: 'YouTube URL (video cover background)', type: 'url', placeholder: 'https://youtube.com/...', group: 'Media' },
     { key: 'background_color', label: 'Background Color', type: 'color', placeholder: '#000000', group: 'Media' },
     { key: 'title_font_size', label: 'Title Font Size', type: 'select', options: FONT_SIZE_OPTIONS, group: 'Typography' },
@@ -241,7 +243,7 @@ const PAGE_TYPE_FIELDS: Record<PageType, FieldDef[]> = {
   ],
   'toc': [
     { key: 'title', label: 'Title', type: 'text', placeholder: 'Table of Contents', group: 'Content' },
-    { key: 'image_url', label: 'Image URL', type: 'url', placeholder: 'https://...', group: 'Media' },
+    { key: 'image_url', label: 'Image', type: 'image-upload', folder: 'magazine/toc', group: 'Media' },
     { key: 'toc_entries', label: 'TOC Entries', type: 'toc-entries', group: 'Content' },
     ...COMMON_FIELDS,
   ],
@@ -253,7 +255,7 @@ const PAGE_TYPE_FIELDS: Record<PageType, FieldDef[]> = {
     { key: 'category', label: 'Category', type: 'text', placeholder: 'e.g. Culture', group: 'Content' },
     { key: 'content', label: 'Content', type: 'textarea', placeholder: 'Article body...', group: 'Content' },
     { key: 'pull_quote', label: 'Pull Quote', type: 'text', placeholder: 'A standout quote...', group: 'Content' },
-    { key: 'image_url', label: 'Image URL', type: 'url', placeholder: 'https://...', group: 'Media' },
+    { key: 'image_url', label: 'Article Image', type: 'image-upload', folder: 'magazine/articles', group: 'Media' },
     { key: 'youtube_url', label: 'YouTube Video URL', type: 'url', placeholder: 'https://youtube.com/...', group: 'Media' },
     { key: 'audio_embed_url', label: 'Audio Embed URL', type: 'url', placeholder: 'https://...', group: 'Media' },
     { key: 'spotify_embed', label: 'Spotify Embed URL', type: 'url', placeholder: 'https://open.spotify.com/...', group: 'Media' },
@@ -266,8 +268,8 @@ const PAGE_TYPE_FIELDS: Record<PageType, FieldDef[]> = {
     { key: 'subtitle', label: 'Subtitle', type: 'text', placeholder: 'Spread subtitle', group: 'Content' },
     { key: 'content', label: 'Content', type: 'textarea', placeholder: 'Spread body...', group: 'Content' },
     { key: 'category', label: 'Category', type: 'text', placeholder: 'e.g. Fashion', group: 'Content' },
-    { key: 'image_url', label: 'Primary Image URL', type: 'url', placeholder: 'https://...', group: 'Media' },
-    { key: 'secondary_image_url', label: 'Secondary Image URL', type: 'url', placeholder: 'https://...', group: 'Media' },
+    { key: 'image_url', label: 'Primary Image', type: 'image-upload', folder: 'magazine/spreads', group: 'Media' },
+    { key: 'secondary_image_url', label: 'Secondary Image', type: 'image-upload', folder: 'magazine/spreads', group: 'Media' },
     { key: 'gallery_images', label: 'Additional Gallery Images', type: 'gallery-editor', group: 'Media' },
     { key: 'caption', label: 'Caption', type: 'text', placeholder: 'Image caption...', group: 'Lower Third / Captions' },
     { key: 'photo_credit', label: 'Photo Credit', type: 'text', placeholder: 'Photo by...', group: 'Lower Third / Captions' },
@@ -285,7 +287,7 @@ const PAGE_TYPE_FIELDS: Record<PageType, FieldDef[]> = {
   ],
   'ad': [
     { key: 'title', label: 'Title', type: 'text', placeholder: 'Ad title', group: 'Content' },
-    { key: 'image_url', label: 'Image URL', type: 'url', placeholder: 'https://...', group: 'Media' },
+    { key: 'image_url', label: 'Ad Image', type: 'image-upload', folder: 'magazine/ads', group: 'Media' },
     { key: 'video_embed_url', label: 'Video Ad URL', type: 'url', placeholder: 'https://...', group: 'Media' },
     { key: 'youtube_url', label: 'YouTube Ad URL', type: 'url', placeholder: 'https://youtube.com/...', group: 'Media' },
     { key: 'advertiser_name', label: 'Advertiser Name', type: 'text', placeholder: 'Brand name', group: 'Advertiser' },
@@ -301,7 +303,7 @@ const PAGE_TYPE_FIELDS: Record<PageType, FieldDef[]> = {
     { key: 'subtitle', label: 'Subtitle', type: 'text', placeholder: 'Subtitle', group: 'Content' },
     { key: 'artist_name', label: 'Artist Name', type: 'text', placeholder: 'Artist name', group: 'Artist' },
     { key: 'artist_bio', label: 'Artist Bio', type: 'textarea', placeholder: 'Artist biography...', group: 'Artist' },
-    { key: 'image_url', label: 'Image URL', type: 'url', placeholder: 'https://...', group: 'Media' },
+    { key: 'image_url', label: 'Artist Image', type: 'image-upload', folder: 'magazine/artists', group: 'Media' },
     { key: 'artist_links', label: 'Artist Links', type: 'artist-links', group: 'Artist' },
     { key: 'music_embed', label: 'Music Embed', type: 'url', placeholder: 'Spotify/SoundCloud embed URL', group: 'Artist' },
     { key: 'category', label: 'Category', type: 'text', placeholder: 'e.g. Hip-Hop', group: 'Content' },
@@ -312,7 +314,7 @@ const PAGE_TYPE_FIELDS: Record<PageType, FieldDef[]> = {
     { key: 'title', label: 'Title', type: 'text', placeholder: 'Title', group: 'Content' },
     { key: 'subtitle', label: 'Subtitle', type: 'text', placeholder: 'Subtitle', group: 'Content' },
     { key: 'category', label: 'Category', type: 'text', placeholder: 'Category', group: 'Content' },
-    { key: 'image_url', label: 'Image URL', type: 'url', placeholder: 'https://...', group: 'Media' },
+    { key: 'image_url', label: 'Full Bleed Image', type: 'image-upload', folder: 'magazine/full-bleed', group: 'Media' },
     { key: 'youtube_url', label: 'YouTube URL (video background)', type: 'url', placeholder: 'https://youtube.com/...', group: 'Media' },
     { key: 'title_font_size', label: 'Title Font Size', type: 'select', options: FONT_SIZE_OPTIONS, group: 'Typography' },
     { key: 'title_alignment', label: 'Title Alignment', type: 'select', options: ALIGNMENT_OPTIONS, group: 'Typography' },
@@ -324,7 +326,7 @@ const PAGE_TYPE_FIELDS: Record<PageType, FieldDef[]> = {
     { key: 'title', label: 'Title', type: 'text', placeholder: 'Title', group: 'Content' },
     { key: 'subtitle', label: 'Subtitle', type: 'text', placeholder: 'Subtitle', group: 'Content' },
     { key: 'content', label: 'Content', type: 'textarea', placeholder: 'Back cover content...', group: 'Content' },
-    { key: 'image_url', label: 'Image URL', type: 'url', placeholder: 'https://...', group: 'Media' },
+    { key: 'image_url', label: 'Back Cover Image', type: 'image-upload', folder: 'magazine/back-covers', group: 'Media' },
     { key: 'background_color', label: 'Background Color', type: 'color', placeholder: '#000000', group: 'Media' },
     ...COMMON_FIELDS,
   ],
@@ -357,7 +359,7 @@ const PAGE_TYPE_FIELDS: Record<PageType, FieldDef[]> = {
     { key: 'content', label: 'Description', type: 'textarea', placeholder: 'Describe the interactive content...', group: 'Content' },
     { key: 'iframe_url', label: 'iFrame URL (game/quiz)', type: 'url', placeholder: 'https://...', group: 'Media' },
     { key: 'interactive_embed_url', label: 'Interactive Embed URL (backup)', type: 'url', placeholder: 'https://...', group: 'Media' },
-    { key: 'image_url', label: 'Fallback Thumbnail', type: 'url', placeholder: 'https://...', group: 'Media' },
+    { key: 'image_url', label: 'Fallback Thumbnail', type: 'image-upload', folder: 'magazine/interactive', group: 'Media' },
     { key: 'cta_text', label: 'CTA Text', type: 'text', placeholder: 'Play Now', group: 'CTA' },
     { key: 'cta_url', label: 'CTA URL', type: 'url', placeholder: 'https://...', group: 'CTA' },
     ...COMMON_FIELDS.filter(f => f.key !== 'cta_text' && f.key !== 'cta_url'),
@@ -369,13 +371,13 @@ const PAGE_TYPE_FIELDS: Record<PageType, FieldDef[]> = {
     { key: 'content', label: 'Description', type: 'textarea', placeholder: 'Episode/track description...', group: 'Content' },
     { key: 'spotify_embed', label: 'Spotify Embed URL', type: 'url', placeholder: 'https://open.spotify.com/...', group: 'Media' },
     { key: 'audio_embed_url', label: 'Audio Embed URL', type: 'url', placeholder: 'https://soundcloud.com/...', group: 'Media' },
-    { key: 'image_url', label: 'Cover Art URL', type: 'url', placeholder: 'https://...', group: 'Media' },
+    { key: 'image_url', label: 'Cover Art', type: 'image-upload', folder: 'magazine/audio', group: 'Media' },
     ...COMMON_FIELDS,
   ],
   'quote': [
     { key: 'title', label: 'Quote Text', type: 'textarea', placeholder: 'The big quote...', group: 'Content' },
     { key: 'subtitle', label: 'Attribution', type: 'text', placeholder: '— Author Name', group: 'Content' },
-    { key: 'image_url', label: 'Background Image', type: 'url', placeholder: 'https://...', group: 'Media' },
+    { key: 'image_url', label: 'Background Image', type: 'image-upload', folder: 'magazine/quotes', group: 'Media' },
     { key: 'background_color', label: 'Background Color', type: 'color', placeholder: '#000000', group: 'Media' },
     { key: 'text_color', label: 'Text Color', type: 'color', placeholder: '#FFFFFF', group: 'Typography' },
     { key: 'title_font_size', label: 'Quote Font Size', type: 'select', options: FONT_SIZE_QUOTE_OPTIONS, group: 'Typography' },
@@ -387,7 +389,7 @@ const PAGE_TYPE_FIELDS: Record<PageType, FieldDef[]> = {
     { key: 'title', label: 'Credits Title', type: 'text', placeholder: 'Credits', group: 'Content' },
     { key: 'content', label: 'Credits Text', type: 'textarea', placeholder: 'Additional credits text...', group: 'Content' },
     { key: 'credits', label: 'Credits List', type: 'credits-editor', group: 'Content' },
-    { key: 'image_url', label: 'Background Image', type: 'url', placeholder: 'https://...', group: 'Media' },
+    { key: 'image_url', label: 'Background Image', type: 'image-upload', folder: 'magazine/credits', group: 'Media' },
     { key: 'background_color', label: 'Background Color', type: 'color', placeholder: '#000000', group: 'Media' },
     ...COMMON_FIELDS,
   ],
@@ -398,7 +400,7 @@ const PAGE_TYPE_FIELDS: Record<PageType, FieldDef[]> = {
     { key: 'author_title', label: 'Author Title', type: 'text', placeholder: 'e.g. Editor-in-Chief', group: 'Content' },
     { key: 'content', label: 'Letter Content', type: 'textarea', placeholder: 'Dear readers...', group: 'Content' },
     { key: 'pull_quote', label: 'Pull Quote', type: 'text', placeholder: 'A standout quote...', group: 'Content' },
-    { key: 'image_url', label: 'Author Photo', type: 'url', placeholder: 'https://...', group: 'Media' },
+    { key: 'image_url', label: 'Author Photo', type: 'image-upload', folder: 'magazine/letters', group: 'Media' },
     ...COMMON_FIELDS,
   ],
 };
@@ -695,6 +697,8 @@ export default function EditMagazineIssuePage() {
           : [];
       } else if (field.type === 'number') {
         formData[field.key] = (page as any)[field.key] ?? '';
+      } else if (field.type === 'image-upload') {
+        formData[field.key] = (page as any)[field.key] || '';
       } else {
         formData[field.key] = (page as any)[field.key] || '';
       }
@@ -910,13 +914,12 @@ export default function EditMagazineIssuePage() {
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1">Cover Image URL</label>
-            <input
-              type="url"
+            <ImageUpload
+              label="Cover Image"
               value={issueForm.cover_image}
-              onChange={(e) => setIssueForm((f) => ({ ...f, cover_image: e.target.value }))}
-              placeholder="https://..."
-              className="admin-input w-full text-sm"
+              onChange={(url) => setIssueForm((f) => ({ ...f, cover_image: url }))}
+              folder="magazine/issue-covers"
+              compact
             />
           </div>
         </div>
@@ -1152,6 +1155,18 @@ function PageFieldEditor({
   value: any;
   onChange: (val: any) => void;
 }) {
+  // ─── Image Upload ───
+  if (field.type === 'image-upload') {
+    return (
+      <ImageUpload
+        label={field.label}
+        value={value || ''}
+        onChange={onChange}
+        folder={field.folder || 'magazine'}
+      />
+    );
+  }
+
   // ─── Select dropdown ───
   if (field.type === 'select') {
     return (
@@ -1202,80 +1217,17 @@ function PageFieldEditor({
     );
   }
 
-  // ─── Gallery Editor ───
+  // ─── Gallery Editor (with upload support) ───
   if (field.type === 'gallery-editor') {
     const images: GalleryImage[] = Array.isArray(value) ? value : [];
-
-    const addImage = () => {
-      onChange([...images, { image_url: '', caption: '', alt: '' }]);
-    };
-
-    const updateImage = (idx: number, key: string, val: string) => {
-      const updated = images.map((img, i) => i === idx ? { ...img, [key]: val } : img);
-      onChange(updated);
-    };
-
-    const removeImage = (idx: number) => {
-      onChange(images.filter((_, i) => i !== idx));
-    };
-
     return (
       <div>
         <label className="block text-xs font-medium text-gray-400 mb-2">{field.label}</label>
-        <div className="space-y-3">
-          {images.map((img, idx) => (
-            <div key={idx} className="p-3 rounded-lg border border-white/[0.06] bg-white/[0.01] space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-500">Image {idx + 1}</span>
-                <button
-                  onClick={() => removeImage(idx)}
-                  className="p-1.5 text-gray-500 hover:text-red-400 transition-colors touch-manipulation"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              <input
-                type="url"
-                value={img.image_url || ''}
-                onChange={(e) => updateImage(idx, 'image_url', e.target.value)}
-                placeholder="Image URL"
-                className="admin-input w-full text-sm"
-              />
-              {img.image_url && img.image_url.match(/\.(jpg|jpeg|png|gif|webp)/i) && (
-                <div className="max-w-[80px] rounded overflow-hidden bg-gray-800">
-                  <img src={img.image_url} alt="" className="w-full h-auto" />
-                </div>
-              )}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <input
-                  type="text"
-                  value={img.caption || ''}
-                  onChange={(e) => updateImage(idx, 'caption', e.target.value)}
-                  placeholder="Caption"
-                  className="admin-input text-sm"
-                />
-                <input
-                  type="text"
-                  value={img.alt || ''}
-                  onChange={(e) => updateImage(idx, 'alt', e.target.value)}
-                  placeholder="Alt text"
-                  className="admin-input text-sm"
-                />
-              </div>
-            </div>
-          ))}
-          <button
-            onClick={addImage}
-            className="text-xs text-[#C9A84C] hover:text-[#d4b35a] transition-colors touch-manipulation flex items-center gap-1 py-2"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Add image
-          </button>
-        </div>
+        <GalleryUpload
+          value={images}
+          onChange={onChange}
+          folder="magazine/gallery"
+        />
       </div>
     );
   }

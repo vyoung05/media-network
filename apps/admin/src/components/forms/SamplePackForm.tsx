@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { ImageUpload } from '@/components/ImageUpload';
 
 const GENRES = ['Trap', 'Hip-Hop', 'R&B', 'Pop', 'Drill', 'Afrobeats', 'Lo-Fi', 'Boom Bap', 'EDM', 'House', 'Dancehall', 'Reggaeton', 'Soul', 'Jazz'];
 
@@ -97,10 +98,12 @@ export function SamplePackForm({ initialData, onSubmit, saving }: SamplePackForm
           <label className="block text-xs font-medium text-gray-400 mb-1">Description</label>
           <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} className="admin-input text-sm resize-y" />
         </div>
-        <div>
-          <label className="block text-xs font-medium text-gray-400 mb-1">Cover Image URL</label>
-          <input type="url" value={coverImage} onChange={(e) => setCoverImage(e.target.value)} className="admin-input text-sm" />
-        </div>
+        <ImageUpload
+          label="Cover Image"
+          value={coverImage}
+          onChange={(url) => setCoverImage(url)}
+          folder="sample-packs/covers"
+        />
         <div>
           <label className="block text-xs font-medium text-gray-400 mb-1">Rating (0-5)</label>
           <div className="flex items-center gap-2">

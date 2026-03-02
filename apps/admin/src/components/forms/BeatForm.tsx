@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { ImageUpload } from '@/components/ImageUpload';
 
 const GENRES = ['Trap', 'Hip-Hop', 'R&B', 'Pop', 'Drill', 'Afrobeats', 'Lo-Fi', 'Boom Bap', 'EDM', 'House', 'Dancehall', 'Reggaeton'];
 const KEYS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
@@ -71,10 +72,13 @@ export function BeatForm({ initialData, onSubmit, saving }: BeatFormProps) {
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1">Cover Image URL</label>
-            <input type="url" value={coverImage} onChange={(e) => setCoverImage(e.target.value)} className="admin-input text-sm" />
-          </div>
+          <ImageUpload
+            label="Cover Image"
+            value={coverImage}
+            onChange={(url) => setCoverImage(url)}
+            folder="beats/covers"
+            compact
+          />
           <div>
             <label className="block text-xs font-medium text-gray-400 mb-1">Audio URL</label>
             <input type="url" value={audioUrl} onChange={(e) => setAudioUrl(e.target.value)} className="admin-input text-sm" />

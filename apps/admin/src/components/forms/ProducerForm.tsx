@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { ImageUpload } from '@/components/ImageUpload';
 
 const DAWS = ['FL Studio', 'Ableton Live', 'Logic Pro', 'Pro Tools', 'Studio One', 'Reason', 'Cubase', 'Reaper', 'GarageBand', 'Bitwig'];
 const GENRES = ['Trap', 'Hip-Hop', 'R&B', 'Pop', 'Drill', 'Afrobeats', 'Lo-Fi', 'Boom Bap', 'EDM', 'House', 'Dancehall', 'Reggaeton', 'Soul', 'Jazz', 'Rock', 'Alternative'];
@@ -101,14 +102,18 @@ export function ProducerForm({ initialData, onSubmit, saving }: ProducerFormProp
       <div className="glass-panel p-5 space-y-4">
         <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Images</h3>
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1">Avatar URL</label>
-            <input type="url" value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} className="admin-input text-sm" />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1">Cover Image URL</label>
-            <input type="url" value={coverImageUrl} onChange={(e) => setCoverImageUrl(e.target.value)} className="admin-input text-sm" />
-          </div>
+          <ImageUpload
+            label="Avatar"
+            value={avatarUrl}
+            onChange={(url) => setAvatarUrl(url)}
+            folder="producers/avatars"
+          />
+          <ImageUpload
+            label="Cover Image"
+            value={coverImageUrl}
+            onChange={(url) => setCoverImageUrl(url)}
+            folder="producers/covers"
+          />
         </div>
       </div>
 

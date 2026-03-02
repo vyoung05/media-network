@@ -12,6 +12,7 @@ import {
   GROUP_LABELS,
   type BrandField,
 } from '@/config/brand-fields';
+import { ImageUpload } from '@/components/ImageUpload';
 import { slugify, estimateReadingTime } from '@media-network/shared';
 import type { Brand, ArticleStatus } from '@media-network/shared';
 
@@ -403,16 +404,12 @@ export default function NewArticlePage() {
           {/* Common: Cover Image + Tags */}
           <div className="glass-panel p-5 space-y-4">
             <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Media & Tags</h3>
-            <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1">Cover Image URL</label>
-              <input
-                type="url"
-                value={formData.cover_image}
-                onChange={(e) => updateField('cover_image', e.target.value)}
-                placeholder="https://images.unsplash.com/..."
-                className="admin-input text-sm"
-              />
-            </div>
+            <ImageUpload
+              label="Cover Image"
+              value={formData.cover_image}
+              onChange={(url) => updateField('cover_image', url)}
+              folder={`content/${brand}`}
+            />
             <div>
               <label className="block text-xs font-medium text-gray-400 mb-1">Tags (comma-separated)</label>
               <input

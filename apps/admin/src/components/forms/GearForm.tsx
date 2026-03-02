@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { ImageUpload } from '@/components/ImageUpload';
 
 const GEAR_CATEGORIES = ['Controllers', 'Monitors', 'Headphones', 'Microphones', 'Audio Interfaces', 'MIDI Controllers', 'Drum Machines', 'Synthesizers', 'Software', 'Accessories'];
 
@@ -119,10 +120,12 @@ export function GearForm({ initialData, onSubmit, saving }: GearFormProps) {
           <label className="block text-xs font-medium text-gray-400 mb-1">Body</label>
           <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={10} className="admin-input text-sm resize-y font-mono" />
         </div>
-        <div>
-          <label className="block text-xs font-medium text-gray-400 mb-1">Cover Image URL</label>
-          <input type="url" value={coverImage} onChange={(e) => setCoverImage(e.target.value)} className="admin-input text-sm" />
-        </div>
+        <ImageUpload
+          label="Cover Image"
+          value={coverImage}
+          onChange={(url) => setCoverImage(url)}
+          folder="gear/covers"
+        />
       </div>
 
       <div className="glass-panel p-5 space-y-4">
