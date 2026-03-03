@@ -13,12 +13,15 @@ let browserClient: SupabaseClient | null = null;
 
 export function getSupabaseBrowserClient(): SupabaseClient {
   if (browserClient) return browserClient;
-  browserClient = createClient(supabaseUrl, supabaseAnonKey, {
+  browserClient = createBrowserClient(supabaseUrl, supabaseAnonKey, {
     auth: {
       flowType: 'pkce',
       detectSessionInUrl: true,
       persistSession: true,
       autoRefreshToken: true,
+      lock: (name: string, acquireTimeout: number, fn: () => Promise<any>) => {
+        return fn();
+      },
     },
   });
   return browserClient;
