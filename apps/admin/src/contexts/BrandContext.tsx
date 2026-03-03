@@ -29,7 +29,8 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
 export function useBrand() {
   const context = useContext(BrandContext);
   if (!context) {
-    throw new Error('useBrand must be used within a BrandProvider');
+    // Fallback: return safe defaults if no provider (e.g., pages outside BrandProvider)
+    return { activeBrand: 'all' as BrandFilter, setActiveBrand: () => {} };
   }
   return context;
 }

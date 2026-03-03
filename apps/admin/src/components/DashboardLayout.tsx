@@ -6,6 +6,7 @@ import type { Brand } from '@media-network/shared';
 import { Sidebar, type BrandSelection } from './Sidebar';
 import { NotificationDropdown } from './NotificationDropdown';
 import { SearchDropdown } from './SearchDropdown';
+import { BrandProvider } from '@/contexts/BrandContext';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -16,6 +17,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
+    <BrandProvider>
     <div className="min-h-screen flex">
       <Sidebar activeBrand={activeBrand} onBrandChange={setActiveBrand} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex-1 lg:ml-64">
@@ -78,5 +80,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </AnimatePresence>
       </div>
     </div>
+    </BrandProvider>
   );
 }
