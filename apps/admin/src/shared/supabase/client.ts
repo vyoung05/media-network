@@ -13,7 +13,16 @@ let browserClient: SupabaseClient | null = null;
 
 export function getSupabaseBrowserClient(): SupabaseClient {
   if (browserClient) return browserClient;
-  browserClient = createBrowserClient(supabaseUrl, supabaseAnonKey);
+  // Use createClient instead of createBrowserClient to avoid Web Lock API deadlocks
+  // that cause "Loading..." hang after OAuth redirect
+  browserClient = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      flowType: 'pkce',
+      detectSessionInUrl: true,
+      persistSession: true,
+      autoRefreshToken: true,
+    },
+  });
   return browserClient;
 }
 
