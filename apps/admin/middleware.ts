@@ -32,6 +32,14 @@ export async function middleware(request: NextRequest) {
     },
   });
 
+  // If there's an OAuth code param, redirect to /auth/callback to exchange it
+  const code = request.nextUrl.searchParams.get('code');
+  if (code && request.nextUrl.pathname.startsWith('/dashboard')) {
+    const callbackUrl = request.nextUrl.clone();
+    callbackUrl.pathname = '/auth/callback';
+    return NextResponse.redirect(callbackUrl);
+  }
+
   const {
     data: { session },
   } = await supabase.auth.getSession();
