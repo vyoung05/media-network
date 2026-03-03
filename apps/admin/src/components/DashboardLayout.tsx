@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Brand } from '@media-network/shared';
-import { Sidebar } from './Sidebar';
+import { Sidebar, type BrandSelection } from './Sidebar';
 import { NotificationDropdown } from './NotificationDropdown';
 import { SearchDropdown } from './SearchDropdown';
 
@@ -12,7 +12,7 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const [activeBrand, setActiveBrand] = useState<Brand>('saucewire');
+  const [activeBrand, setActiveBrand] = useState<BrandSelection>('all');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
@@ -43,15 +43,18 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <div
                 className="w-2 h-2 rounded-full"
                 style={{
-                  backgroundColor:
-                    activeBrand === 'saucecaviar' ? '#C9A84C'
-                    : activeBrand === 'trapglow' ? '#8B5CF6'
-                    : activeBrand === 'saucewire' ? '#E63946'
-                    : '#39FF14',
+                  ...(activeBrand === 'all'
+                    ? { background: 'linear-gradient(135deg, #C9A84C, #8B5CF6, #E63946, #39FF14)' }
+                    : { backgroundColor:
+                        activeBrand === 'saucecaviar' ? '#C9A84C'
+                        : activeBrand === 'trapglow' ? '#8B5CF6'
+                        : activeBrand === 'saucewire' ? '#E63946'
+                        : '#39FF14' }),
                 }}
               />
               <span className="text-xs font-mono text-gray-400">
-                {activeBrand === 'saucecaviar' ? 'SauceCaviar'
+                {activeBrand === 'all' ? 'All Brands'
+                  : activeBrand === 'saucecaviar' ? 'SauceCaviar'
                   : activeBrand === 'trapglow' ? 'TrapGlow'
                   : activeBrand === 'saucewire' ? 'SauceWire'
                   : 'TrapFrequency'}
