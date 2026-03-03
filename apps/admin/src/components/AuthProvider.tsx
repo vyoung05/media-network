@@ -25,7 +25,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Safety timeout — if auth check takes too long, stop loading
     const timeout = setTimeout(() => {
       setLoading(false);
-    }, 3000);
+    }, 10000);
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session: s } }) => {

@@ -4,13 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { createBrowserClient } from '@supabase/ssr';
 import type { Brand } from '@media-network/shared';
-
-const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { getSupabaseBrowserClient } from '@/lib/supabase';
 
 const BRAND_COLORS: Record<Brand, string> = {
   saucecaviar: '#C9A84C',
@@ -51,6 +46,8 @@ export function Sidebar({ activeBrand, onBrandChange, isOpen = true, onClose }: 
   const [userRole, setUserRole] = useState('');
 
   useEffect(() => {
+    const supabase = getSupabaseBrowserClient();
+
     async function fetchCounts() {
       try {
         const [contentRes, subRes, writerRes] = await Promise.all([
@@ -84,6 +81,7 @@ export function Sidebar({ activeBrand, onBrandChange, isOpen = true, onClose }: 
   }, []);
 
   const handleLogout = async () => {
+    const supabase = getSupabaseBrowserClient();
     await supabase.auth.signOut();
     router.push('/');
   };

@@ -1,54 +1,19 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { createBrowserClient } from '@supabase/ssr';
 import type { Brand } from '@media-network/shared';
 import { Sidebar } from './Sidebar';
 import { NotificationDropdown } from './NotificationDropdown';
 import { SearchDropdown } from './SearchDropdown';
-
-const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const router = useRouter();
   const [activeBrand, setActiveBrand] = useState<Brand>('saucewire');
-  const [authChecked, setAuthChecked] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        router.replace('/');
-      } else {
-        setAuthChecked(true);
-      }
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
-        router.replace('/');
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [router]);
-
-  if (!authChecked) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-admin-bg">
-        <div className="animate-pulse text-gray-400">Loading...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex">
