@@ -344,3 +344,22 @@ export async function getAnalyticsSummary(
     views_by_country: [],
   };
 }
+
+// ======================== AUDIO ========================
+
+export async function getArticleAudioUrl(
+  supabase: SupabaseClient,
+  articleId: string
+): Promise<string | null> {
+  const { data, error } = await supabase
+    .from('audio_versions')
+    .select('url')
+    .eq('article_id', articleId)
+    .eq('status', 'ready')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (error || !data) return null;
+  return data.url || null;
+}

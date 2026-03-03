@@ -4,3 +4,4 @@ export * from './supabase/client';
 export * from './auth';
 export * from './api';
 export * from './utils';
+export * from './components';
