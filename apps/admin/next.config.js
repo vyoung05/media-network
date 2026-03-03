@@ -12,6 +12,8 @@ const nextConfig = {
   },
   experimental: {
     optimizePackageImports: ['@media-network/shared', '@media-network/ui'],
+    // Skip prerender errors for dynamic dashboard pages
+    missingSuspenseWithCSRBailout: false,
   },
 };
 

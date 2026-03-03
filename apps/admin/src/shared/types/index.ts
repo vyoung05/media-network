@@ -8,7 +8,7 @@ export type Brand = 'saucecaviar' | 'trapglow' | 'saucewire' | 'trapfrequency';
 
 export type UserRole = 'admin' | 'editor' | 'writer' | 'artist' | 'producer' | 'reader';
 
-export type ArticleStatus = 'draft' | 'pending_review' | 'published' | 'archived';
+export type ArticleStatus = 'draft' | 'pending_review' | 'published' | 'archived' | 'saved';
 
 export type SubmissionStatus = 'pending' | 'under_review' | 'approved' | 'rejected' | 'published';
 
