@@ -1,19 +1,26 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
 import { DashboardLayout } from '@/components/DashboardLayout';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { session, loading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
+    // If we landed here with a ?code= param, redirect to auth callback to exchange it
+    const code = searchParams.get('code');
+    if (code) {
+      router.replace(`/auth/callback?code=${code}`);
+      return;
+    }
     if (!loading && !session) {
       router.push('/');
     }
-  }, [session, loading, router]);
+  }, [session, loading, router, searchParams]);
 
   if (loading) {
     return (
