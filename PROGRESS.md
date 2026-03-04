@@ -1,46 +1,50 @@
-# Media Network Admin — Feature Progress
+# Media Enrichment - Progress
 
-## Date: 2025-07-12
+## Feature: Automatic Image Sourcing, AI Image Generation & Video Discovery
 
-### ✅ 1. API Key Auth System
-- **Table**: `auth_api_keys` created in Supabase (separate from existing `api_keys` table which stores 3rd-party keys)
-- **API Key**: `mn_f8a5e22e4ba142199483469096b7016c8083bc213c34a83f` inserted for "Vector"
-- **Key saved to**: `D:\Vector\media-network\API_KEY.txt` (gitignored)
-- **Middleware**: `apps/admin/src/lib/api-auth.ts` — validates `X-API-Key` header against `auth_api_keys` table, updates `last_used_at`
-- **Auth added to routes**:
-  - `POST /api/articles` ✅
-  - `POST /api/upload` ✅
-  - `PATCH /api/articles/[id]` ✅
-  - `POST /api/articles/[id]/publish` ✅
-  - `POST /api/upload-url` ✅
-- **Auth is optional**: If no X-API-Key header is sent, request passes through (browser users unaffected). If X-API-Key is sent but invalid, returns 401.
+### Status: ✅ Complete
 
-### ✅ 2. Article Edit Page with LivePreview
-- **File**: `apps/admin/src/app/dashboard/content/[id]/edit/page.tsx`
-- **Split-screen layout**: Form on left, `LivePreview` component on right (same as `/dashboard/content/new`)
-- **Features**:
-  - Fetches article by ID on load
-  - Pre-populates all fields including metadata
-  - Brand selector, content type selector
-  - Brand-specific fields rendered dynamically
-  - Toggle to show/hide preview
-  - Publish Now button for unpublished articles
-  - Saves via `PATCH /api/articles/[id]`
-- **Edit button added**: ContentQueuePage.tsx now has a pencil ✏️ icon button for each article that navigates to `/dashboard/content/{id}/edit`
+### Files Changed/Created:
+- ✅ `apps/admin/src/lib/media-search.ts` — Core media search library (new)
+- ✅ `apps/admin/src/app/api/media-search/route.ts` — Standalone API endpoint (new)
+- ✅ `apps/admin/src/app/api/generate-article/route.ts` — Integrated media enrichment
+- ✅ `apps/admin/src/app/dashboard/DashboardHome.tsx` — Enhanced toast with media counts
+- ✅ `apps/admin/src/app/dashboard/content/[id]/edit/page.tsx` — Media Options Panel
 
-### ✅ 3. Upload URL Endpoint
-- **File**: `apps/admin/src/app/api/upload-url/route.ts`
-- **Endpoint**: `POST /api/upload-url`
-- **Request body**: `{ url: string, folder?: string }`
-- **Features**:
-  - Downloads image from URL
-  - Detects content type via magic bytes + response headers + URL extension
-  - Validates file type (JPEG, PNG, GIF, WebP, SVG) and size (max 10MB)
-  - Uploads to Supabase storage bucket "media" under specified folder (default: `uploads/`)
-  - Returns `{ url, path, size, type, originalUrl }`
-  - API key auth enabled
+### What It Does:
 
-### Git
-- Committed: `07c25fc` — "feat: API key auth, article edit page with LivePreview, upload-url endpoint"
-- Pushed to `origin/main`
-- TypeScript: compiles clean (`tsc --noEmit` passes)
+**Media Search Library (`media-search.ts`)**
+- Scrapes source article for og:image and content images (>200px, filtered for non-icons)
+- Extracts YouTube/Vimeo embeds from source article HTML
+- Searches Unsplash API (with API key) or falls back to source URL (without)
+- Generates AI images via fal.ai FLUX Schnell (if FAL_KEY available)
+- Searches YouTube Data API (if YOUTUBE_API_KEY available) or provides search URL fallback
+- All sources run in parallel via Promise.allSettled for speed
+- Graceful degradation: every API key is optional
+
+**Generate Article Integration**
+- After AI generates article text, media search runs automatically
+- Results stored in article `metadata.media_options` column
+- Best cover image picked automatically: og:image > AI generated > article image > stock > fallback
+- Response includes `media.imagesFound` and `media.videosFound` counts
+
+**Dashboard Toast Enhancement**
+- After article generation, toast shows: "Generated: 'Title' for Brand with X images and Y videos found"
+
+**Article Edit Page - Media Options Panel**
+- Collapsible panel below cover image picker
+- Shows media counts badge
+- **Source Images**: Grid with "Use as Cover" hover button, labeled Featured/Article
+- **Stock Images**: Grid with credit attribution, "Use as Cover" button
+- **AI Generated**: Larger grid showing prompt on hover, "Use as Cover" button  
+- **Videos**: List with thumbnails, "Open" link, "Embed" button (inserts iframe in body), "Cover" button (uses thumbnail)
+
+### API Keys (all optional):
+| Key | Source | Effect if Missing |
+|-----|--------|-------------------|
+| `UNSPLASH_ACCESS_KEY` | Unsplash | Falls back to source.unsplash.com URL |
+| `FAL_KEY` | fal.ai | AI images skipped silently |
+| `YOUTUBE_API_KEY` | YouTube Data API | Returns search URL instead of results |
+
+### Build: ✅ Passes `next build` cleanly
+### TypeScript: ✅ Passes `tsc --noEmit` cleanly

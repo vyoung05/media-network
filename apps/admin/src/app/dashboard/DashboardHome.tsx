@@ -546,7 +546,10 @@ function NewsScanner() {
 
       const data = await res.json();
       if (res.ok && data.success) {
-        setToast({ message: `✅ Generated: "${data.article.title}" for ${BRAND_NAMES[brand]}`, type: 'success' });
+        const mediaInfo = data.media
+          ? ` with ${data.media.imagesFound} image${data.media.imagesFound !== 1 ? 's' : ''} and ${data.media.videosFound} video${data.media.videosFound !== 1 ? 's' : ''} found`
+          : '';
+        setToast({ message: `✅ Generated: "${data.article.title}" for ${BRAND_NAMES[brand]}${mediaInfo}`, type: 'success' });
       } else {
         setToast({ message: `❌ ${data.error || 'Generation failed'}`, type: 'error' });
       }

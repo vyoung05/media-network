@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { searchMedia, pickBestCoverImage, type MediaSearchResult } from '@/lib/media-search';
 
 // ======================== TYPES ========================
 
@@ -557,7 +558,7 @@ Remember: Write 400-800 words in the ${BRAND_NAMES[brand]} voice. Make it engagi
       openai: 'gpt-4o-mini',
       anthropic: 'claude-sonnet-4-20250514',
     };
-    const aiMeta = JSON.stringify({
+    const aiMetaObj = {
       source_url: newsUrl || null,
       source_title: newsTitle,
       source_name: newsSource || null,
@@ -568,7 +569,8 @@ Remember: Write 400-800 words in the ${BRAND_NAMES[brand]} voice. Make it engagi
       brand,
       quality_score: qualityResult.score,
       quality_flags: qualityResult.flags,
-    });
+    };
+    const aiMeta = JSON.stringify(aiMetaObj);
     const bodyWithMeta = `${finalBody}\n\n<!-- AI_META:${aiMeta} -->`;
 
     // Insert into Supabase
@@ -581,9 +583,41 @@ Remember: Write 400-800 words in the ${BRAND_NAMES[brand]} voice. Make it engagi
     // Look up the correct AI editor persona for this brand
     const aiEditorId = await lookupAIEditorId(supabase, brand);
 
-    // Generate cover image URL from AI's suggested search term or category
+    // --- Media Enrichment: search for images and videos ---
     const coverSearchTerm = generated.coverSearch || generated.suggestedCategory || category || 'entertainment';
-    const coverImageUrl = `https://source.unsplash.com/1200x630/?${encodeURIComponent(coverSearchTerm.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ','))}`;
+    const fallbackCoverUrl = `https://source.unsplash.com/1200x630/?${encodeURIComponent(coverSearchTerm.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ','))}`;
+
+    let mediaResults: MediaSearchResult = {
+      sourceImages: [],
+      stockImages: [],
+      aiImages: [],
+      videos: [],
+    };
+
+    try {
+      mediaResults = await searchMedia({
+        query: coverSearchTerm,
+        newsUrl: newsUrl || undefined,
+        type: 'all',
+      });
+    } catch (mediaErr) {
+      console.warn('Media enrichment failed (non-fatal):', mediaErr instanceof Error ? mediaErr.message : mediaErr);
+    }
+
+    // Pick the best cover image from all available sources
+    const coverImageUrl = pickBestCoverImage(mediaResults, fallbackCoverUrl);
+
+    // Build metadata with media options
+    const articleMetadata: Record<string, unknown> = {
+      media_options: {
+        sourceImages: mediaResults.sourceImages,
+        stockImages: mediaResults.stockImages,
+        aiImages: mediaResults.aiImages,
+        videos: mediaResults.videos,
+      },
+      ai_meta: aiMetaObj,
+      content_type: 'article',
+    };
 
     const slug = slugify(finalTitle) + '-' + Date.now().toString(36);
     const wordCount = finalBody.trim().split(/\s+/).length;
@@ -612,6 +646,7 @@ Remember: Write 400-800 words in the ${BRAND_NAMES[brand]} voice. Make it engagi
         author_id: aiEditorId || 'bfd7420b-6d11-4599-8169-d5d568c2287c',
         reading_time_minutes: readingTime,
         view_count: 0,
+        metadata: articleMetadata,
       })
       .select()
       .single();
@@ -620,6 +655,10 @@ Remember: Write 400-800 words in the ${BRAND_NAMES[brand]} voice. Make it engagi
       console.error('Supabase insert error:', insertError);
       throw new Error(`Failed to save article: ${insertError.message}`);
     }
+
+    // Count media found for the response
+    const mediaImageCount = mediaResults.sourceImages.length + mediaResults.stockImages.length + mediaResults.aiImages.length;
+    const mediaVideoCount = mediaResults.videos.length;
 
     const responseData: Record<string, unknown> = {
       success: true,
@@ -637,6 +676,10 @@ Remember: Write 400-800 words in the ${BRAND_NAMES[brand]} voice. Make it engagi
         readingTime,
         qualityScore: qualityResult.score,
         qualityBreakdown: qualityResult.breakdown,
+      },
+      media: {
+        imagesFound: mediaImageCount,
+        videosFound: mediaVideoCount,
       },
     };
 
