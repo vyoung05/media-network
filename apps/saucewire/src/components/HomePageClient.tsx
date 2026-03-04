@@ -58,9 +58,10 @@ export function HomePageClient({
     router.push(`/category/${category.toLowerCase()}`);
   };
 
-  // Featured article (first article)
-  const featuredArticle = articles[0];
-  const remainingArticles = articles.slice(1);
+  // Featured article: pick first article WITH a cover image
+  const featuredIndex = articles.findIndex((a) => !!a.cover_image);
+  const featuredArticle = featuredIndex >= 0 ? articles[featuredIndex] : null;
+  const remainingArticles = articles.filter((_, i) => i !== featuredIndex);
 
   return (
     <>
