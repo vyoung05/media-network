@@ -1,60 +1,90 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/components/AuthProvider';
+import { LivePreview } from '@/components/LivePreview';
 import { ImageUpload } from '@/components/ImageUpload';
-import { getArticleById, updateArticle, updateArticleStatus } from '@media-network/shared';
+import {
+  BRAND_FORM_CONFIGS,
+  getBrandFormConfig,
+  getFieldGroups,
+  GROUP_LABELS,
+  type BrandField,
+} from '@/config/brand-fields';
+import { getArticleById } from '@media-network/shared';
 import { slugify, estimateReadingTime, BRAND_CONFIGS } from '@media-network/shared';
-import type { Article, Brand, ArticleStatus } from '@media-network/shared';
+import type { Brand, ArticleStatus } from '@media-network/shared';
 
-const BRANDS = Object.entries(BRAND_CONFIGS).map(([id, config]) => ({
-  id: id as Brand,
-  name: config.name,
-  categories: config.categories,
-  color: config.colors.primary,
-}));
+const ALL_BRANDS = Object.values(BRAND_FORM_CONFIGS);
 
 export default function EditArticlePage() {
   const router = useRouter();
   const params = useParams();
   const { supabase } = useAuth();
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [showPreview, setShowPreview] = useState(true);
 
-  const [title, setTitle] = useState('');
-  const [body, setBody] = useState('');
-  const [excerpt, setExcerpt] = useState('');
+  // Core fields
   const [brand, setBrand] = useState<Brand>('saucewire');
-  const [category, setCategory] = useState('');
-  const [tags, setTags] = useState('');
-  const [coverImage, setCoverImage] = useState('');
+  const [contentTypeId, setContentTypeId] = useState('article');
   const [status, setStatus] = useState<ArticleStatus>('draft');
-  const [isBreaking, setIsBreaking] = useState(false);
+
+  // Form data (common + metadata)
+  const [formData, setFormData] = useState<Record<string, any>>({
+    title: '',
+    body: '',
+    excerpt: '',
+    cover_image: '',
+    tags: '',
+    is_breaking: false,
+  });
 
   const articleId = params.id as string;
-  const selectedBrand = BRANDS.find((b) => b.id === brand);
 
+  // Derived
+  const brandConfig = getBrandFormConfig(brand);
+  const contentType = brandConfig.contentTypes.find(ct => ct.id === contentTypeId) || brandConfig.contentTypes[0];
+  const fieldGroups = useMemo(() => getFieldGroups(contentType.fields), [contentType]);
+  const slug = slugify(formData.title || '');
+
+  // Fetch article on mount
   useEffect(() => {
     async function fetchArticle() {
       try {
         const article = await getArticleById(supabase, articleId);
         if (!article) {
           setError('Article not found');
+          setLoading(false);
           return;
         }
 
-        setTitle(article.title);
-        setBody(article.body);
-        setExcerpt(article.excerpt || '');
         setBrand(article.brand);
-        setCategory(article.category);
-        setTags(article.tags.join(', '));
-        setCoverImage(article.cover_image || '');
         setStatus(article.status);
-        setIsBreaking(article.is_breaking);
+
+        // Try to detect content type from metadata
+        const metadata = (article.metadata || {}) as Record<string, any>;
+        if (metadata.content_type) {
+          setContentTypeId(metadata.content_type as string);
+        }
+
+        // Set form data from article fields + metadata
+        setFormData({
+          title: article.title || '',
+          body: article.body || '',
+          excerpt: article.excerpt || '',
+          cover_image: article.cover_image || '',
+          tags: (article.tags || []).join(', '),
+          is_breaking: article.is_breaking || false,
+          category: article.category || '',
+          source_url: article.source_url || '',
+          // Spread metadata fields
+          ...metadata,
+        });
       } catch (err: any) {
         setError(err.message || 'Failed to load article');
       } finally {
@@ -65,25 +95,68 @@ export default function EditArticlePage() {
     fetchArticle();
   }, [supabase, articleId]);
 
-  const handleSave = async (e: React.FormEvent) => {
+  const handleBrandChange = (newBrand: Brand) => {
+    setBrand(newBrand);
+    const newConfig = getBrandFormConfig(newBrand);
+    setContentTypeId(newConfig.contentTypes[0].id);
+  };
+
+  const updateField = (key: string, value: any) => {
+    setFormData(prev => ({ ...prev, [key]: value }));
+  };
+
+  const COMMON_KEYS = ['title', 'body', 'excerpt', 'cover_image', 'tags', 'is_breaking', 'source_url'];
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSaving(true);
 
     try {
-      await updateArticle(supabase, articleId, {
-        title,
-        slug: slugify(title),
-        body,
-        excerpt: excerpt || null,
-        cover_image: coverImage || null,
-        brand,
-        category,
-        tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
-        status,
-        is_breaking: isBreaking,
-        reading_time_minutes: estimateReadingTime(body),
+      if (!formData.title || !formData.body) {
+        throw new Error('Title and body are required');
+      }
+
+      const category = formData.category || contentType.label;
+
+      // Separate metadata from core fields
+      const metadata: Record<string, any> = {};
+      for (const [key, value] of Object.entries(formData)) {
+        if (!COMMON_KEYS.includes(key) && key !== 'category' && value !== '' && value !== undefined && value !== false) {
+          metadata[key] = value;
+        }
+      }
+      metadata.content_type = contentTypeId;
+
+      const tags = (formData.tags || '')
+        .split(',')
+        .map((t: string) => t.trim())
+        .filter(Boolean);
+
+      const res = await fetch(`/api/articles/${articleId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: formData.title,
+          slug,
+          body: formData.body,
+          excerpt: formData.excerpt || null,
+          cover_image: formData.cover_image || null,
+          brand,
+          category: category || brandConfig.contentTypes[0].label,
+          tags,
+          status,
+          is_breaking: formData.is_breaking || false,
+          source_url: formData.source_url || null,
+          reading_time_minutes: estimateReadingTime(formData.body),
+          metadata,
+        }),
       });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to update article');
+      }
 
       router.push('/dashboard/content');
     } catch (err: any) {
@@ -96,7 +169,17 @@ export default function EditArticlePage() {
   const handlePublish = async () => {
     setSaving(true);
     try {
-      await updateArticleStatus(supabase, articleId, 'published');
+      const res = await fetch(`/api/articles/${articleId}/publish`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to publish');
+      }
+
       router.push('/dashboard/content');
     } catch (err: any) {
       setError(err.message || 'Failed to publish');
@@ -104,6 +187,116 @@ export default function EditArticlePage() {
       setSaving(false);
     }
   };
+
+  // Render a single field (same pattern as new article page)
+  const renderField = (field: BrandField) => {
+    if (field.key === 'title' || field.key === 'body' || field.key === 'excerpt' || field.key === 'cover_image' || field.key === 'tags') return null;
+
+    const value = formData[field.key] ?? '';
+
+    switch (field.type) {
+      case 'text':
+      case 'url':
+        return (
+          <div key={field.key}>
+            <label className="block text-xs font-medium text-gray-400 mb-1">
+              {field.label} {field.required && <span className="text-red-400">*</span>}
+            </label>
+            <input
+              type={field.type === 'url' ? 'url' : 'text'}
+              value={value}
+              onChange={(e) => updateField(field.key, e.target.value)}
+              placeholder={field.placeholder}
+              className="admin-input text-sm"
+              required={field.required}
+            />
+            {field.helpText && <p className="text-[10px] text-gray-600 mt-0.5">{field.helpText}</p>}
+          </div>
+        );
+
+      case 'textarea':
+        return null;
+
+      case 'number':
+        return (
+          <div key={field.key}>
+            <label className="block text-xs font-medium text-gray-400 mb-1">
+              {field.label} {field.required && <span className="text-red-400">*</span>}
+            </label>
+            <input
+              type="number"
+              value={value}
+              onChange={(e) => updateField(field.key, e.target.value ? Number(e.target.value) : '')}
+              placeholder={field.placeholder}
+              className="admin-input text-sm"
+              min={field.min}
+              max={field.max}
+              required={field.required}
+            />
+            {field.helpText && <p className="text-[10px] text-gray-600 mt-0.5">{field.helpText}</p>}
+          </div>
+        );
+
+      case 'select':
+        return (
+          <div key={field.key}>
+            <label className="block text-xs font-medium text-gray-400 mb-1">
+              {field.label} {field.required && <span className="text-red-400">*</span>}
+            </label>
+            <select
+              value={value}
+              onChange={(e) => updateField(field.key, e.target.value)}
+              className="admin-input text-sm"
+              required={field.required}
+            >
+              <option value="">Select...</option>
+              {field.options?.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+            {field.helpText && <p className="text-[10px] text-gray-600 mt-0.5">{field.helpText}</p>}
+          </div>
+        );
+
+      case 'toggle':
+        return (
+          <div key={field.key} className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => updateField(field.key, !value)}
+              className={`relative w-10 h-5 rounded-full transition-colors ${value ? 'bg-blue-500' : 'bg-gray-700'}`}
+            >
+              <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${value ? 'translate-x-5' : 'translate-x-0.5'}`} />
+            </button>
+            <div>
+              <span className="text-xs font-medium text-gray-300">{field.label}</span>
+              {field.helpText && <p className="text-[10px] text-gray-600">{field.helpText}</p>}
+            </div>
+          </div>
+        );
+
+      case 'tags':
+        if (field.key === 'tags') return null;
+        return (
+          <div key={field.key}>
+            <label className="block text-xs font-medium text-gray-400 mb-1">{field.label}</label>
+            <input
+              type="text"
+              value={value}
+              onChange={(e) => updateField(field.key, e.target.value)}
+              placeholder={field.placeholder}
+              className="admin-input text-sm"
+            />
+            {field.helpText && <p className="text-[10px] text-gray-600 mt-0.5">{field.helpText}</p>}
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  const parsedTags = (formData.tags || '').split(',').map((t: string) => t.trim()).filter(Boolean);
 
   if (loading) {
     return (
@@ -114,163 +307,255 @@ export default function EditArticlePage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <motion.div
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
-      >
-        <div>
-          <h1 className="text-2xl font-bold text-white">Edit Article</h1>
-          <p className="text-sm text-gray-500 mt-1">Editing: {title || 'Untitled'}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          {status !== 'published' && (
-            <button
-              onClick={handlePublish}
-              disabled={saving}
-              className="admin-btn-success flex items-center gap-1.5 disabled:opacity-50"
-            >
-              🚀 Publish Now
-            </button>
-          )}
-          <button onClick={() => router.back()} className="admin-btn-ghost text-sm">
-            ← Back
-          </button>
-        </div>
-      </motion.div>
-
-      <form onSubmit={handleSave} className="space-y-6">
-        {error && (
-          <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-            <p className="text-sm text-red-400">{error}</p>
-          </div>
-        )}
-
-        <div className="glass-panel p-6 space-y-5">
+    <div className="flex gap-6 h-[calc(100vh-6rem)]">
+      {/* Left: Form */}
+      <div className={`${showPreview ? 'w-1/2' : 'w-full'} overflow-y-auto pr-2 space-y-5`}>
+        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1.5">Title</label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="admin-input text-lg font-semibold"
-              required
-            />
-            {title && (
-              <p className="text-xs text-gray-600 mt-1 font-mono">Slug: {slugify(title)}</p>
+            <h1 className="text-2xl font-bold text-white">Edit Article</h1>
+            <p className="text-sm text-gray-500 mt-0.5">
+              {brandConfig.icon} {brandConfig.name} — {formData.title || 'Untitled'}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            {status !== 'published' && (
+              <button
+                onClick={handlePublish}
+                disabled={saving}
+                className="admin-btn-success text-xs flex items-center gap-1.5 disabled:opacity-50"
+              >
+                🚀 Publish Now
+              </button>
             )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1.5">Excerpt</label>
-            <textarea
-              value={excerpt}
-              onChange={(e) => setExcerpt(e.target.value)}
-              rows={2}
-              className="admin-input text-sm resize-none"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1.5">
-              Body
-              {body && (
-                <span className="text-gray-600 font-normal ml-2">~{estimateReadingTime(body)} min read</span>
-              )}
-            </label>
-            <textarea
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              rows={16}
-              className="admin-input text-sm resize-y font-mono"
-              required
-            />
-          </div>
-        </div>
-
-        <div className="glass-panel p-6 space-y-5">
-          <h3 className="text-sm font-semibold text-white">Metadata</h3>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1.5">Brand</label>
-              <select
-                value={brand}
-                onChange={(e) => { setBrand(e.target.value as Brand); setCategory(''); }}
-                className="admin-input text-sm"
-              >
-                {BRANDS.map((b) => (
-                  <option key={b.id} value={b.id}>{b.name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1.5">Category</label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="admin-input text-sm"
-                required
-              >
-                <option value="">Select...</option>
-                {selectedBrand?.categories.map((cat) => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1.5">Tags (comma-separated)</label>
-            <input
-              type="text"
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
-              className="admin-input text-sm"
-            />
-          </div>
-
-          <ImageUpload
-            label="Cover Image"
-            value={coverImage}
-            onChange={(url) => setCoverImage(url)}
-            folder={`content/${brand}`}
-          />
-
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={isBreaking}
-              onChange={(e) => setIsBreaking(e.target.checked)}
-              className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-blue-500"
-            />
-            <span className="text-sm text-gray-300">🔴 Breaking News</span>
-          </label>
-        </div>
-
-        <div className="glass-panel p-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <label className="text-sm text-gray-400">Status:</label>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value as ArticleStatus)}
-              className="admin-input text-sm w-auto"
+            <button
+              type="button"
+              onClick={() => setShowPreview(!showPreview)}
+              className={`admin-btn-ghost text-xs flex items-center gap-1.5 ${showPreview ? 'text-blue-400' : ''}`}
             >
-              <option value="draft">Draft</option>
-              <option value="pending_review">Pending Review</option>
-              <option value="published">Published</option>
-              <option value="archived">Archived</option>
-            </select>
+              {showPreview ? '👁️ Hide Preview' : '👁️ Show Preview'}
+            </button>
+            <button onClick={() => router.back()} className="admin-btn-ghost text-xs">← Back</button>
           </div>
-          <div className="flex items-center gap-3">
+        </motion.div>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {error && (
+            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+              <p className="text-sm text-red-400">{error}</p>
+            </div>
+          )}
+
+          {/* Brand + Content Type Selector */}
+          <div className="glass-panel p-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1.5">Brand</label>
+                <div className="flex gap-1.5 flex-wrap">
+                  {ALL_BRANDS.map(b => (
+                    <button
+                      key={b.id}
+                      type="button"
+                      onClick={() => handleBrandChange(b.id)}
+                      className={`px-3 py-1.5 text-xs rounded-md transition-all flex items-center gap-1.5 ${
+                        brand === b.id ? 'bg-white/15 text-white ring-1' : 'text-gray-500 hover:text-white hover:bg-white/5'
+                      }`}
+                      style={brand === b.id ? { borderColor: b.color, borderWidth: '1px' } : {}}
+                    >
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: b.color }} />
+                      {b.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {brandConfig.contentTypes.length > 1 && (
+                <div>
+                  <label className="block text-xs font-medium text-gray-400 mb-1.5">Content Type</label>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {brandConfig.contentTypes.map(ct => (
+                      <button
+                        key={ct.id}
+                        type="button"
+                        onClick={() => setContentTypeId(ct.id)}
+                        className={`px-3 py-1.5 text-xs rounded-md transition-all ${
+                          contentTypeId === ct.id ? 'bg-white/15 text-white' : 'text-gray-500 hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        {ct.label}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-[10px] text-gray-600 mt-1">{contentType.description}</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Title + Slug */}
+          <div className="glass-panel p-5 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1.5">Title <span className="text-red-400">*</span></label>
+              <input
+                type="text"
+                value={formData.title}
+                onChange={(e) => updateField('title', e.target.value)}
+                placeholder="Enter article title..."
+                className="admin-input text-lg font-semibold"
+                required
+              />
+              {formData.title && (
+                <p className="text-[10px] text-gray-600 mt-1 font-mono">Slug: {slug}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1.5">Excerpt</label>
+              <textarea
+                value={formData.excerpt}
+                onChange={(e) => updateField('excerpt', e.target.value)}
+                placeholder="Brief summary of the article..."
+                rows={2}
+                className="admin-input text-sm resize-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1.5">
+                Body <span className="text-red-400">*</span>
+                {formData.body && (
+                  <span className="text-gray-600 font-normal ml-2">~{estimateReadingTime(formData.body)} min read</span>
+                )}
+              </label>
+              <textarea
+                value={formData.body}
+                onChange={(e) => updateField('body', e.target.value)}
+                placeholder="Write your article content... (supports HTML)"
+                rows={12}
+                className="admin-input text-sm resize-y font-mono"
+                required
+              />
+            </div>
+          </div>
+
+          {/* Brand-specific fields by group */}
+          {Array.from(fieldGroups.entries()).map(([groupKey, fields]) => {
+            if (groupKey === 'content') return null;
+            const renderedFields = fields.map(renderField).filter(Boolean);
+            if (renderedFields.length === 0) return null;
+
+            return (
+              <div key={groupKey} className="glass-panel p-5 space-y-4">
+                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  {GROUP_LABELS[groupKey] || groupKey}
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {renderedFields}
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Common: Cover Image + Tags */}
+          <div className="glass-panel p-5 space-y-4">
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Media & Tags</h3>
+            <ImageUpload
+              label="Cover Image"
+              value={formData.cover_image}
+              onChange={(url) => updateField('cover_image', url)}
+              folder={`content/${brand}`}
+            />
+            <div>
+              <label className="block text-xs font-medium text-gray-400 mb-1">Tags (comma-separated)</label>
+              <input
+                type="text"
+                value={formData.tags}
+                onChange={(e) => updateField('tags', e.target.value)}
+                placeholder="hip-hop, music, breaking-news"
+                className="admin-input text-sm"
+              />
+            </div>
+          </div>
+
+          {/* Publishing */}
+          <div className="glass-panel p-5 space-y-4">
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Publishing</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1">Category</label>
+                <select
+                  value={formData.category || ''}
+                  onChange={(e) => updateField('category', e.target.value)}
+                  className="admin-input text-sm"
+                >
+                  <option value="">Auto ({contentType.label})</option>
+                  {brandConfig.contentTypes[0].fields
+                    .find(f => f.key === 'category')
+                    ?.options?.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    )) || (
+                    <>
+                      {['Music', 'Fashion', 'Entertainment', 'Sports', 'Tech', 'Culture', 'Art', 'Lifestyle'].map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </>
+                  )}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1">Status</label>
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value as ArticleStatus)}
+                  className="admin-input text-sm"
+                >
+                  <option value="draft">Draft</option>
+                  <option value="pending_review">Pending Review</option>
+                  <option value="published">Published</option>
+                  <option value="archived">Archived</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Submit */}
+          <div className="glass-panel p-4 flex items-center justify-end gap-3">
             <button type="button" onClick={() => router.back()} className="admin-btn-ghost">Cancel</button>
-            <button type="submit" disabled={saving} className="admin-btn-primary disabled:opacity-50">
-              {saving ? 'Saving...' : '💾 Save Changes'}
+            <button
+              type="submit"
+              disabled={saving}
+              className="admin-btn-primary flex items-center gap-2 disabled:opacity-50"
+            >
+              {saving ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Saving...
+                </>
+              ) : '💾 Save Changes'}
             </button>
           </div>
-        </div>
-      </form>
+        </form>
+      </div>
+
+      {/* Right: Live Preview */}
+      {showPreview && (
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="w-1/2 glass-panel overflow-hidden flex flex-col sticky top-0"
+        >
+          <LivePreview
+            brand={brand}
+            title={formData.title}
+            excerpt={formData.excerpt}
+            body={formData.body}
+            coverImage={formData.cover_image}
+            category={formData.category || contentType.label}
+            tags={parsedTags}
+            metadata={formData}
+            contentType={contentTypeId}
+          />
+        </motion.div>
+      )}
     </div>
   );
 }

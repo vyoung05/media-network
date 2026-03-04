@@ -3,9 +3,14 @@ import { getSupabaseServiceClient } from '@media-network/shared';
 import { createArticle } from '@media-network/shared';
 import { slugify, estimateReadingTime } from '@media-network/shared';
 import type { Brand, ArticleStatus } from '@media-network/shared';
+import { validateRequest } from '@/lib/api-auth';
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await validateRequest(request);
+    if (!auth.authenticated) {
+      return NextResponse.json({ error: auth.error }, { status: 401 });
+    }
     const supabase = getSupabaseServiceClient();
     const body = await request.json();
 

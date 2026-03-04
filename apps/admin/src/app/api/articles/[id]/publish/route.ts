@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServiceClient, updateArticleStatus, getArticleById, updateArticle, BRAND_CONFIGS } from '@media-network/shared';
 import type { Brand, SocialPlatform } from '@media-network/shared';
+import { validateRequest } from '@/lib/api-auth';
 
 const BRAND_DOMAINS: Record<Brand, string> = {
   saucewire: 'https://saucewire.com',
@@ -14,6 +15,10 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
+    const auth = await validateRequest(request);
+    if (!auth.authenticated) {
+      return NextResponse.json({ error: auth.error }, { status: 401 });
+    }
     const supabase = getSupabaseServiceClient();
 
     // Parse optional cross-posting and sharing options from body

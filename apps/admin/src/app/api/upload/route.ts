@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { validateRequest } from '@/lib/api-auth';
 
 const ALLOWED_IMAGE_TYPES = [
   'image/jpeg',
@@ -22,6 +23,10 @@ function getServiceClient() {
 // POST /api/upload — upload file to Supabase Storage
 export async function POST(request: NextRequest) {
   try {
+    const auth = await validateRequest(request);
+    if (!auth.authenticated) {
+      return NextResponse.json({ error: auth.error }, { status: 401 });
+    }
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const bucket = (formData.get('bucket') as string) || 'media';
