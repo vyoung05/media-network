@@ -127,6 +127,251 @@ function SuccessToast({ message, onDone }: { message: string; onDone: () => void
   );
 }
 
+// ======================== MEDIA OPTIONS PANEL ========================
+
+interface MediaOptionsProps {
+  mediaOptions?: {
+    sourceImages?: Array<{ url: string; alt: string; source: string }>;
+    stockImages?: Array<{ url: string; credit: string }>;
+    aiImages?: Array<{ url: string; prompt: string }>;
+    videos?: Array<{ title: string; url: string; embedUrl: string; thumbnailUrl: string; source: string }>;
+  };
+  onUseCover: (url: string) => void;
+  onEmbedVideo: (embedUrl: string, title: string) => void;
+}
+
+function MediaOptionsPanel({ mediaOptions, onUseCover, onEmbedVideo }: MediaOptionsProps) {
+  const [expanded, setExpanded] = useState(false);
+
+  if (!mediaOptions) return null;
+
+  const { sourceImages = [], stockImages = [], aiImages = [], videos = [] } = mediaOptions;
+  const totalImages = sourceImages.length + stockImages.length + aiImages.length;
+  const totalVideos = videos.length;
+
+  if (totalImages === 0 && totalVideos === 0) return null;
+
+  return (
+    <div className="glass-panel overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setExpanded(!expanded)}
+        className="w-full px-5 py-3 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-lg">🖼️</span>
+          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+            Media Options
+          </h3>
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400">
+            {totalImages} image{totalImages !== 1 ? 's' : ''} · {totalVideos} video{totalVideos !== 1 ? 's' : ''}
+          </span>
+        </div>
+        <motion.svg
+          animate={{ rotate: expanded ? 180 : 0 }}
+          transition={{ duration: 0.2 }}
+          className="w-4 h-4 text-gray-500"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </motion.svg>
+      </button>
+
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="overflow-hidden"
+          >
+            <div className="px-5 pb-5 space-y-4">
+              {/* Source Images */}
+              {sourceImages.length > 0 && (
+                <div>
+                  <p className="text-xs font-medium text-gray-400 mb-2 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    Source Article Images ({sourceImages.length})
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {sourceImages.map((img, i) => (
+                      <div key={`src-${i}`} className="relative group rounded-lg overflow-hidden border border-white/[0.06] bg-black/20">
+                        <img
+                          src={img.url}
+                          alt={img.alt}
+                          className="w-full h-20 object-cover"
+                          loading="lazy"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        />
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <button
+                            type="button"
+                            onClick={() => onUseCover(img.url)}
+                            className="px-2 py-1 text-[10px] font-medium rounded bg-white/20 text-white hover:bg-white/30 transition-colors"
+                          >
+                            Use as Cover
+                          </button>
+                        </div>
+                        <div className="absolute bottom-0 left-0 right-0 px-1.5 py-0.5 bg-black/50">
+                          <p className="text-[9px] text-gray-300 truncate">
+                            {img.source === 'og:image' ? '📌 Featured' : '📷 Article'}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Stock Images */}
+              {stockImages.length > 0 && (
+                <div>
+                  <p className="text-xs font-medium text-gray-400 mb-2 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-blue-500" />
+                    Stock Images ({stockImages.length})
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {stockImages.map((img, i) => (
+                      <div key={`stock-${i}`} className="relative group rounded-lg overflow-hidden border border-white/[0.06] bg-black/20">
+                        <img
+                          src={img.url}
+                          alt={img.credit}
+                          className="w-full h-20 object-cover"
+                          loading="lazy"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        />
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <button
+                            type="button"
+                            onClick={() => onUseCover(img.url)}
+                            className="px-2 py-1 text-[10px] font-medium rounded bg-white/20 text-white hover:bg-white/30 transition-colors"
+                          >
+                            Use as Cover
+                          </button>
+                        </div>
+                        <div className="absolute bottom-0 left-0 right-0 px-1.5 py-0.5 bg-black/50">
+                          <p className="text-[9px] text-gray-300 truncate">📸 {img.credit}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* AI Generated Images */}
+              {aiImages.length > 0 && (
+                <div>
+                  <p className="text-xs font-medium text-gray-400 mb-2 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-purple-500" />
+                    AI Generated ({aiImages.length})
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {aiImages.map((img, i) => (
+                      <div key={`ai-${i}`} className="relative group rounded-lg overflow-hidden border border-white/[0.06] bg-black/20">
+                        <img
+                          src={img.url}
+                          alt="AI generated"
+                          className="w-full h-28 object-cover"
+                          loading="lazy"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        />
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1 p-2">
+                          <button
+                            type="button"
+                            onClick={() => onUseCover(img.url)}
+                            className="px-2 py-1 text-[10px] font-medium rounded bg-white/20 text-white hover:bg-white/30 transition-colors"
+                          >
+                            Use as Cover
+                          </button>
+                          <p className="text-[8px] text-gray-300 text-center line-clamp-2 mt-1">{img.prompt}</p>
+                        </div>
+                        <div className="absolute bottom-0 left-0 right-0 px-1.5 py-0.5 bg-black/50">
+                          <p className="text-[9px] text-gray-300 truncate">🤖 AI Generated</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Videos */}
+              {videos.length > 0 && (
+                <div>
+                  <p className="text-xs font-medium text-gray-400 mb-2 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-red-500" />
+                    Videos ({videos.length})
+                  </p>
+                  <div className="space-y-2">
+                    {videos.map((video, i) => (
+                      <div
+                        key={`vid-${i}`}
+                        className="flex items-center gap-3 p-2 rounded-lg border border-white/[0.06] bg-black/10 hover:bg-white/[0.02] transition-colors group"
+                      >
+                        {video.thumbnailUrl ? (
+                          <img
+                            src={video.thumbnailUrl}
+                            alt={video.title}
+                            className="w-24 h-14 object-cover rounded flex-shrink-0"
+                            loading="lazy"
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                          />
+                        ) : (
+                          <div className="w-24 h-14 bg-white/5 rounded flex-shrink-0 flex items-center justify-center">
+                            <span className="text-gray-600 text-lg">🎬</span>
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-white truncate">{video.title}</p>
+                          <p className="text-[10px] text-gray-500 font-mono truncate">
+                            {video.source === 'source_article' ? '📎 From source article' : '🔍 YouTube'}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {video.url && (
+                            <a
+                              href={video.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-2 py-1 text-[10px] font-medium rounded bg-white/10 text-gray-300 hover:bg-white/20 transition-colors"
+                            >
+                              Open
+                            </a>
+                          )}
+                          {video.embedUrl && (
+                            <button
+                              type="button"
+                              onClick={() => onEmbedVideo(video.embedUrl, video.title)}
+                              className="px-2 py-1 text-[10px] font-medium rounded bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors"
+                            >
+                              Embed
+                            </button>
+                          )}
+                          {video.thumbnailUrl && (
+                            <button
+                              type="button"
+                              onClick={() => onUseCover(video.thumbnailUrl)}
+                              className="px-2 py-1 text-[10px] font-medium rounded bg-white/10 text-gray-300 hover:bg-white/20 transition-colors"
+                            >
+                              Cover
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 // ======================== MAIN PAGE ========================
 
 export default function EditArticlePage() {
@@ -823,6 +1068,18 @@ export default function EditArticlePage() {
               onChange={(url) => updateField('cover_image', url)}
               folder={`content/${brand}`}
             />
+            {formData.cover_image && (
+              <button
+                type="button"
+                onClick={() => updateField('cover_image', '')}
+                className="mt-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white border border-white/10 transition-colors flex items-center gap-1.5"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                No Cover Image
+              </button>
+            )}
             <div>
               <label className="block text-xs font-medium text-gray-400 mb-1">Tags (comma-separated)</label>
               <input
@@ -834,6 +1091,17 @@ export default function EditArticlePage() {
               />
             </div>
           </div>
+
+          {/* Media Options Panel — shows enrichment results from AI generation */}
+          <MediaOptionsPanel
+            mediaOptions={formData.media_options}
+            onUseCover={(url) => updateField('cover_image', url)}
+            onEmbedVideo={(embedUrl, title) => {
+              const iframe = `\n\n<div class="video-embed"><iframe src="${embedUrl}" title="${title}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="width:100%;aspect-ratio:16/9;border-radius:8px;"></iframe></div>\n\n`;
+              updateField('body', (formData.body || '') + iframe);
+              setSuccessMsg('Video embedded in article body');
+            }}
+          />
 
           {/* Category */}
           <div className="glass-panel p-5 space-y-4">

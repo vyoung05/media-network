@@ -410,6 +410,18 @@ export default function NewArticlePage() {
               onChange={(url) => updateField('cover_image', url)}
               folder={`content/${brand}`}
             />
+            {formData.cover_image && (
+              <button
+                type="button"
+                onClick={() => updateField('cover_image', '')}
+                className="mt-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white border border-white/10 transition-colors flex items-center gap-1.5"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                No Cover Image
+              </button>
+            )}
             <div>
               <label className="block text-xs font-medium text-gray-400 mb-1">Tags (comma-separated)</label>
               <input
