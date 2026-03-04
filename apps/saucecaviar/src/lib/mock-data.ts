@@ -47,6 +47,23 @@ export interface MagazinePage {
   advertiserCta?: string;
   advertiserUrl?: string;
   tocEntries?: TocEntry[];
+  // Enhanced fields (from rich magazine editor)
+  spotify_embed?: string;
+  audio_embed_url?: string;
+  youtube_url?: string;
+  video_embed_url?: string;
+  gallery_images?: any[];
+  interactive_embed_url?: string;
+  iframe_url?: string;
+  lower_third_text?: string;
+  lower_third_subtitle?: string;
+  caption?: string;
+  credits?: string;
+  cta_text?: string;
+  cta_url?: string;
+  layout_style?: string;
+  animation?: string;
+  transition_effect?: string;
 }
 
 export interface TocEntry {
