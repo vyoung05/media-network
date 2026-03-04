@@ -10,6 +10,7 @@ import { CategoryFilter } from '@media-network/ui';
 import { NewsFeed } from '@media-network/ui';
 import { ArticleCard } from '@media-network/ui';
 import { TrendingSidebar } from './TrendingSidebar';
+import { HeroCarousel } from './HeroCarousel';
 
 interface HomePageClientProps {
   articles: Article[];
@@ -58,10 +59,10 @@ export function HomePageClient({
     router.push(`/category/${category.toLowerCase()}`);
   };
 
-  // Featured article: pick first article WITH a cover image
-  const featuredIndex = articles.findIndex((a) => !!a.cover_image);
-  const featuredArticle = featuredIndex >= 0 ? articles[featuredIndex] : null;
-  const remainingArticles = articles.filter((_, i) => i !== featuredIndex);
+  // Hero carousel: all articles with cover images (up to 5)
+  const heroArticles = articles.filter((a) => !!a.cover_image).slice(0, 5);
+  const heroIds = new Set(heroArticles.map((a) => a.id));
+  const remainingArticles = articles.filter((a) => !heroIds.has(a.id));
 
   return (
     <>
@@ -88,14 +89,14 @@ export function HomePageClient({
       </div>
 
       <div className="container-wire py-6">
-        {/* Featured article */}
-        {featuredArticle && (
+        {/* Hero carousel */}
+        {heroArticles.length > 0 && (
           <StaggeredSection className="mb-8">
-            <ArticleCard
-              article={featuredArticle}
-              variant="featured"
-              onClick={handleArticleClick}
+            <HeroCarousel
+              articles={heroArticles}
+              onArticleClick={handleArticleClick}
               onCategoryClick={handleCategoryClick}
+              autoPlayInterval={6000}
             />
           </StaggeredSection>
         )}
