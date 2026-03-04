@@ -204,7 +204,8 @@ function getUnsplashCover(category: string, title: string): string {
 type AIProvider = 'gemini' | 'openai' | 'anthropic';
 
 async function generateWithGemini(prompt: string, systemPrompt: string, apiKey: string): Promise<string> {
-  const model = process.env.AI_MODEL || 'gemini-2.0-flash-001';
+  const model = process.env.AI_MODEL || 'gemini-2.5-flash-preview-05-20';
+  // Use v1beta for preview models, v1 for stable — v1beta supports both
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
   const res = await fetch(url, {
@@ -552,7 +553,7 @@ Remember: Write 400-800 words in the ${BRAND_NAMES[brand]} voice. Make it engagi
 
     // Append AI metadata to body (including quality score)
     const providerModels: Record<AIProvider, string> = {
-      gemini: process.env.AI_MODEL || 'gemini-2.0-flash-001',
+      gemini: process.env.AI_MODEL || 'gemini-2.5-flash-preview-05-20',
       openai: 'gpt-4o-mini',
       anthropic: 'claude-sonnet-4-20250514',
     };
