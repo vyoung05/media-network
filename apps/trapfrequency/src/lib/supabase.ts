@@ -18,7 +18,11 @@ function getSupabase(): SupabaseClient | null {
     console.warn('Supabase env vars missing — returning null client');
     return null;
   }
-  return createClient(url, key);
+  return createClient(url, key, {
+    global: {
+      fetch: (input, init) => fetch(input, { ...init, cache: 'no-store' }),
+    },
+  });
 }
 
 // ======================== DATA MAPPERS (snake_case DB → camelCase UI) ========================
