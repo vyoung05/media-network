@@ -191,7 +191,7 @@ export async function POST(request: Request) {
     }
 
     // Check that at least one key source is available (BYOK or server)
-    const provider = aiProvider || 'gemini';
+    const provider = aiProvider || 'openai';
     const hasKey = apiKey ||
       (provider === 'gemini' && process.env.GEMINI_API_KEY) ||
       (provider === 'openai' && process.env.OPENAI_API_KEY) ||

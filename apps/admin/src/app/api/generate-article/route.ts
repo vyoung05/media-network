@@ -293,7 +293,7 @@ async function generateWithAnthropic(prompt: string, systemPrompt: string, apiKe
 async function generateArticleContent(
   prompt: string,
   systemPrompt: string,
-  provider: AIProvider = 'gemini',
+  provider: AIProvider = 'openai',
   apiKey?: string,
 ): Promise<string> {
   // Resolve API key: BYOK key takes priority, then fall back to env vars
@@ -487,7 +487,7 @@ export async function POST(request: Request) {
     }
 
     // Determine provider and key
-    const provider: AIProvider = aiProvider || 'gemini';
+    const provider: AIProvider = aiProvider || 'openai';
     const userKey = apiKey || '';
 
     // Check that SOME key is available (BYOK or server)
