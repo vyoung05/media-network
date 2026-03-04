@@ -32,6 +32,11 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    const auth = await validateRequest(request);
+    if (!auth.authenticated) {
+      return NextResponse.json({ error: auth.error }, { status: 401 });
+    }
+
     const supabase = getSupabaseServiceClient();
     await deleteArticle(supabase, params.id);
     return NextResponse.json({ success: true });

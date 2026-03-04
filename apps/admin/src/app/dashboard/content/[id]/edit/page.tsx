@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/components/AuthProvider';
 import { LivePreview } from '@/components/LivePreview';
 import { ImageUpload } from '@/components/ImageUpload';
@@ -14,10 +14,120 @@ import {
   type BrandField,
 } from '@/config/brand-fields';
 import { getArticleById } from '@media-network/shared';
-import { slugify, estimateReadingTime, BRAND_CONFIGS } from '@media-network/shared';
+import { slugify, estimateReadingTime } from '@media-network/shared';
 import type { Brand, ArticleStatus } from '@media-network/shared';
 
 const ALL_BRANDS = Object.values(BRAND_FORM_CONFIGS);
+
+// ======================== STATUS CONFIG ========================
+
+const STATUS_BADGE: Record<string, { label: string; color: string; bg: string; icon: string }> = {
+  draft:          { label: 'Draft',          color: 'text-gray-400',    bg: 'bg-gray-400/10 border-gray-400/20',    icon: '📝' },
+  pending_review: { label: 'Pending Review', color: 'text-amber-400',   bg: 'bg-amber-400/10 border-amber-400/20',  icon: '⏳' },
+  saved:          { label: 'Saved for Later',color: 'text-amber-300',   bg: 'bg-amber-300/10 border-amber-300/20',  icon: '🔖' },
+  published:      { label: 'Published',      color: 'text-emerald-400', bg: 'bg-emerald-400/10 border-emerald-400/20', icon: '✅' },
+  archived:       { label: 'Archived',       color: 'text-red-400',     bg: 'bg-red-400/10 border-red-400/20',      icon: '📦' },
+};
+
+// ======================== DELETE CONFIRMATION MODAL ========================
+
+function DeleteConfirmModal({
+  title,
+  onConfirm,
+  onCancel,
+  deleting,
+}: {
+  title: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+  deleting: boolean;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+    >
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onCancel} />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+        transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+        className="relative w-full max-w-md glass-panel-solid shadow-2xl shadow-black/50"
+      >
+        <div className="p-6 text-center">
+          <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-red-500/10 flex items-center justify-center">
+            <svg className="w-7 h-7 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-bold text-white mb-2">Delete Article?</h3>
+          <p className="text-sm text-gray-400 mb-1">Are you sure you want to delete:</p>
+          <p className="text-sm text-white font-medium mb-4 line-clamp-2">&ldquo;{title}&rdquo;</p>
+          <p className="text-xs text-red-400/80 mb-6">This action cannot be undone.</p>
+
+          <div className="flex items-center justify-center gap-3">
+            <button
+              onClick={onCancel}
+              disabled={deleting}
+              className="admin-btn-ghost px-5 py-2"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onConfirm}
+              disabled={deleting}
+              className="px-5 py-2 text-sm font-medium rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors flex items-center gap-2 disabled:opacity-50"
+            >
+              {deleting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  Delete Permanently
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// ======================== SUCCESS TOAST ========================
+
+function SuccessToast({ message, onDone }: { message: string; onDone: () => void }) {
+  useEffect(() => {
+    const t = setTimeout(onDone, 2500);
+    return () => clearTimeout(t);
+  }, [onDone]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className="fixed top-6 right-6 z-[70] px-4 py-3 rounded-lg bg-emerald-500/20 border border-emerald-500/30 backdrop-blur-sm shadow-lg"
+    >
+      <p className="text-sm text-emerald-300 flex items-center gap-2">
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+        </svg>
+        {message}
+      </p>
+    </motion.div>
+  );
+}
+
+// ======================== MAIN PAGE ========================
 
 export default function EditArticlePage() {
   const router = useRouter();
@@ -27,7 +137,15 @@ export default function EditArticlePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
   const [showPreview, setShowPreview] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  // Track whether user has edited a published article
+  const [hasEdits, setHasEdits] = useState(false);
+  const [initialStatus, setInitialStatus] = useState<ArticleStatus>('draft');
+  const [publishedAt, setPublishedAt] = useState<string | null>(null);
 
   // Core fields
   const [brand, setBrand] = useState<Brand>('saucewire');
@@ -44,6 +162,9 @@ export default function EditArticlePage() {
     is_breaking: false,
   });
 
+  // Snapshot of initial form data for dirty detection
+  const [initialFormSnapshot, setInitialFormSnapshot] = useState('');
+
   const articleId = params.id as string;
 
   // Derived
@@ -51,6 +172,8 @@ export default function EditArticlePage() {
   const contentType = brandConfig.contentTypes.find(ct => ct.id === contentTypeId) || brandConfig.contentTypes[0];
   const fieldGroups = useMemo(() => getFieldGroups(contentType.fields), [contentType]);
   const slug = slugify(formData.title || '');
+
+  const statusInfo = STATUS_BADGE[status] || STATUS_BADGE.draft;
 
   // Fetch article on mount
   useEffect(() => {
@@ -65,15 +188,15 @@ export default function EditArticlePage() {
 
         setBrand(article.brand);
         setStatus(article.status);
+        setInitialStatus(article.status);
+        setPublishedAt(article.published_at || null);
 
-        // Try to detect content type from metadata
         const metadata = (article.metadata || {}) as Record<string, any>;
         if (metadata.content_type) {
           setContentTypeId(metadata.content_type as string);
         }
 
-        // Set form data from article fields + metadata
-        setFormData({
+        const data = {
           title: article.title || '',
           body: article.body || '',
           excerpt: article.excerpt || '',
@@ -82,9 +205,10 @@ export default function EditArticlePage() {
           is_breaking: article.is_breaking || false,
           category: article.category || '',
           source_url: article.source_url || '',
-          // Spread metadata fields
           ...metadata,
-        });
+        };
+        setFormData(data);
+        setInitialFormSnapshot(JSON.stringify(data));
       } catch (err: any) {
         setError(err.message || 'Failed to load article');
       } finally {
@@ -94,6 +218,13 @@ export default function EditArticlePage() {
 
     fetchArticle();
   }, [supabase, articleId]);
+
+  // Dirty detection: mark hasEdits when form changes from initial snapshot
+  useEffect(() => {
+    if (!initialFormSnapshot) return;
+    const currentSnapshot = JSON.stringify(formData);
+    setHasEdits(currentSnapshot !== initialFormSnapshot);
+  }, [formData, initialFormSnapshot]);
 
   const handleBrandChange = (newBrand: Brand) => {
     setBrand(newBrand);
@@ -107,8 +238,45 @@ export default function EditArticlePage() {
 
   const COMMON_KEYS = ['title', 'body', 'excerpt', 'cover_image', 'tags', 'is_breaking', 'source_url'];
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // ======================== BUILD PATCH PAYLOAD ========================
+
+  const buildPayload = useCallback(() => {
+    const category = formData.category || contentType.label;
+
+    const metadata: Record<string, any> = {};
+    for (const [key, value] of Object.entries(formData)) {
+      if (!COMMON_KEYS.includes(key) && key !== 'category' && value !== '' && value !== undefined && value !== false) {
+        metadata[key] = value;
+      }
+    }
+    metadata.content_type = contentTypeId;
+
+    const tags = (formData.tags || '')
+      .split(',')
+      .map((t: string) => t.trim())
+      .filter(Boolean);
+
+    return {
+      title: formData.title,
+      slug,
+      body: formData.body,
+      excerpt: formData.excerpt || null,
+      cover_image: formData.cover_image || null,
+      brand,
+      category: category || brandConfig.contentTypes[0].label,
+      tags,
+      is_breaking: formData.is_breaking || false,
+      source_url: formData.source_url || null,
+      reading_time_minutes: estimateReadingTime(formData.body),
+      metadata,
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData, brand, contentTypeId, slug]);
+
+  // ======================== ACTION: SAVE ========================
+
+  const handleSave = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     setError('');
     setSaving(true);
 
@@ -117,62 +285,48 @@ export default function EditArticlePage() {
         throw new Error('Title and body are required');
       }
 
-      const category = formData.category || contentType.label;
-
-      // Separate metadata from core fields
-      const metadata: Record<string, any> = {};
-      for (const [key, value] of Object.entries(formData)) {
-        if (!COMMON_KEYS.includes(key) && key !== 'category' && value !== '' && value !== undefined && value !== false) {
-          metadata[key] = value;
-        }
-      }
-      metadata.content_type = contentTypeId;
-
-      const tags = (formData.tags || '')
-        .split(',')
-        .map((t: string) => t.trim())
-        .filter(Boolean);
+      const payload = { ...buildPayload(), status };
 
       const res = await fetch(`/api/articles/${articleId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: formData.title,
-          slug,
-          body: formData.body,
-          excerpt: formData.excerpt || null,
-          cover_image: formData.cover_image || null,
-          brand,
-          category: category || brandConfig.contentTypes[0].label,
-          tags,
-          status,
-          is_breaking: formData.is_breaking || false,
-          source_url: formData.source_url || null,
-          reading_time_minutes: estimateReadingTime(formData.body),
-          metadata,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || 'Failed to update article');
+        throw new Error(err.error || 'Failed to save article');
       }
 
-      router.push('/dashboard/content');
+      // Reset dirty tracking
+      setInitialFormSnapshot(JSON.stringify(formData));
+      setHasEdits(false);
+      setSuccessMsg('Changes saved');
     } catch (err: any) {
-      setError(err.message || 'Failed to update article');
+      setError(err.message || 'Failed to save article');
     } finally {
       setSaving(false);
     }
   };
 
+  // ======================== ACTION: PUBLISH ========================
+
   const handlePublish = async () => {
+    setError('');
     setSaving(true);
+
     try {
-      const res = await fetch(`/api/articles/${articleId}/publish`, {
-        method: 'POST',
+      // Save current edits first, then publish
+      const payload = {
+        ...buildPayload(),
+        status: 'published' as ArticleStatus,
+        published_at: new Date().toISOString(),
+      };
+
+      const res = await fetch(`/api/articles/${articleId}`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
@@ -180,7 +334,19 @@ export default function EditArticlePage() {
         throw new Error(err.error || 'Failed to publish');
       }
 
-      router.push('/dashboard/content');
+      // Also trigger the publish pipeline (TTS, newsletter, social, etc.)
+      fetch(`/api/articles/${articleId}/publish`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      }).catch(() => {});
+
+      setStatus('published');
+      setInitialStatus('published');
+      setPublishedAt(new Date().toISOString());
+      setInitialFormSnapshot(JSON.stringify(formData));
+      setHasEdits(false);
+      setSuccessMsg('Article published! 🚀');
     } catch (err: any) {
       setError(err.message || 'Failed to publish');
     } finally {
@@ -188,7 +354,99 @@ export default function EditArticlePage() {
     }
   };
 
-  // Render a single field (same pattern as new article page)
+  // ======================== ACTION: UNPUBLISH ========================
+
+  const handleUnpublish = async () => {
+    setError('');
+    setSaving(true);
+
+    try {
+      const res = await fetch(`/api/articles/${articleId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: 'draft',
+          published_at: null,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to unpublish');
+      }
+
+      setStatus('draft');
+      setInitialStatus('draft');
+      setPublishedAt(null);
+      setSuccessMsg('Article unpublished — moved to Draft');
+    } catch (err: any) {
+      setError(err.message || 'Failed to unpublish');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // ======================== ACTION: REPUBLISH ========================
+
+  const handleRepublish = async () => {
+    setError('');
+    setSaving(true);
+
+    try {
+      const payload = {
+        ...buildPayload(),
+        status: 'published' as ArticleStatus,
+        published_at: new Date().toISOString(),
+      };
+
+      const res = await fetch(`/api/articles/${articleId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to republish');
+      }
+
+      setPublishedAt(new Date().toISOString());
+      setInitialFormSnapshot(JSON.stringify(formData));
+      setHasEdits(false);
+      setSuccessMsg('Article republished with updates! 🔄');
+    } catch (err: any) {
+      setError(err.message || 'Failed to republish');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // ======================== ACTION: DELETE ========================
+
+  const handleDelete = async () => {
+    setDeleting(true);
+
+    try {
+      const res = await fetch(`/api/articles/${articleId}`, {
+        method: 'DELETE',
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to delete article');
+      }
+
+      router.push('/dashboard/content');
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete article');
+      setShowDeleteModal(false);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  // ======================== FIELD RENDERER ========================
+
   const renderField = (field: BrandField) => {
     if (field.key === 'title' || field.key === 'body' || field.key === 'excerpt' || field.key === 'cover_image' || field.key === 'tags') return null;
 
@@ -306,46 +564,147 @@ export default function EditArticlePage() {
     );
   }
 
+  // ======================== DETERMINE VISIBLE ACTIONS ========================
+
+  const isPublished = status === 'published';
+  const showRepublish = isPublished && hasEdits;
+
   return (
     <div className="flex gap-6 h-[calc(100vh-6rem)]">
       {/* Left: Form */}
       <div className={`${showPreview ? 'w-1/2' : 'w-full'} overflow-y-auto pr-2 space-y-5`}>
-        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-white">Edit Article</h1>
-            <p className="text-sm text-gray-500 mt-0.5">
-              {brandConfig.icon} {brandConfig.name} — {formData.title || 'Untitled'}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            {status !== 'published' && (
+
+        {/* ========== HEADER ========== */}
+        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold text-white">Edit Article</h1>
+              {/* Status badge */}
+              <span className={`inline-flex items-center gap-1.5 text-xs font-mono px-2.5 py-1 rounded-md border ${statusInfo.bg} ${statusInfo.color}`}>
+                <span>{statusInfo.icon}</span>
+                {statusInfo.label}
+              </span>
+              {hasEdits && (
+                <span className="text-xs text-amber-400 font-mono px-2 py-0.5 bg-amber-400/10 rounded border border-amber-400/20">
+                  • unsaved changes
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
               <button
-                onClick={handlePublish}
-                disabled={saving}
-                className="admin-btn-success text-xs flex items-center gap-1.5 disabled:opacity-50"
+                type="button"
+                onClick={() => setShowPreview(!showPreview)}
+                className={`admin-btn-ghost text-xs flex items-center gap-1.5 ${showPreview ? 'text-blue-400' : ''}`}
               >
-                🚀 Publish Now
+                {showPreview ? '👁️ Hide Preview' : '👁️ Show Preview'}
               </button>
-            )}
-            <button
-              type="button"
-              onClick={() => setShowPreview(!showPreview)}
-              className={`admin-btn-ghost text-xs flex items-center gap-1.5 ${showPreview ? 'text-blue-400' : ''}`}
-            >
-              {showPreview ? '👁️ Hide Preview' : '👁️ Show Preview'}
-            </button>
-            <button onClick={() => router.back()} className="admin-btn-ghost text-xs">← Back</button>
+              <button onClick={() => router.back()} className="admin-btn-ghost text-xs">← Back</button>
+            </div>
           </div>
+
+          {/* Subtitle with published date */}
+          <p className="text-sm text-gray-500">
+            {brandConfig.icon} {brandConfig.name} — {formData.title || 'Untitled'}
+            {publishedAt && (
+              <span className="ml-2 text-gray-600">
+                · Published {new Date(publishedAt).toLocaleDateString('en-US', {
+                  month: 'short', day: 'numeric', year: 'numeric',
+                  hour: 'numeric', minute: '2-digit',
+                })}
+              </span>
+            )}
+          </p>
         </motion.div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        {/* ========== ACTION BAR ========== */}
+        <div className="glass-panel p-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {/* Save — always available */}
+            <button
+              type="button"
+              onClick={() => handleSave()}
+              disabled={saving}
+              className="admin-btn-primary text-xs flex items-center gap-1.5 disabled:opacity-50"
+            >
+              {saving ? (
+                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                </svg>
+              )}
+              Save Changes
+            </button>
+
+            {/* Publish — only when NOT published */}
+            {!isPublished && (
+              <button
+                type="button"
+                onClick={handlePublish}
+                disabled={saving}
+                className="px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white transition-colors flex items-center gap-1.5 disabled:opacity-50"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Publish
+              </button>
+            )}
+
+            {/* Republish — published + has edits */}
+            {showRepublish && (
+              <button
+                type="button"
+                onClick={handleRepublish}
+                disabled={saving}
+                className="px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-500 hover:bg-blue-600 text-white transition-colors flex items-center gap-1.5 disabled:opacity-50"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Republish
+              </button>
+            )}
+
+            {/* Unpublish — only when published */}
+            {isPublished && (
+              <button
+                type="button"
+                onClick={handleUnpublish}
+                disabled={saving}
+                className="px-3 py-1.5 text-xs font-medium rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                </svg>
+                Unpublish
+              </button>
+            )}
+          </div>
+
+          {/* Delete — always available */}
+          <button
+            type="button"
+            onClick={() => setShowDeleteModal(true)}
+            disabled={saving}
+            className="admin-btn-ghost text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 flex items-center gap-1.5 disabled:opacity-50"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            Delete
+          </button>
+        </div>
+
+        {/* ========== FORM ========== */}
+        <form onSubmit={handleSave} className="space-y-5">
           {error && (
             <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
               <p className="text-sm text-red-400">{error}</p>
             </div>
           )}
 
-          {/* Brand + Content Type Selector */}
+          {/* Brand + Content Type */}
           <div className="glass-panel p-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -391,7 +750,7 @@ export default function EditArticlePage() {
             </div>
           </div>
 
-          {/* Title + Slug */}
+          {/* Title + Body */}
           <div className="glass-panel p-5 space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1.5">Title <span className="text-red-400">*</span></label>
@@ -437,7 +796,7 @@ export default function EditArticlePage() {
             </div>
           </div>
 
-          {/* Brand-specific fields by group */}
+          {/* Brand-specific fields */}
           {Array.from(fieldGroups.entries()).map(([groupKey, fields]) => {
             if (groupKey === 'content') return null;
             const renderedFields = fields.map(renderField).filter(Boolean);
@@ -455,7 +814,7 @@ export default function EditArticlePage() {
             );
           })}
 
-          {/* Common: Cover Image + Tags */}
+          {/* Cover Image + Tags */}
           <div className="glass-panel p-5 space-y-4">
             <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Media & Tags</h3>
             <ImageUpload
@@ -476,67 +835,74 @@ export default function EditArticlePage() {
             </div>
           </div>
 
-          {/* Publishing */}
+          {/* Category */}
           <div className="glass-panel p-5 space-y-4">
             <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Publishing</h3>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1">Category</label>
-                <select
-                  value={formData.category || ''}
-                  onChange={(e) => updateField('category', e.target.value)}
-                  className="admin-input text-sm"
-                >
-                  <option value="">Auto ({contentType.label})</option>
-                  {brandConfig.contentTypes[0].fields
-                    .find(f => f.key === 'category')
-                    ?.options?.map(opt => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    )) || (
-                    <>
-                      {['Music', 'Fashion', 'Entertainment', 'Sports', 'Tech', 'Culture', 'Art', 'Lifestyle'].map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
-                      ))}
-                    </>
-                  )}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1">Status</label>
-                <select
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value as ArticleStatus)}
-                  className="admin-input text-sm"
-                >
-                  <option value="draft">Draft</option>
-                  <option value="pending_review">Pending Review</option>
-                  <option value="published">Published</option>
-                  <option value="archived">Archived</option>
-                </select>
-              </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-400 mb-1">Category</label>
+              <select
+                value={formData.category || ''}
+                onChange={(e) => updateField('category', e.target.value)}
+                className="admin-input text-sm"
+              >
+                <option value="">Auto ({contentType.label})</option>
+                {brandConfig.contentTypes[0].fields
+                  .find(f => f.key === 'category')
+                  ?.options?.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  )) || (
+                  <>
+                    {['Music', 'Fashion', 'Entertainment', 'Sports', 'Tech', 'Culture', 'Art', 'Lifestyle'].map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </>
+                )}
+              </select>
             </div>
           </div>
 
-          {/* Submit */}
-          <div className="glass-panel p-4 flex items-center justify-end gap-3">
-            <button type="button" onClick={() => router.back()} className="admin-btn-ghost">Cancel</button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="admin-btn-primary flex items-center gap-2 disabled:opacity-50"
-            >
-              {saving ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Saving...
-                </>
-              ) : '💾 Save Changes'}
-            </button>
+          {/* Bottom action bar (duplicate for long forms) */}
+          <div className="glass-panel p-4 flex items-center justify-between">
+            <button type="button" onClick={() => router.back()} className="admin-btn-ghost text-xs">← Back to Queue</button>
+            <div className="flex items-center gap-2">
+              {!isPublished && (
+                <button
+                  type="button"
+                  onClick={handlePublish}
+                  disabled={saving}
+                  className="px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  🚀 Publish
+                </button>
+              )}
+              {showRepublish && (
+                <button
+                  type="button"
+                  onClick={handleRepublish}
+                  disabled={saving}
+                  className="px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-500 hover:bg-blue-600 text-white transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  🔄 Republish
+                </button>
+              )}
+              <button
+                type="submit"
+                disabled={saving}
+                className="admin-btn-primary flex items-center gap-2 disabled:opacity-50"
+              >
+                {saving ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Saving...
+                  </>
+                ) : '💾 Save Changes'}
+              </button>
+            </div>
           </div>
         </form>
       </div>
 
-      {/* Right: Live Preview */}
+      {/* ========== RIGHT: LIVE PREVIEW ========== */}
       {showPreview && (
         <motion.div
           initial={{ opacity: 0, x: 20 }}
@@ -556,6 +922,24 @@ export default function EditArticlePage() {
           />
         </motion.div>
       )}
+
+      {/* ========== MODALS & TOASTS ========== */}
+      <AnimatePresence>
+        {showDeleteModal && (
+          <DeleteConfirmModal
+            title={formData.title || 'Untitled'}
+            onConfirm={handleDelete}
+            onCancel={() => setShowDeleteModal(false)}
+            deleting={deleting}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {successMsg && (
+          <SuccessToast message={successMsg} onDone={() => setSuccessMsg('')} />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
