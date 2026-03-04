@@ -54,7 +54,28 @@ export async function fetchArticleBySlug(slug: string): Promise<Article | null> 
 export async function fetchBreakingArticles(): Promise<Article[]> {
   const supabase = getSupabase();
   if (!supabase) return [];
-  return getBreakingNews(supabase, BRAND);
+
+  // Always show the latest 5 published articles in the breaking banner
+  // Plus any explicitly marked as breaking (deduped)
+  const [breakingRes, latestRes] = await Promise.all([
+    getBreakingNews(supabase, BRAND),
+    getArticles(supabase, {
+      brand: BRAND,
+      status: 'published',
+      per_page: 5,
+    }),
+  ]);
+
+  // Merge: breaking first, then latest, deduplicated
+  const seen = new Set<string>();
+  const merged: Article[] = [];
+  for (const a of [...breakingRes, ...latestRes.data]) {
+    if (!seen.has(a.id)) {
+      seen.add(a.id);
+      merged.push(a);
+    }
+  }
+  return merged.slice(0, 8);
 }
 
 export async function fetchTrendingArticles(limit = 8): Promise<Article[]> {

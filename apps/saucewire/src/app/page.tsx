@@ -15,11 +15,6 @@ export default async function HomePage() {
     fetchTrendingArticles(8),
   ]);
 
-  // If no articles are explicitly marked as breaking, use the latest 5 as breaking news
-  const effectiveBreaking = breakingArticles.length > 0
-    ? breakingArticles
-    : articles.slice(0, 5);
-
   return (
     <>
       <JsonLd
@@ -30,7 +25,7 @@ export default async function HomePage() {
       />
       <HomePageClient
         articles={articles}
-        breakingArticles={effectiveBreaking}
+        breakingArticles={breakingArticles}
         trendingArticles={trendingArticles}
       />
     </>
