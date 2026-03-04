@@ -73,7 +73,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
-            className="p-4 lg:p-8"
+            className="p-4 lg:p-8 max-w-screen-2xl mx-auto"
           >
             {children}
           </motion.main>
