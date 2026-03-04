@@ -414,16 +414,11 @@ function ArticlePreviewModal({
             {title || 'Untitled Article'}
           </h1>
 
-          {/* Body paragraphs */}
-          <div className="space-y-4 mb-8">
-            {body.split('\n\n').map((paragraph, i) =>
-              paragraph.trim() ? (
-                <p key={i} className="text-sm text-gray-300 leading-relaxed">
-                  {paragraph}
-                </p>
-              ) : null
-            )}
-          </div>
+          {/* Body content */}
+          <div
+            className="prose prose-sm prose-invert max-w-none mb-8 [&_p]:text-gray-300 [&_p]:leading-relaxed [&_h2]:text-white [&_h2]:text-lg [&_h2]:font-bold [&_h2]:mt-6 [&_h2]:mb-3 [&_a]:text-blue-400 [&_a]:underline [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1 [&_li]:text-gray-300 [&_strong]:text-white [&_em]:italic [&_hr]:border-white/10 [&_hr]:my-6"
+            dangerouslySetInnerHTML={{ __html: body }}
+          />
 
           {/* Media embeds */}
           {embeds.length > 0 && (
