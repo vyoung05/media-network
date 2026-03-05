@@ -93,6 +93,17 @@ export function Footer() {
           />
         </div>
 
+        {/* Young Empire Network */}
+        <div className="border-t border-white/10 mt-8 pt-6">
+          <p className="text-xs text-gray-500 mb-2">Part of The Young Empire · A Vinci Studios Network</p>
+          <div className="flex gap-4 text-xs text-gray-400">
+            <span className="text-white font-bold">SauceWire</span>
+            <a href="https://saucecaviar.com" className="hover:text-white transition">SauceCaviar</a>
+            <a href="https://trapglow.com" className="hover:text-white transition">TrapGlow</a>
+            <a href="https://trapfrequency.com" className="hover:text-white transition">TrapFrequency</a>
+          </div>
+        </div>
+
         {/* Bottom bar */}
         <div className="mt-10 pt-6 border-t border-gray-800 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs text-neutral/60">

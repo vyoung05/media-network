@@ -7,6 +7,7 @@ import { ScrollProgress } from '@/components/ScrollProgress';
 import { PageTransition } from '@/components/PageTransition';
 import { CustomCursor } from '@/components/CustomCursor';
 import { PageViewTracker } from '@/components/PageViewTracker';
+import { OrganizationSchema } from '@/components/StructuredData';
 
 export const metadata: Metadata = {
   title: {
@@ -41,6 +42,10 @@ export const metadata: Metadata = {
     description: 'Tune Into The Craft — Music Production Hub',
     images: ['https://heyboss.heeyo.ai/replicate-z-image-turbo-1772241201-ce4e6fb9.jpeg'],
   },
+  icons: {
+    icon: '/icon.svg',
+    apple: '/icon.svg',
+  },
   alternates: {
     types: {
       'application/rss+xml': '/feed.xml',
@@ -56,6 +61,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className="min-h-screen flex flex-col bg-secondary">
+        <OrganizationSchema />
         <LenisProvider>
           <CustomCursor />
           <ScrollProgress />

@@ -111,6 +111,17 @@ export function Footer() {
           </div>
         </div>
 
+        {/* Young Empire Network */}
+        <div className="border-t border-white/10 mt-8 pt-6">
+          <p className="text-xs text-gray-500 mb-2">Part of The Young Empire · A Vinci Studios Network</p>
+          <div className="flex gap-4 text-xs text-gray-400">
+            <a href="https://saucewire.com" className="hover:text-white transition">SauceWire</a>
+            <a href="https://saucecaviar.com" className="hover:text-white transition">SauceCaviar</a>
+            <span className="text-white font-bold">TrapGlow</span>
+            <a href="https://trapfrequency.com" className="hover:text-white transition">TrapFrequency</a>
+          </div>
+        </div>
+
         {/* Bottom bar */}
         <div className="mt-12 pt-6 border-t border-white/[0.06] flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs text-white/30 font-body">
