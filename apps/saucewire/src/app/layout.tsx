@@ -10,6 +10,9 @@ import { PageViewTracker } from '@/components/PageViewTracker';
 import { OrganizationSchema } from '@/components/StructuredData';
 
 export const metadata: Metadata = {
+  verification: {
+    google: 'NQwNXZA-HV7RNO78KSSoA8b8rA-AC5gK8usCgtJIPaM',
+  },
   title: {
     default: 'SauceWire — Culture. Connected. Now.',
     template: '%s | SauceWire',
