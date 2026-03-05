@@ -21,6 +21,16 @@ export interface AIImage {
   prompt: string;
 }
 
+export interface WikimediaImage {
+  url: string;
+  thumbUrl: string;
+  credit: string;
+  license: string;
+  title: string;
+  width: number;
+  height: number;
+}
+
 export interface VideoResult {
   title: string;
   url: string;
@@ -33,6 +43,8 @@ export interface MediaSearchResult {
   sourceImages: SourceImage[];
   stockImages: StockImage[];
   aiImages: AIImage[];
+  wikimediaImages: WikimediaImage[];
+  wikipediaImage: { url: string; title: string } | null;
   videos: VideoResult[];
 }
 
@@ -240,6 +252,125 @@ async function generateAIImage(query: string): Promise<AIImage[]> {
   }
 }
 
+// ======================== WIKIMEDIA COMMONS SEARCH ========================
+
+export async function searchWikimediaCommons(query: string): Promise<WikimediaImage[]> {
+  try {
+    const params = new URLSearchParams({
+      action: 'query',
+      generator: 'search',
+      gsrnamespace: '6',
+      gsrsearch: query,
+      gsrlimit: '12',
+      prop: 'imageinfo',
+      iiprop: 'url|extmetadata|size',
+      iiurlwidth: '800',
+      format: 'json',
+      origin: '*',
+    });
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+
+    const res = await fetch(`https://commons.wikimedia.org/w/api.php?${params}`, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'MediaNetwork/1.0 (https://saucewire.com; admin dashboard photo search)',
+      },
+    });
+    clearTimeout(timeout);
+
+    if (!res.ok) return [];
+
+    const data = await res.json();
+    const pages = data?.query?.pages;
+    if (!pages) return [];
+
+    const results: WikimediaImage[] = [];
+
+    for (const page of Object.values(pages) as any[]) {
+      const imageinfo = page.imageinfo?.[0];
+      if (!imageinfo) continue;
+
+      const width = imageinfo.width || 0;
+      const height = imageinfo.height || 0;
+
+      // Filter out small images
+      if (width < 200) continue;
+
+      const extmetadata = imageinfo.extmetadata || {};
+      const credit = extmetadata.Artist?.value?.replace(/<[^>]*>/g, '').trim() ||
+                     extmetadata.Credit?.value?.replace(/<[^>]*>/g, '').trim() ||
+                     'Wikimedia Commons';
+      const license = extmetadata.LicenseShortName?.value || extmetadata.License?.value || 'Unknown';
+      const title = (page.title || '').replace(/^File:/, '').replace(/\.[^.]+$/, '');
+
+      results.push({
+        url: imageinfo.url || '',
+        thumbUrl: imageinfo.thumburl || imageinfo.url || '',
+        credit,
+        license,
+        title,
+        width,
+        height,
+      });
+    }
+
+    return results;
+  } catch (err) {
+    console.warn('Wikimedia Commons search error:', err instanceof Error ? err.message : err);
+    return [];
+  }
+}
+
+// ======================== WIKIPEDIA IMAGE LOOKUP ========================
+
+export async function searchWikipediaImage(query: string): Promise<{ url: string; title: string } | null> {
+  try {
+    const params = new URLSearchParams({
+      action: 'query',
+      titles: query,
+      prop: 'pageimages',
+      pithumbsize: '800',
+      format: 'json',
+      origin: '*',
+    });
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+
+    const res = await fetch(`https://en.wikipedia.org/w/api.php?${params}`, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'MediaNetwork/1.0 (https://saucewire.com; admin dashboard photo search)',
+      },
+    });
+    clearTimeout(timeout);
+
+    if (!res.ok) return null;
+
+    const data = await res.json();
+    const pages = data?.query?.pages;
+    if (!pages) return null;
+
+    for (const page of Object.values(pages) as any[]) {
+      if (page.missing !== undefined) continue;
+      const thumbUrl = page.thumbnail?.source;
+      if (thumbUrl) {
+        return {
+          url: thumbUrl,
+          title: page.title || query,
+        };
+      }
+    }
+
+    return null;
+  } catch (err) {
+    console.warn('Wikipedia image lookup error:', err instanceof Error ? err.message : err);
+    return null;
+  }
+}
+
 // ======================== YOUTUBE SEARCH ========================
 
 async function searchYouTube(query: string): Promise<VideoResult[]> {
@@ -291,6 +422,8 @@ export async function searchMedia(params: {
     sourceImages: [],
     stockImages: [],
     aiImages: [],
+    wikimediaImages: [],
+    wikipediaImage: null,
     videos: [],
   };
 
@@ -328,6 +461,24 @@ export async function searchMedia(params: {
     );
   }
 
+  // Wikimedia Commons search
+  if (searchImages) {
+    promises.push(
+      searchWikimediaCommons(query).then(images => {
+        result.wikimediaImages = images;
+      })
+    );
+  }
+
+  // Wikipedia main image lookup
+  if (searchImages) {
+    promises.push(
+      searchWikipediaImage(query).then(image => {
+        result.wikipediaImage = image;
+      })
+    );
+  }
+
   // YouTube search
   if (searchVideos) {
     promises.push(
@@ -350,23 +501,29 @@ export async function searchMedia(params: {
 
 /**
  * Pick the best available cover image from media search results.
- * Priority: og:image > AI generated > first stock image > fallback
+ * Priority: og:image > Wikipedia main image > AI generated > wikimedia first > stock > fallback
  */
 export function pickBestCoverImage(media: MediaSearchResult, fallbackUrl: string): string {
   // 1. og:image from source article is usually the best
   const ogImage = media.sourceImages.find(img => img.source === 'og:image');
   if (ogImage?.url) return ogImage.url;
 
-  // 2. AI-generated image is custom for this article
+  // 2. Wikipedia main image — often the canonical press/editorial photo
+  if (media.wikipediaImage?.url) return media.wikipediaImage.url;
+
+  // 3. AI-generated image is custom for this article
   if (media.aiImages.length > 0 && media.aiImages[0].url) return media.aiImages[0].url;
 
-  // 3. First article image
+  // 4. First Wikimedia Commons image
+  if (media.wikimediaImages.length > 0 && media.wikimediaImages[0].url) return media.wikimediaImages[0].thumbUrl || media.wikimediaImages[0].url;
+
+  // 5. First stock image
+  if (media.stockImages.length > 0 && media.stockImages[0].url) return media.stockImages[0].url;
+
+  // 6. First article image
   const articleImage = media.sourceImages.find(img => img.source === 'article');
   if (articleImage?.url) return articleImage.url;
 
-  // 4. First stock image
-  if (media.stockImages.length > 0 && media.stockImages[0].url) return media.stockImages[0].url;
-
-  // 5. Fallback
+  // 7. Fallback
   return fallbackUrl;
 }

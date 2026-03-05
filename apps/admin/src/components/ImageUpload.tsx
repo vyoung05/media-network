@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useCallback } from 'react';
+import { PhotoSearch } from './PhotoSearch';
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 const MAX_SIZE = 10 * 1024 * 1024; // 10MB
@@ -12,6 +13,7 @@ interface ImageUploadProps {
   label?: string;
   className?: string;
   compact?: boolean;
+  searchQuery?: string;
 }
 
 export function ImageUpload({
@@ -21,8 +23,9 @@ export function ImageUpload({
   label,
   className = '',
   compact = false,
+  searchQuery,
 }: ImageUploadProps) {
-  const [mode, setMode] = useState<'upload' | 'url'>(value && !value.includes('supabase') ? 'url' : 'upload');
+  const [mode, setMode] = useState<'upload' | 'url' | 'search'>(value && !value.includes('supabase') ? 'url' : 'upload');
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState('');
@@ -155,6 +158,17 @@ export function ImageUpload({
         >
           🔗 URL
         </button>
+        <button
+          type="button"
+          onClick={() => setMode('search')}
+          className={`px-3 py-1 text-[11px] font-medium rounded-md transition-all ${
+            mode === 'search'
+              ? 'bg-cyan-500/15 text-cyan-400 ring-1 ring-cyan-500/30'
+              : 'text-gray-500 hover:text-gray-300 bg-white/[0.03]'
+          }`}
+        >
+          🔍 Search
+        </button>
       </div>
 
       {/* Upload Mode */}
@@ -223,6 +237,21 @@ export function ImageUpload({
           >
             Set
           </button>
+        </div>
+      )}
+
+      {/* Search Mode */}
+      {mode === 'search' && !hasImage && (
+        <div className="border border-white/[0.06] rounded-xl p-3 bg-white/[0.01]">
+          <PhotoSearch
+            onSelect={(url, credit) => {
+              onChange(url);
+              setUrlInput(url);
+              setMode('upload'); // Switch back to upload mode to show preview
+            }}
+            initialQuery={searchQuery}
+            compact
+          />
         </div>
       )}
 

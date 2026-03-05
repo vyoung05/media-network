@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/components/AuthProvider';
 import { LivePreview } from '@/components/LivePreview';
 import { ImageUpload } from '@/components/ImageUpload';
+import { PhotoSearch } from '@/components/PhotoSearch';
 import {
   BRAND_FORM_CONFIGS,
   getBrandFormConfig,
@@ -386,6 +387,9 @@ export default function EditArticlePage() {
   const [showPreview, setShowPreview] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  // Photo search
+  const [showPhotoSearch, setShowPhotoSearch] = useState(false);
 
   // Track whether user has edited a published article
   const [hasEdits, setHasEdits] = useState(false);
@@ -1061,12 +1065,46 @@ export default function EditArticlePage() {
 
           {/* Cover Image + Tags */}
           <div className="glass-panel p-5 space-y-4">
-            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Media & Tags</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Media & Tags</h3>
+              {(formData.title || formData.tags) && (
+                <button
+                  type="button"
+                  onClick={() => setShowPhotoSearch(!showPhotoSearch)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all flex items-center gap-1.5 ${
+                    showPhotoSearch
+                      ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30'
+                      : 'bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white border border-white/10'
+                  }`}
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  {showPhotoSearch ? 'Hide Search' : 'Find Photos'}
+                </button>
+              )}
+            </div>
+
+            {/* Photo Search Panel */}
+            {showPhotoSearch && (
+              <div className="border border-white/[0.06] rounded-xl p-4 bg-white/[0.01]">
+                <PhotoSearch
+                  onSelect={(url, credit) => {
+                    updateField('cover_image', url);
+                    setShowPhotoSearch(false);
+                  }}
+                  initialQuery={formData.title || (formData.tags || '').split(',')[0]?.trim() || ''}
+                />
+              </div>
+            )}
+
             <ImageUpload
               label="Cover Image"
               value={formData.cover_image}
               onChange={(url) => updateField('cover_image', url)}
               folder={`content/${brand}`}
+              searchQuery={formData.title || (formData.tags || '').split(',')[0]?.trim()}
             />
             {formData.cover_image && (
               <button

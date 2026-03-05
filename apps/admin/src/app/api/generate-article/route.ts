@@ -591,6 +591,8 @@ Remember: Write 400-800 words in the ${BRAND_NAMES[brand]} voice. Make it engagi
       sourceImages: [],
       stockImages: [],
       aiImages: [],
+      wikimediaImages: [],
+      wikipediaImage: null,
       videos: [],
     };
 
