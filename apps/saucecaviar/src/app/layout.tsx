@@ -10,6 +10,9 @@ import { PageViewTracker } from '@/components/PageViewTracker';
 import { OrganizationSchema } from '@/components/StructuredData';
 
 export const metadata: Metadata = {
+  verification: {
+    google: 'fGmwaXxcmHyfINrlUZrh3AOR59oMhLpzs3BabTIAcsE',
+  },
   title: {
     default: 'SauceCaviar — Culture Served Premium',
     template: '%s | SauceCaviar',
