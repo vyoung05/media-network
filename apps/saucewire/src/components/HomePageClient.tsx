@@ -61,8 +61,8 @@ export function HomePageClient({
 
   // Hero carousel: all articles with cover images (up to 5)
   const heroArticles = articles.filter((a) => !!a.cover_image).slice(0, 5);
-  const heroIds = new Set(heroArticles.map((a) => a.id));
-  const remainingArticles = articles.filter((a) => !heroIds.has(a.id));
+  // Live Feed shows ALL articles (including hero ones — different presentation)
+  const feedArticles = articles;
 
   return (
     <>
@@ -117,7 +117,7 @@ export function HomePageClient({
             <div className="bg-surface rounded-lg border border-gray-800/50 overflow-hidden">
               <NewsFeed
                 brand="saucewire"
-                articles={remainingArticles}
+                articles={feedArticles}
                 category={activeCategory}
                 onArticleClick={handleArticleClick}
                 onCategoryClick={handleCategoryClick}
