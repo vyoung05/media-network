@@ -51,7 +51,7 @@ export function HeroCarousel({
       onMouseLeave={() => setIsPaused(false)}
     >
       {/* Main carousel area */}
-      <div className="relative aspect-[16/9] md:aspect-[21/9]">
+      <div className="relative aspect-[4/5] sm:aspect-[16/9] md:aspect-[21/9]">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentIndex}
@@ -126,14 +126,14 @@ export function HeroCarousel({
               {/* Title */}
               <h2
                 onClick={() => onArticleClick(currentArticle)}
-                className="text-xl md:text-3xl lg:text-4xl font-headline text-white leading-tight mb-2 cursor-pointer hover:text-primary transition-colors line-clamp-3"
+                className="text-lg sm:text-xl md:text-3xl lg:text-4xl font-headline text-white leading-snug sm:leading-tight mb-2 cursor-pointer hover:text-primary transition-colors line-clamp-2 sm:line-clamp-3"
               >
                 {currentArticle.title}
               </h2>
 
               {/* Excerpt */}
               {currentArticle.excerpt && (
-                <p className="text-sm md:text-base text-gray-300/80 line-clamp-2 max-w-2xl mb-3">
+                <p className="hidden sm:block text-sm md:text-base text-gray-300/80 line-clamp-2 max-w-2xl mb-3">
                   {currentArticle.excerpt}
                 </p>
               )}
@@ -176,12 +176,28 @@ export function HeroCarousel({
       {/* Slide indicators + thumbnails */}
       {articles.length > 1 && (
         <div className="bg-surface/95 border-t border-gray-800/50">
-          <div className="flex">
+          {/* Mobile: simple dot indicators */}
+          <div className="flex sm:hidden items-center justify-center gap-2 py-3">
+            {articles.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => goToSlide(idx)}
+                className={`w-2 h-2 rounded-full transition-all ${
+                  idx === currentIndex
+                    ? 'bg-primary w-6'
+                    : 'bg-gray-600 hover:bg-gray-500'
+                }`}
+                aria-label={`Go to slide ${idx + 1}`}
+              />
+            ))}
+          </div>
+          {/* Desktop: full thumbnail strip */}
+          <div className="hidden sm:flex">
             {articles.map((article, idx) => (
               <button
                 key={article.id}
                 onClick={() => goToSlide(idx)}
-                className={`flex-1 flex items-center gap-3 px-3 py-2.5 text-left transition-all border-b-2 ${
+                className={`relative flex-1 flex items-center gap-3 px-3 py-2.5 text-left transition-all border-b-2 ${
                   idx === currentIndex
                     ? 'border-primary bg-primary/5'
                     : 'border-transparent hover:bg-surface/80'
