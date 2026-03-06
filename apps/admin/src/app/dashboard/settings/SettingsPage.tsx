@@ -294,7 +294,10 @@ function FieldRow({
 // ======================== MAIN COMPONENT ========================
 
 export function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<'general' | 'brands' | 'ai' | 'feeds' | 'api' | 'permissions'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'brands' | 'ai' | 'feeds' | 'api' | 'permissions' | 'account'>('general');
+  const [passwordForm, setPasswordForm] = useState({ newPassword: '', confirmPassword: '' });
+  const [passwordStatus, setPasswordStatus] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [changingPassword, setChangingPassword] = useState(false);
   const [general, setGeneral] = useState(INITIAL_GENERAL);
   const [brandSettings, setBrandSettings] = useState(INITIAL_BRAND_SETTINGS);
   const [api, setApi] = useState(INITIAL_API);
@@ -522,6 +525,7 @@ export function SettingsPage() {
     { key: 'feeds' as const, label: 'News Feeds', icon: '📡' },
     { key: 'api' as const, label: 'API Keys', icon: '🔑' },
     { key: 'permissions' as const, label: 'Permissions', icon: '🔐' },
+    { key: 'account' as const, label: 'Account', icon: '👤' },
   ];
 
   const currentBrand = brandSettings[activeBrandTab];
@@ -1706,6 +1710,113 @@ export function SettingsPage() {
                 </div>
               </div>
             </div>
+          </motion.div>
+        </div>
+      )}
+
+      {activeTab === 'account' && (
+        <div className="space-y-6">
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="glass-panel p-6"
+          >
+            <h3 className="text-lg font-bold text-white mb-1">Change Password</h3>
+            <p className="text-sm text-gray-500 mb-6">Update your login password. This takes effect immediately.</p>
+
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setPasswordStatus(null);
+
+                if (passwordForm.newPassword.length < 8) {
+                  setPasswordStatus({ message: 'Password must be at least 8 characters.', type: 'error' });
+                  return;
+                }
+                if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+                  setPasswordStatus({ message: 'Passwords do not match.', type: 'error' });
+                  return;
+                }
+
+                setChangingPassword(true);
+                try {
+                  const { getSupabaseBrowserClient } = await import('@/lib/supabase');
+                  const supabase = getSupabaseBrowserClient();
+                  const { error } = await supabase.auth.updateUser({ password: passwordForm.newPassword });
+                  if (error) throw error;
+                  setPasswordStatus({ message: 'Password updated successfully!', type: 'success' });
+                  setPasswordForm({ newPassword: '', confirmPassword: '' });
+                } catch (err: any) {
+                  setPasswordStatus({ message: err.message || 'Failed to update password.', type: 'error' });
+                } finally {
+                  setChangingPassword(false);
+                }
+              }}
+              className="space-y-4 max-w-md"
+            >
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1.5">New Password</label>
+                <input
+                  type="password"
+                  value={passwordForm.newPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                  className="admin-input w-full"
+                  placeholder="Enter new password (min 8 characters)"
+                  required
+                  minLength={8}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1.5">Confirm New Password</label>
+                <input
+                  type="password"
+                  value={passwordForm.confirmPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                  className="admin-input w-full"
+                  placeholder="Re-enter new password"
+                  required
+                  minLength={8}
+                />
+              </div>
+
+              {passwordStatus && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`p-3 rounded-lg text-sm font-medium ${
+                    passwordStatus.type === 'success'
+                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                      : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                  }`}
+                >
+                  {passwordStatus.message}
+                </motion.div>
+              )}
+
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                type="submit"
+                disabled={changingPassword}
+                className="admin-btn-primary flex items-center gap-2 disabled:opacity-50"
+              >
+                {changingPassword ? (
+                  <>
+                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                    </svg>
+                    Update Password
+                  </>
+                )}
+              </motion.button>
+            </form>
           </motion.div>
         </div>
       )}
