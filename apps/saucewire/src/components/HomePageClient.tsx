@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, useInView } from 'framer-motion';
 import type { Article } from '@media-network/shared';
-import { SAUCEWIRE_CATEGORIES } from '@media-network/shared';
+import { SAUCEWIRE_CATEGORIES, SponsoredSection } from '@media-network/shared';
 import { BreakingBanner } from '@media-network/ui';
 import { CategoryFilter } from '@media-network/ui';
 import { NewsFeed } from '@media-network/ui';
@@ -178,6 +178,15 @@ export function HomePageClient({
                   ))}
                 </div>
               </div>
+            </StaggeredSection>
+
+            {/* Sponsored content — native ad cards */}
+            <StaggeredSection delay={0.35}>
+              <SponsoredSection
+                slots={['sw-sponsored-1', 'sw-sponsored-2']}
+                headingClass="text-xs font-mono text-neutral/40 uppercase tracking-wider"
+                badgeClass="text-neutral/40 bg-surface"
+              />
             </StaggeredSection>
           </div>
         </div>

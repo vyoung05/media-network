@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { motion, useScroll, useTransform, useInView } from 'framer-motion';
 import type { MagazineIssue } from '@/lib/mock-data';
+import { SponsoredSection } from '@media-network/shared';
 import { IssueCard } from './IssueCard';
 import { SubscribeForm } from './SubscribeForm';
 import { TextReveal } from './TextReveal';
@@ -274,6 +275,18 @@ export function HomePageClient({ latestIssue, allIssues }: HomePageClientProps) 
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ============ SPONSORED CONTENT ============ */}
+      <section className="py-16 md:py-20 bg-secondary">
+        <div className="container-caviar">
+          <SponsoredSection
+            slots={['sc-sponsored-1', 'sc-sponsored-2', 'sc-sponsored-3']}
+            title="From Our Partners"
+            headingClass="text-[10px] tracking-[0.3em] uppercase text-primary/40 font-body"
+            badgeClass="text-text/20 bg-surface/30"
+          />
         </div>
       </section>
 

@@ -9,7 +9,6 @@ import { PageTransition } from '@/components/PageTransition';
 import { CustomCursor } from '@/components/CustomCursor';
 import { PageViewTracker } from '@/components/PageViewTracker';
 import { OrganizationSchema } from '@/components/StructuredData';
-import { AdBannerSlot } from '@/components/AdBannerSlot';
 
 export const metadata: Metadata = {
   title: {
@@ -76,13 +75,9 @@ export default function RootLayout({
           <CustomCursor />
           <ScrollProgress />
           <Header />
-          {/* Header leaderboard ad */}
-          <AdBannerSlot slot="tg-header-leaderboard" format="horizontal" className="bg-secondary border-b border-white/[0.06]" />
           <main className="flex-1">
             <PageTransition>{children}</PageTransition>
           </main>
-          {/* Footer banner ad */}
-          <AdBannerSlot slot="tg-footer-banner" format="horizontal" className="bg-secondary border-t border-white/[0.06]" />
           <Footer />
           <PageViewTracker brand="trapglow" />
         </LenisProvider>

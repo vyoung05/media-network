@@ -8,7 +8,7 @@ import { GlassMorphCard } from '@/components/GlassMorphCard';
 import { MusicEmbed } from '@/components/MusicEmbed';
 import type { BlogPost, Artist } from '@/lib/mock-data';
 import { formatListeners } from '@/lib/mock-data';
-import { formatDate, timeAgo, AdBanner } from '@media-network/shared';
+import { formatDate, timeAgo, NativeInArticleAd } from '@media-network/shared';
 
 interface BlogPostClientProps {
   post: BlogPost;
@@ -73,10 +73,8 @@ export function BlogPostClient({ post, relatedPosts, artist }: BlogPostClientPro
               dangerouslySetInnerHTML={{ __html: post.body }}
             />
 
-            {/* Mid-content ad */}
-            <div className="my-8 flex justify-center">
-              <AdBanner slot="tg-blog-mid" format="auto" responsive />
-            </div>
+            {/* Native in-article ad — blends with content flow */}
+            <NativeInArticleAd slot="tg-in-article" badgeClass="text-white/30 bg-white/5" />
 
             {/* Tags */}
             <div className="mt-10 pt-6 border-t border-white/[0.06]">
@@ -196,10 +194,6 @@ export function BlogPostClient({ post, relatedPosts, artist }: BlogPostClientPro
               </Link>
             </GlassMorphCard>
 
-            {/* Sidebar rectangle ad */}
-            <div className="sticky top-24">
-              <AdBanner slot="tg-blog-sidebar" format="rectangle" />
-            </div>
           </div>
         </div>
       </div>

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import type { Article } from '@media-network/shared';
 import { formatDate, timeAgo, formatNumber } from '@media-network/shared';
 import { ArticleCard } from '@media-network/ui';
-import { AdBanner } from '@media-network/shared';
+import { NativeInArticleAd } from '@media-network/shared';
 import { TrendingSidebar } from '@/components/TrendingSidebar';
 import { AudioPlayer } from '@/components/AudioPlayer';
 import { TextReveal } from '@/components/TextReveal';
@@ -128,10 +128,8 @@ export function ArticlePageClient({
             dangerouslySetInnerHTML={{ __html: article.body }}
           />
 
-          {/* Mid-content ad */}
-          <div className="my-8 flex justify-center">
-            <AdBanner slot="sw-article-mid" format="auto" responsive />
-          </div>
+          {/* Native in-article ad — blends with content flow */}
+          <NativeInArticleAd slot="sw-in-article" />
 
           {/* Tags */}
           {article.tags.length > 0 && (
@@ -215,11 +213,6 @@ export function ArticlePageClient({
         {/* Sidebar */}
         <aside className="lg:col-span-1 space-y-6">
           <TrendingSidebar articles={trendingArticles} />
-
-          {/* Sidebar rectangle ad */}
-          <div className="sticky top-24">
-            <AdBanner slot="sw-article-sidebar" format="rectangle" />
-          </div>
         </aside>
       </div>
     </div>

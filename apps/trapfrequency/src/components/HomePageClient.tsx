@@ -12,6 +12,7 @@ import { ProducerCard } from './ProducerCard';
 import { FrequencyChart } from './FrequencyChart';
 import { SamplePackCard } from './SamplePackCard';
 import { WaveformPlayer } from './WaveformPlayer';
+import { SponsoredSection } from '@media-network/shared';
 import type { Tutorial, Beat, GearReview, Producer, FrequencyChartEntry, SamplePack } from '@/lib/mock-data';
 
 interface HomePageClientProps {
@@ -297,6 +298,17 @@ export function HomePageClient({
               <SamplePackCard key={pack.id} pack={pack} index={i} />
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ============ SPONSORED CONTENT ============ */}
+      <section className="py-12">
+        <div className="container-freq">
+          <SponsoredSection
+            slots={['tf-sponsored-1', 'tf-sponsored-2', 'tf-sponsored-3']}
+            headingClass="text-xs font-mono text-neutral/30 uppercase tracking-wider"
+            badgeClass="text-primary/30 bg-primary/5"
+          />
         </div>
       </section>
 

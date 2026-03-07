@@ -10,6 +10,7 @@ import { GlowUpLeaderboard } from './GlowUpLeaderboard';
 import { DailyDiscovery } from './DailyDiscovery';
 import { TextReveal } from './TextReveal';
 import { GlassMorphCard } from './GlassMorphCard';
+import { SponsoredSection } from '@media-network/shared';
 import type { Artist, BlogPost } from '@/lib/mock-data';
 import { formatListeners } from '@/lib/mock-data';
 
@@ -309,6 +310,19 @@ export function HomePageClient({
               </div>
             </StaggeredSection>
           </div>
+        </div>
+      </section>
+
+      {/* Sponsored content — native ad cards */}
+      <section className="section-glow py-12">
+        <div className="container-glow">
+          <StaggeredSection>
+            <SponsoredSection
+              slots={['tg-sponsored-1', 'tg-sponsored-2', 'tg-sponsored-3']}
+              headingClass="text-xs font-body text-white/30 uppercase tracking-widest"
+              badgeClass="text-white/25 bg-white/5"
+            />
+          </StaggeredSection>
         </div>
       </section>
 

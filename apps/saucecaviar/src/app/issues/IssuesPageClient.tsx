@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { AdBanner } from '@media-network/shared';
+import { NativeInFeedAd } from '@media-network/shared';
 import type { MagazineIssue } from '@/lib/mock-data';
 import { IssueCard } from '@/components/IssueCard';
 
@@ -39,10 +39,10 @@ export function IssuesPageClient({ issues }: IssuesPageClientProps) {
           {issues.map((issue, i) => (
             <React.Fragment key={issue.id}>
               <IssueCard issue={issue} index={i} />
-              {/* In-feed ad after every 3rd issue */}
-              {(i + 1) % 3 === 0 && i < issues.length - 1 && (
-                <div className="col-span-full flex justify-center py-4">
-                  <AdBanner slot="sc-infeed-ad" format="auto" responsive />
+              {/* Native in-feed ad after every 6th issue */}
+              {(i + 1) % 6 === 0 && i < issues.length - 1 && (
+                <div className="col-span-full">
+                  <NativeInFeedAd slot="sc-native-infeed" badgeClass="text-primary/40 bg-primary/5" />
                 </div>
               )}
             </React.Fragment>

@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { GlassMorphCard } from '@/components/GlassMorphCard';
-import { AdBanner } from '@media-network/shared';
+import { NativeInArticleAd } from '@media-network/shared';
 import type { Tutorial } from '@/lib/mock-data';
 import { DAW_INFO, SKILL_COLORS, formatNumber } from '@/lib/mock-data';
 
@@ -160,10 +160,8 @@ export function TutorialDetailClient({ tutorial }: TutorialDetailClientProps) {
           </div>
         </motion.div>
 
-        {/* Mid-content ad */}
-        <div className="my-8 flex justify-center">
-          <AdBanner slot="tf-tutorial-mid" format="auto" responsive />
-        </div>
+        {/* Native in-article ad — blends with content flow */}
+        <NativeInArticleAd slot="tf-in-article" badgeClass="text-primary/30 bg-primary/5" />
 
         {/* Tags */}
         <div className="mt-10 pt-6 border-t border-primary/10">
@@ -175,11 +173,6 @@ export function TutorialDetailClient({ tutorial }: TutorialDetailClientProps) {
               </span>
             ))}
           </div>
-        </div>
-
-        {/* Sidebar rectangle ad */}
-        <div className="mt-8 flex justify-center">
-          <AdBanner slot="tf-tutorial-sidebar" format="rectangle" />
         </div>
       </div>
     </div>

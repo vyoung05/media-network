@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import type { Article, Brand } from '@media-network/shared';
-import { AdBanner } from '@media-network/shared';
+import { NativeInFeedAd } from '@media-network/shared';
 import { ArticleCard } from './ArticleCard';
 
 interface NewsFeedProps {
@@ -130,7 +130,7 @@ export function NewsFeed({
         </div>
       )}
 
-      {/* Articles with in-feed ads every 3rd item */}
+      {/* Articles with native in-feed ads every 5th item */}
       <div className="divide-y divide-gray-800/50">
         {filteredArticles.map((article, index) => (
           <React.Fragment key={article.id}>
@@ -141,11 +141,9 @@ export function NewsFeed({
               onCategoryClick={onCategoryClick}
               href={`/${article.slug}`}
             />
-            {/* In-feed ad after every 3rd article */}
-            {(index + 1) % 3 === 0 && index < filteredArticles.length - 1 && (
-              <div className="py-3 px-4 flex justify-center bg-surface/30">
-                <AdBanner slot="infeed-ad" format="auto" responsive />
-              </div>
+            {/* Native in-feed ad — same visual weight as articles */}
+            {(index + 1) % 5 === 0 && index < filteredArticles.length - 1 && (
+              <NativeInFeedAd slot="native-infeed" />
             )}
           </React.Fragment>
         ))}

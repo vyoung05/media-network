@@ -9,7 +9,6 @@ import { PageTransition } from '@/components/PageTransition';
 import { CustomCursor } from '@/components/CustomCursor';
 import { PageViewTracker } from '@/components/PageViewTracker';
 import { OrganizationSchema } from '@/components/StructuredData';
-import { AdBannerSlot } from '@/components/AdBannerSlot';
 
 export const metadata: Metadata = {
   verification: {
@@ -79,13 +78,9 @@ export default function RootLayout({
           <CustomCursor />
           <ScrollProgress />
           <Header />
-          {/* Header leaderboard ad */}
-          <AdBannerSlot slot="sw-header-leaderboard" format="horizontal" className="bg-secondary border-b border-gray-800" />
           <main className="flex-1">
             <PageTransition>{children}</PageTransition>
           </main>
-          {/* Footer banner ad */}
-          <AdBannerSlot slot="sw-footer-banner" format="horizontal" className="bg-secondary border-t border-gray-800" />
           <Footer />
           <PageViewTracker brand="saucewire" />
         </LenisProvider>
