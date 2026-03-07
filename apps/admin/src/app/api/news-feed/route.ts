@@ -73,6 +73,14 @@ const FEED_SOURCES: Array<{
   { name: 'Clash Magazine', url: 'https://www.clashmusic.com/feed/', defaultCategory: 'Music', primaryBrands: ['trapglow'] },
   { name: 'WORLDSTARHIPHOP', url: 'https://rsshub.app/worldstarhiphop/featured', defaultCategory: 'Hip-Hop', primaryBrands: ['trapglow', 'saucewire'] },
 
+  // ==================== GAMING (gaming news, esports, reviews, industry) ====================
+  { name: 'IGN', url: 'https://feeds.feedburner.com/ign/all', defaultCategory: 'Gaming', primaryBrands: ['saucewire'] },
+  { name: 'Kotaku', url: 'https://kotaku.com/rss', defaultCategory: 'Gaming', primaryBrands: ['saucewire'] },
+  { name: 'GameSpot', url: 'https://www.gamespot.com/feeds/mashup/', defaultCategory: 'Gaming', primaryBrands: ['saucewire'] },
+  { name: 'Polygon', url: 'https://www.polygon.com/rss/index.xml', defaultCategory: 'Gaming', primaryBrands: ['saucewire'] },
+  { name: 'PC Gamer', url: 'https://www.pcgamer.com/rss/', defaultCategory: 'Gaming', primaryBrands: ['saucewire'] },
+  { name: 'Eurogamer', url: 'https://www.eurogamer.net/feed', defaultCategory: 'Gaming', primaryBrands: ['saucewire'] },
+
   // ==================== TRAPFREQUENCY (production, gear, tech, tutorials) ====================
   { name: 'MusicRadar', url: 'https://www.musicradar.com/rss', defaultCategory: 'Gear', primaryBrands: ['trapfrequency'] },
   { name: 'Sound On Sound', url: 'https://www.soundonsound.com/feeds/rss.xml', defaultCategory: 'Tutorials', primaryBrands: ['trapfrequency'] },
@@ -106,6 +114,9 @@ const BRAND_TOPIC_RULES: Array<{
   { pattern: /\b(rapper|hip.hop|trap|drill|underground|emerging|up.and.coming|debut|mixtape|freestyle|cypher|soundcloud|unsigned)\b/i, category: 'Hip-Hop', brands: ['trapglow'] },
   { pattern: /\b(r&b|rnb|soul|neo.soul|afrobeats|reggaeton|latin.trap)\b/i, category: 'R&B', brands: ['trapglow'] },
   { pattern: /\b(festival|club|nightlife|party|rave|edm|electronic|dj.set)\b/i, category: 'Electronic', brands: ['trapglow'] },
+
+  // SauceWire — gaming, esports, video games
+  { pattern: /\b(gaming|gamer|esport|video.game|playstation|ps5|ps6|xbox|nintendo|switch.2|steam|pc.gaming|fortnite|call.of.duty|warzone|gta|grand.theft|resident.evil|zelda|mario|game.pass|twitch|streamer|speedrun|mmorpg|battle.royale|indie.game|aaa|game.dev|unreal.engine|unity)\b/i, category: 'Gaming', brands: ['saucewire'] },
 
   // SauceWire — breaking news, sports, broad entertainment
   { pattern: /\b(nba|nfl|mlb|nhl|soccer|football|basketball|baseball|ufc|boxing|tennis|sport|athlete|draft|trade|playoff|championship|super.bowl)\b/i, category: 'Sports', brands: ['saucewire'] },

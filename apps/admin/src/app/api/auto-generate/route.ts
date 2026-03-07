@@ -35,7 +35,7 @@ const BRAND_NAMES: Record<string, string> = {
 const BRAND_CATEGORIES: Record<string, string[]> = {
   saucecaviar: ['Fashion', 'Music', 'Art', 'Culture', 'Lifestyle'],
   trapglow: ['Hip-Hop', 'R&B', 'Pop', 'Electronic', 'Alternative', 'Latin'],
-  saucewire: ['Music', 'Fashion', 'Entertainment', 'Sports', 'Tech'],
+  saucewire: ['Music', 'Fashion', 'Entertainment', 'Sports', 'Tech', 'Gaming'],
   trapfrequency: ['Tutorials', 'Beats', 'Gear', 'DAW Tips', 'Samples', 'Interviews'],
 };
 
@@ -75,6 +75,7 @@ const CATEGORY_MAPPING: Record<string, Record<string, string>> = {
     Celebrity: 'Entertainment',
     Fashion: 'Fashion',
     Tech: 'Tech',
+    Gaming: 'Gaming',
     Culture: 'Entertainment',
     'Hip-Hop': 'Music',
     'R&B': 'Music',
