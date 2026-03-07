@@ -347,8 +347,8 @@ export async function GET() {
       return dateB - dateA;
     });
 
-    // Return top 60 (more items for better brand distribution across 30+ sources)
-    const topItems = allItems.slice(0, 60);
+    // Return top 120 (more items = less dedup exhaustion at 17 articles/day)
+    const topItems = allItems.slice(0, 120);
 
     // Collect feed health data
     const feedHealth: FeedHealthEntry[] = Array.from(feedHealthMap.values());

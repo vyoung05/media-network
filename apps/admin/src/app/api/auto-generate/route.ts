@@ -223,21 +223,25 @@ export async function POST(request: Request) {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
+    // Dedup window: 2 days (not 7) — at 17 articles/day, 7 days exhausts all feed sources
     const { data: recentArticles } = await supabase
       .from('articles')
       .select('title, brand, source_url')
-      .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+      .gte('created_at', new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString())
       .order('created_at', { ascending: false })
       .limit(200);
 
     const existingTitles: Array<{ title: string; brand: string; source_url?: string | null }> = recentArticles || [];
 
-    // Build a set of already-used source URLs across ALL brands for cross-brand dedup
-    const usedSourceUrls = new Set<string>(
-      existingTitles
-        .filter(a => a.source_url)
-        .map(a => a.source_url!.toLowerCase().trim())
-    );
+    // Build a map of already-used source URLs PER BRAND (not cross-brand)
+    // Different brands SHOULD cover the same story with their own angle
+    const usedSourceUrlsByBrand = new Map<string, Set<string>>();
+    for (const a of existingTitles) {
+      if (!a.source_url) continue;
+      const brandSet = usedSourceUrlsByBrand.get(a.brand) || new Set<string>();
+      brandSet.add(a.source_url.toLowerCase().trim());
+      usedSourceUrlsByBrand.set(a.brand, brandSet);
+    }
 
     const results: GenerationResult[] = [];
     const articlesPerBrand = Math.min(count, 10);
@@ -261,28 +265,24 @@ export async function POST(request: Request) {
       for (const item of relevantItems) {
         if (generated >= articlesPerBrand) break;
 
-        // Check for duplicates — enhanced with source_url + fuzzy title matching
-        // 1. Exact source URL match across ANY brand
-        const urlDuplicate = item.link && usedSourceUrls.has(item.link.toLowerCase().trim());
+        // Check for duplicates — per-brand source URL + fuzzy title matching
+        // 1. Same-brand source URL match (different brands CAN cover same source)
+        const brandUrls = usedSourceUrlsByBrand.get(brand) || new Set<string>();
+        const urlDuplicate = item.link && brandUrls.has(item.link.toLowerCase().trim());
         if (urlDuplicate) {
           results.push({
             brand,
             title: '',
             sourceTitle: item.title,
             status: 'skipped',
-            reason: 'Source URL already used by another brand',
+            reason: 'Source URL already used by this brand',
           });
           continue;
         }
 
-        // 2. Same-brand title similarity (original check)
+        // 2. Same-brand title similarity
         const titleDuplicate = existingTitles.some(
           existing => existing.brand === brand && similarTitle(existing.title, item.title)
-        );
-
-        // 3. Cross-brand fuzzy title match (first 5 significant words)
-        const fuzzyDuplicate = !titleDuplicate && existingTitles.some(
-          existing => fuzzyTitleMatch(existing.title, item.title)
         );
 
         if (titleDuplicate) {
@@ -296,13 +296,18 @@ export async function POST(request: Request) {
           continue;
         }
 
+        // 3. Same-brand fuzzy title match (first 5 significant words)
+        const fuzzyDuplicate = existingTitles.some(
+          existing => existing.brand === brand && fuzzyTitleMatch(existing.title, item.title)
+        );
+
         if (fuzzyDuplicate) {
           results.push({
             brand,
             title: '',
             sourceTitle: item.title,
             status: 'skipped',
-            reason: 'Similar story already covered by another brand',
+            reason: 'Similar story already covered by this brand',
           });
           continue;
         }
@@ -338,7 +343,11 @@ export async function POST(request: Request) {
             });
 
             existingTitles.push({ title: genData.article.title, brand, source_url: item.link });
-            if (item.link) usedSourceUrls.add(item.link.toLowerCase().trim());
+            if (item.link) {
+              const brandSet = usedSourceUrlsByBrand.get(brand) || new Set<string>();
+              brandSet.add(item.link.toLowerCase().trim());
+              usedSourceUrlsByBrand.set(brand, brandSet);
+            }
             generated++;
           } else {
             results.push({
