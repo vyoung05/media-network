@@ -4,7 +4,7 @@ export function OrganizationSchema() {
     '@type': 'NewsMediaOrganization',
     name: 'SauceWire',
     url: 'https://saucewire.com',
-    logo: 'https://saucewire.com/icon.svg',
+    logo: 'https://saucewire.com/icon-512.png',
     sameAs: [],
     parentOrganization: {
       '@type': 'Organization',
