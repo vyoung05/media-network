@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Script from 'next/script';
 import './globals.css';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
@@ -8,6 +9,7 @@ import { PageTransition } from '@/components/PageTransition';
 import { CustomCursor } from '@/components/CustomCursor';
 import { PageViewTracker } from '@/components/PageViewTracker';
 import { OrganizationSchema } from '@/components/StructuredData';
+import { AdBannerSlot } from '@/components/AdBannerSlot';
 
 export const metadata: Metadata = {
   verification: {
@@ -57,17 +59,33 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const adsenseClientId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
+
   return (
     <html lang="en" className="dark">
+      <head>
+        {adsenseClientId && (
+          <Script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClientId}`}
+            crossOrigin="anonymous"
+            strategy="afterInteractive"
+          />
+        )}
+      </head>
       <body className="min-h-screen flex flex-col bg-secondary">
         <OrganizationSchema />
         <LenisProvider>
           <CustomCursor />
           <ScrollProgress />
           <Header />
+          {/* Header leaderboard ad */}
+          <AdBannerSlot slot="sc-header-leaderboard" format="horizontal" className="bg-secondary border-b border-primary/10" />
           <main className="flex-1">
             <PageTransition>{children}</PageTransition>
           </main>
+          {/* Footer banner ad */}
+          <AdBannerSlot slot="sc-footer-banner" format="horizontal" className="bg-secondary border-t border-primary/10" />
           <Footer />
           <PageViewTracker brand="saucecaviar" />
         </LenisProvider>

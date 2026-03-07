@@ -128,6 +128,12 @@ export function Footer() {
             © {new Date().getFullYear()} TrapGlow. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
+            <Link href="/privacy" className="text-xs text-white/30 hover:text-accent transition-colors font-body">
+              Privacy Policy
+            </Link>
+            <Link href="/terms" className="text-xs text-white/30 hover:text-accent transition-colors font-body">
+              Terms of Service
+            </Link>
             <span className="text-xs text-white/20 font-body">
               Powered by Media Network
             </span>

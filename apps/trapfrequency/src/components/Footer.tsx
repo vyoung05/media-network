@@ -130,6 +130,12 @@ export function Footer() {
             © {new Date().getFullYear()} TrapFrequency. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
+            <Link href="/privacy" className="text-xs text-neutral/40 hover:text-primary transition-colors font-mono">
+              Privacy Policy
+            </Link>
+            <Link href="/terms" className="text-xs text-neutral/40 hover:text-primary transition-colors font-mono">
+              Terms of Service
+            </Link>
             <span className="text-xs font-mono text-neutral/30">
               Powered by Media Network
             </span>

@@ -110,6 +110,12 @@ export function Footer() {
             © {new Date().getFullYear()} SauceWire. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
+            <Link href="/privacy" className="text-xs text-neutral/40 hover:text-white transition-colors">
+              Privacy Policy
+            </Link>
+            <Link href="/terms" className="text-xs text-neutral/40 hover:text-white transition-colors">
+              Terms of Service
+            </Link>
             <span className="text-xs font-mono text-neutral/40">
               Powered by Media Network
             </span>
