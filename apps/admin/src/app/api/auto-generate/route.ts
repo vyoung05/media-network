@@ -223,11 +223,11 @@ export async function POST(request: Request) {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    // Dedup window: 2 days (not 7) — at 17 articles/day, 7 days exhausts all feed sources
+    // Dedup window: 3 days — balances freshness vs avoiding repeats
     const { data: recentArticles } = await supabase
       .from('articles')
       .select('title, brand, source_url')
-      .gte('created_at', new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString())
+      .gte('created_at', new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString())
       .order('created_at', { ascending: false })
       .limit(200);
 
