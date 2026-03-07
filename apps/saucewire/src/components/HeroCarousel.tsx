@@ -85,7 +85,7 @@ export function HeroCarousel({
             </span>
           </div>
           <div className="text-[9px] md:text-[10px] font-mono text-white/50 uppercase tracking-[0.3em] -mt-0.5">
-            Culture. Connected. Now.
+            Culture Connected Now
           </div>
         </div>
 

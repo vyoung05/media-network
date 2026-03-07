@@ -27,7 +27,7 @@ const BRAND_STYLES: Record<Brand, {
 }> = {
   saucewire: {
     name: 'SauceWire',
-    tagline: 'Culture. Connected. Now.',
+    tagline: 'Culture Connected Now',
     primaryColor: '#E63946',
     bgColor: '#111111',
     textColor: '#FFFFFF',

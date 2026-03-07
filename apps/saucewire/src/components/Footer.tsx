@@ -15,7 +15,7 @@ export function Footer() {
               <span className="text-xl font-headline text-primary tracking-tight">WIRE</span>
             </Link>
             <p className="text-sm text-neutral mb-4">
-              Culture. Connected. Now.
+              Culture Connected Now
             </p>
             <p className="text-xs text-neutral/60">
               Part of the Media Network — SauceCaviar · TrapGlow · SauceWire · TrapFrequency

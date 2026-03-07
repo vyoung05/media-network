@@ -21,7 +21,7 @@ export default async function HomePage() {
         type="organization"
         name="SauceWire"
         url="https://saucewire.com"
-        description="Culture. Connected. Now. Breaking news and culture coverage — hip-hop, fashion, entertainment, sports, and tech."
+        description="Culture Connected Now Breaking news and culture coverage — hip-hop, fashion, entertainment, sports, and tech."
       />
       <HomePageClient
         articles={articles}

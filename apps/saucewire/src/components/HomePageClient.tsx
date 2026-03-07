@@ -76,7 +76,7 @@ export function HomePageClient({
       <div className="bg-surface border-b border-gray-800">
         <div className="container-wire py-3 flex items-center justify-between">
           <p className="text-xs font-mono text-neutral uppercase tracking-[0.2em]">
-            Culture. Connected. Now.
+            Culture Connected Now
           </p>
           <div className="flex items-center gap-2">
             <span className="relative flex h-2 w-2">

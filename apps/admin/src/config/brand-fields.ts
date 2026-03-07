@@ -48,7 +48,7 @@ export const BRAND_FORM_CONFIGS: Record<Brand, BrandFormConfig> = {
   saucewire: {
     id: 'saucewire',
     name: 'SauceWire',
-    description: 'Culture. Connected. Now.',
+    description: 'Culture Connected Now',
     icon: '⚡',
     color: '#E63946',
     contentTypes: [

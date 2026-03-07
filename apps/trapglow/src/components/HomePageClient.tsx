@@ -361,7 +361,7 @@ export function HomePageClient({
             <div className="flex flex-wrap justify-center gap-6">
               {[
                 { name: 'SauceCaviar', color: '#C9A84C', tagline: 'Culture Served Premium' },
-                { name: 'SauceWire', color: '#E63946', tagline: 'Culture. Connected. Now.' },
+                { name: 'SauceWire', color: '#E63946', tagline: 'Culture Connected Now' },
                 { name: 'TrapFrequency', color: '#39FF14', tagline: 'Tune Into The Craft' },
               ].map((brand) => (
                 <div key={brand.name} className="flex items-center gap-2 opacity-40 hover:opacity-80 transition-opacity cursor-pointer">

@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { Brand } from '@media-network/shared';
 
 const BRANDS: { id: Brand; name: string; tagline: string; color: string; icon: string }[] = [
-  { id: 'saucewire', name: 'SauceWire', tagline: 'Culture. Connected. Now.', color: '#E63946', icon: '⚡' },
+  { id: 'saucewire', name: 'SauceWire', tagline: 'Culture Connected Now', color: '#E63946', icon: '⚡' },
   { id: 'saucecaviar', name: 'SauceCaviar', tagline: 'Culture Served Premium', color: '#C9A84C', icon: '🥂' },
   { id: 'trapglow', name: 'TrapGlow', tagline: 'Shining Light on What\'s Next', color: '#8B5CF6', icon: '✨' },
   { id: 'trapfrequency', name: 'TrapFrequency', tagline: 'Tune Into The Craft', color: '#39FF14', icon: '🎵' },

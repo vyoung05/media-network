@@ -287,7 +287,7 @@ export const BRAND_CONFIGS: Record<Brand, BrandConfig> = {
   saucewire: {
     id: 'saucewire',
     name: 'SauceWire',
-    tagline: 'Culture. Connected. Now.',
+    tagline: 'Culture Connected Now',
     domain: 'saucewire.com',
     colors: {
       primary: '#E63946',

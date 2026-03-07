@@ -6,7 +6,7 @@ export const runtime = 'edge';
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
 
-  const title = searchParams.get('title') || 'SauceWire — Culture. Connected. Now.';
+  const title = searchParams.get('title') || 'SauceWire — Culture Connected Now';
   const category = searchParams.get('category') || '';
   const author = searchParams.get('author') || '';
   const date = searchParams.get('date') || '';
