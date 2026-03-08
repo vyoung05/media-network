@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBrand } from '@/contexts/BrandContext';
+import { AdminGuard } from '@/components/AdminGuard';
 
 interface User {
   id: string;
@@ -41,6 +42,10 @@ const BRAND_NAMES: Record<string, string> = {
 const ALL_BRANDS = ['saucecaviar', 'trapglow', 'saucewire', 'trapfrequency'];
 
 export default function UsersPage() {
+  return <AdminGuard><UsersPageInner /></AdminGuard>;
+}
+
+function UsersPageInner() {
   const { activeBrand } = useBrand();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);

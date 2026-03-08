@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { AdminGuard } from '@/components/AdminGuard';
 
 interface ApiKeyInfo {
   id: string;
@@ -15,6 +16,10 @@ interface ApiKeyInfo {
 }
 
 export default function ApiKeysPage() {
+  return <AdminGuard><ApiKeysPageInner /></AdminGuard>;
+}
+
+function ApiKeysPageInner() {
   const [keys, setKeys] = useState<ApiKeyInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingKey, setEditingKey] = useState<string | null>(null);

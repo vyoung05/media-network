@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { AdminGuard } from '@/components/AdminGuard';
 
 const BRAND_CONFIG: Record<string, { name: string; color: string; icon: string; description: string }> = {
   saucewire: {
@@ -60,6 +61,10 @@ const SOURCE_OPTIONS: { value: SourceMode; label: string; icon: string; descript
 ];
 
 export default function AIPipelinePage() {
+  return <AdminGuard><AIPipelinePageInner /></AdminGuard>;
+}
+
+function AIPipelinePageInner() {
   const [status, setStatus] = useState<PipelineStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);

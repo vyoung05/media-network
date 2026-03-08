@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { checkUserRole } from '@/lib/api-role-check';
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -15,6 +16,10 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Admin-only: only admins can modify users
+    const roleCheck = await checkUserRole(request, ['admin']);
+    if (!roleCheck.authorized) return roleCheck.error!;
+
     const body = await request.json();
     const { name, role, brand_affiliations, bio, is_verified, password } = body;
 
@@ -62,10 +67,14 @@ export async function PATCH(
 
 // DELETE /api/users/[id] — delete user (auth + profile)
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    // Admin-only: only admins can delete users
+    const roleCheck = await checkUserRole(request, ['admin']);
+    if (!roleCheck.authorized) return roleCheck.error!;
+
     const supabase = getServiceClient();
 
     // Delete from public.users first (CASCADE will handle related records)

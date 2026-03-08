@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { checkUserRole } from '@/lib/api-role-check';
 
 function getSupabaseService() {
   return createClient(
@@ -62,9 +63,13 @@ export async function GET() {
   }
 }
 
-// POST — save or update a key
+// POST — save or update a key (admin only)
 export async function POST(request: NextRequest) {
   try {
+    // Admin-only: only admins can modify API keys
+    const roleCheck = await checkUserRole(request, ['admin']);
+    if (!roleCheck.authorized) return roleCheck.error!;
+
     const { keyName, keyValue } = await request.json();
 
     if (!keyName || !keyValue) {
@@ -114,9 +119,13 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// DELETE — remove a key from dashboard storage (falls back to env var)
+// DELETE — remove a key from dashboard storage (admin only)
 export async function DELETE(request: NextRequest) {
   try {
+    // Admin-only: only admins can delete API keys
+    const roleCheck = await checkUserRole(request, ['admin']);
+    if (!roleCheck.authorized) return roleCheck.error!;
+
     const { keyName } = await request.json();
     if (!keyName) return NextResponse.json({ error: 'keyName required' }, { status: 400 });
 
