@@ -993,6 +993,30 @@ export function DashboardHome() {
         </p>
       </div>
 
+      {/* Founded badge */}
+      <div className="glass-panel p-4 flex items-center gap-3 border-white/[0.04]">
+        <span className="text-2xl">🏛️</span>
+        <div>
+          <p className="text-sm font-semibold text-white">The Young Empire Media Network</p>
+          <p className="text-xs text-gray-400">
+            Founded February 27, 2026 · Running for{' '}
+            {(() => {
+              const founded = new Date('2026-02-27T00:00:00');
+              const now = new Date();
+              const diffMs = now.getTime() - founded.getTime();
+              const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+              if (days < 30) return `${days} day${days !== 1 ? 's' : ''}`;
+              const months = Math.floor(days / 30);
+              const remainDays = days % 30;
+              if (months < 12) return `${months} month${months !== 1 ? 's' : ''}${remainDays > 0 ? `, ${remainDays} day${remainDays !== 1 ? 's' : ''}` : ''}`;
+              const years = Math.floor(months / 12);
+              const remainMonths = months % 12;
+              return `${years} year${years !== 1 ? 's' : ''}${remainMonths > 0 ? `, ${remainMonths} month${remainMonths !== 1 ? 's' : ''}` : ''}`;
+            })()}
+          </p>
+        </div>
+      </div>
+
       {/* Error banner */}
       {error && (
         <div className="glass-panel p-4 border-red-500/20 bg-red-500/5">
