@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+// Allow up to 300 seconds — this route generates multiple articles sequentially
+export const maxDuration = 300;
+
 // ======================== TYPES ========================
 
 interface FeedItem {

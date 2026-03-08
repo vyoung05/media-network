@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { searchMedia, pickBestCoverImage, type MediaSearchResult } from '@/lib/media-search';
 
+// Allow up to 60 seconds for AI generation + media search + Supabase insert
+export const maxDuration = 60;
+
 // ======================== TYPES ========================
 
 interface GenerateRequest {

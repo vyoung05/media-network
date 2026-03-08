@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+// Allow up to 300 seconds for full pipeline run
+export const maxDuration = 300;
+
 // ─── Config ──────────────────────────────────────────────
 
 function getSupabaseService() {

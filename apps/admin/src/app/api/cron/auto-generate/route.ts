@@ -4,6 +4,9 @@ import { createClient } from '@supabase/supabase-js';
 // Force dynamic rendering — this route reads headers and hits external APIs
 export const dynamic = 'force-dynamic';
 
+// Allow up to 300 seconds — generates articles for all brands sequentially
+export const maxDuration = 300;
+
 // ======================== CRON: AUTO-GENERATE ========================
 // Dual-trigger: Vercel Cron (daily safety net) OR external call from Vector/Clawdbot
 // Auth: accepts Vercel's `authorization: Bearer <CRON_SECRET>` OR `x-cron-secret` header
