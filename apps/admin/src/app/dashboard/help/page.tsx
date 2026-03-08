@@ -169,6 +169,58 @@ const GUIDE_SECTIONS: GuideSection[] = [
     ],
   },
   {
+    id: 'buyer-personas',
+    icon: '🎯',
+    title: 'Buyer Personas — Know Your Audience',
+    description: 'Every brand has a specific person we\'re creating content for. Here\'s who they are.',
+    steps: [
+      {
+        title: 'Sauce Caviar → "Culture Chris"',
+        detail: 'Age 25-34 • Content Creator / Brand Curator\nGoals: Stay ahead of culture trends, discover underground artists and brands, level up lifestyle.\nPain Points: Mainstream luxury feels out of touch with street culture, most content is surface-level.\nPlatforms: Instagram, TikTok, YouTube, X/Twitter\nContent that works: Luxury lifestyle clips, underground brand features, curated playlists, magazine-style editorials, artist spotlights.',
+      },
+      {
+        title: 'Trap Glow → "Glow Girl Gia"',
+        detail: 'Age 18-24 • Beauty Enthusiast / Self-Care Advocate\nGoals: Feel confident in her skin, find products for melanin-rich skin, build affordable self-care routine.\nPain Points: Mainstream beauty doesn\'t represent her, overwhelmed by products, viral stuff doesn\'t work for her skin.\nPlatforms: TikTok, Instagram, Pinterest, YouTube\nContent that works: GRWM videos, skincare routines, product reviews, before/afters, Black-owned brand features.',
+      },
+      {
+        title: 'Trap Frequency → "Producer Pete"',
+        detail: 'Age 18-24 • Music Producer / Emerging Artist\nGoals: Get music heard, learn production skills, connect with other creatives, make a living from music.\nPain Points: Hard to stand out, can\'t afford studio time, pay-to-play scams, doesn\'t know how to market music.\nPlatforms: YouTube, TikTok, SoundCloud, Discord, Spotify\nContent that works: Beat-making tutorials, "made a beat in 60s" clips, free sample packs, artist spotlights, gear reviews.',
+      },
+      {
+        title: 'Sauce Wire → "News Nick"',
+        detail: 'Age 25-34 • Culture Enthusiast / Social Media Consumer\nGoals: Be first to know breaking news, find unfiltered takes, share hot takes, stay connected to culture.\nPain Points: Mainstream media is out of touch, most blogs died or became corporate, too much clickbait.\nPlatforms: X/Twitter, Instagram, TikTok, Google News\nContent that works: Breaking news threads, 60-second video recaps, hot takes, deep dives, daily newsletter.',
+      },
+      {
+        title: 'The Golden Rule',
+        detail: 'Before you post ANYTHING, ask yourself:\n1. "Would my persona stop scrolling for this?"\n2. "Does this solve a problem they actually have?"\n3. "Am I posting where they actually hang out?"\n4. "Does this feel authentic, or does it feel like an ad?"',
+      },
+    ],
+  },
+  {
+    id: 'resources',
+    icon: '📚',
+    title: 'Team Resources & Downloads',
+    description: 'PDFs, guides, and playbooks for the team.',
+    steps: [
+      {
+        title: 'Buyer Personas Team Guide (PDF)',
+        detail: 'Download: /Young-Empire-Buyer-Personas-Team-Guide.pdf\nAll 4 buyer personas broken down in plain language with content ideas and the cross-brand flywheel strategy.',
+      },
+      {
+        title: 'Digital Marketing Playbook (PDF)',
+        detail: 'Download: /Young-Empire-Digital-Marketing-Playbook.pdf\nComplete marketing strategy for all 4 brands — buyer journeys, media audits, 30-day action plan, SMART goals.',
+      },
+      {
+        title: 'Free Certifications Guide (PDF)',
+        detail: 'Download: /Free-Certifications-Guide.pdf\n21 free industry-recognized certifications from Google, HubSpot, IBM, Meta, Semrush, and more. Sign-up links included.',
+      },
+      {
+        title: 'HubSpot Academy (Free Training)',
+        detail: 'Go to: academy.hubspot.com\nFree marketing certifications the whole team should earn: Digital Marketing, Content Marketing, Social Media Marketing, Digital Advertising. All free, no credit card.',
+      },
+    ],
+  },
+  {
     id: 'automation',
     icon: '🤖',
     title: 'Automation Features',

@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Script from 'next/script';
 import './globals.css';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
@@ -11,18 +10,15 @@ import { PageViewTracker } from '@/components/PageViewTracker';
 import { OrganizationSchema } from '@/components/StructuredData';
 
 export const metadata: Metadata = {
-  verification: {
-    google: 'NQwNXZA-HV7RNO78KSSoA8b8rA-AC5gK8usCgtJIPaM',
-  },
   title: {
-    default: 'SauceWire — Culture Connected Now',
+    default: 'SauceWire — Culture. Connected. Now.',
     template: '%s | SauceWire',
   },
   description:
     'Breaking news and culture coverage — hip-hop, fashion, entertainment, sports, and tech. Always on, always plugged in.',
   keywords: ['news', 'hip-hop', 'culture', 'entertainment', 'fashion', 'sports', 'tech'],
   openGraph: {
-    title: 'SauceWire — Culture Connected Now',
+    title: 'SauceWire — Culture. Connected. Now.',
     description: 'Breaking culture news. Always on.',
     siteName: 'SauceWire',
     type: 'website',
@@ -32,25 +28,26 @@ export const metadata: Metadata = {
         url: 'https://heyboss.heeyo.ai/replicate-z-image-turbo-1772241235-870da467.jpeg',
         width: 1200,
         height: 630,
-        alt: 'SauceWire - Culture Connected Now',
+        alt: 'SauceWire - Culture. Connected. Now.',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'SauceWire',
-    description: 'Culture Connected Now',
+    description: 'Culture. Connected. Now.',
     images: ['https://heyboss.heeyo.ai/replicate-z-image-turbo-1772241235-870da467.jpeg'],
   },
   icons: {
     icon: [
-      { url: '/favicon.ico', sizes: '48x48' },
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
       { url: '/icon.svg', type: 'image/svg+xml' },
-      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
-      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
     ],
-    apple: '/apple-touch-icon.svg',
+    apple: '/apple-touch-icon.png',
   },
+  manifest: '/site.webmanifest',
   alternates: {
     types: {
       'application/rss+xml': '/feed.xml',
@@ -63,20 +60,8 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const adsenseClientId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
-
   return (
     <html lang="en" className="dark">
-      <head>
-        {adsenseClientId && (
-          <Script
-            async
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClientId}`}
-            crossOrigin="anonymous"
-            strategy="afterInteractive"
-          />
-        )}
-      </head>
       <body className="min-h-screen flex flex-col bg-secondary">
         <OrganizationSchema />
         <LenisProvider>
