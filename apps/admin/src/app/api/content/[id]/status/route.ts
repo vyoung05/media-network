@@ -37,6 +37,16 @@ export async function PATCH(
 
     if (error) throw error;
 
+    // Fire-and-forget TTS generation when publishing
+    if (status === 'published') {
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://media-network-admin.vercel.app';
+      fetch(`${siteUrl}/api/tts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ articleId: id }),
+      }).catch((err) => console.error(`TTS trigger failed for ${id}:`, err));
+    }
+
     return NextResponse.json({ data });
   } catch (err: any) {
     console.error('API /content/[id]/status error:', err);

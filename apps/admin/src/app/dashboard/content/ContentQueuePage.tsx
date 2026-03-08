@@ -1016,18 +1016,18 @@ export function ContentQueuePage() {
   const handleStatusChange = async (id: string, newStatus: ArticleStatus) => {
     setActionLoading(id);
     try {
-      const supabase = getSupabaseBrowserClient();
-      const updates: Record<string, unknown> = { status: newStatus };
-      if (newStatus === 'published') {
-        updates.published_at = new Date().toISOString();
+      // Use the API endpoint instead of direct DB update
+      // This triggers TTS generation, notifications, etc. when publishing
+      const res = await fetch(`/api/content/${id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `Failed with status ${res.status}`);
       }
-
-      const { error: updateError } = await supabase
-        .from('articles')
-        .update(updates)
-        .eq('id', id);
-
-      if (updateError) throw updateError;
 
       setArticles((prev) =>
         prev.map((a) =>
