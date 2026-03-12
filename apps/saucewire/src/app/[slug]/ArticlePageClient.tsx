@@ -75,8 +75,7 @@ export function ArticlePageClient({
             )}
             <span className="text-gray-700">|</span>
             <span className="font-mono">{article.reading_time_minutes} min read</span>
-            <span className="text-gray-700">|</span>
-            <span className="font-mono">{formatNumber(article.view_count)} views</span>
+            {/* View count hidden from public — tracked in admin analytics */}
             {article.is_ai_generated && (
               <>
                 <span className="text-gray-700">|</span>

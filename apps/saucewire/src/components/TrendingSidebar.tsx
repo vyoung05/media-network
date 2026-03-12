@@ -40,7 +40,7 @@ export function TrendingSidebar({ articles }: TrendingSidebarProps) {
               <div className="flex items-center gap-2 mt-1 text-xs text-neutral">
                 <span className="font-mono">{article.category}</span>
                 <span>·</span>
-                <span className="font-mono">{formatNumber(article.view_count)} views</span>
+                {/* View count hidden from public — tracked in admin analytics */}
                 {article.published_at && (
                   <>
                     <span>·</span>
