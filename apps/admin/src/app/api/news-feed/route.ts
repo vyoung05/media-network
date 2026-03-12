@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+// Force dynamic rendering — prevent Vercel from static-caching this route
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // ======================== TYPES ========================
 
 type FeedPriority = 'breaking' | 'trending' | 'normal';
@@ -40,16 +44,18 @@ const FEED_SOURCES: Array<{
   // ==================== SAUCEWIRE (breaking news, sports, entertainment) ====================
   { name: 'TMZ', url: 'https://www.tmz.com/rss.xml', defaultCategory: 'Celebrity', primaryBrands: ['saucewire', 'trapglow'] },
   { name: 'ESPN', url: 'https://www.espn.com/espn/rss/news', defaultCategory: 'Sports', primaryBrands: ['saucewire'] },
+  { name: 'ESPN Top', url: 'https://www.espn.com/espn/rss/espn/news', defaultCategory: 'Sports', primaryBrands: ['saucewire'] },
   { name: 'Variety', url: 'https://variety.com/feed/', defaultCategory: 'Entertainment', primaryBrands: ['saucewire', 'saucecaviar'] },
-  { name: 'AP News', url: 'https://rsshub.app/apnews/topics/apf-entertainment', defaultCategory: 'Entertainment', primaryBrands: ['saucewire'] },
-  { name: 'Reuters Entertainment', url: 'https://rsshub.app/reuters/world', defaultCategory: 'Entertainment', primaryBrands: ['saucewire'] },
-  { name: 'CNN Entertainment', url: 'https://rss.cnn.com/rss/edition_entertainment.rss', defaultCategory: 'Entertainment', primaryBrands: ['saucewire'] },
-  { name: 'NBC News Entertainment', url: 'https://feeds.nbcnews.com/nbcnews/public/entertainment', defaultCategory: 'Entertainment', primaryBrands: ['saucewire'] },
-  { name: 'Yahoo Entertainment', url: 'https://rsshub.app/yahoo/news/entertainment', defaultCategory: 'Entertainment', primaryBrands: ['saucewire'] },
+  { name: 'The Hollywood Reporter', url: 'https://www.hollywoodreporter.com/feed/', defaultCategory: 'Entertainment', primaryBrands: ['saucewire'] },
+  { name: 'Deadline', url: 'https://deadline.com/feed/', defaultCategory: 'Entertainment', primaryBrands: ['saucewire'] },
+  { name: 'People', url: 'https://people.com/feed/', defaultCategory: 'Celebrity', primaryBrands: ['saucewire'] },
+  { name: 'E! News', url: 'https://www.eonline.com/syndication/feeds/rssfeeds/topstories.xml', defaultCategory: 'Celebrity', primaryBrands: ['saucewire'] },
   { name: 'Page Six', url: 'https://pagesix.com/feed/', defaultCategory: 'Celebrity', primaryBrands: ['saucewire'] },
-  { name: 'The Shade Room', url: 'https://rsshub.app/instagram/user/theshaderoom', defaultCategory: 'Celebrity', primaryBrands: ['saucewire', 'trapglow'] },
   { name: 'Bossip', url: 'https://bossip.com/feed/', defaultCategory: 'Celebrity', primaryBrands: ['saucewire'] },
   { name: 'MediaTakeOut', url: 'https://mediatakeout.com/feed/', defaultCategory: 'Celebrity', primaryBrands: ['saucewire'] },
+  { name: 'The Source', url: 'https://thesource.com/feed/', defaultCategory: 'Entertainment', primaryBrands: ['saucewire', 'trapglow'] },
+  { name: 'BET', url: 'https://www.bet.com/rss/topics/news.xml', defaultCategory: 'Entertainment', primaryBrands: ['saucewire', 'trapglow'] },
+  { name: 'Vulture', url: 'https://www.vulture.com/feed/rss/index.xml', defaultCategory: 'Entertainment', primaryBrands: ['saucewire'] },
 
   // ==================== SAUCECAVIAR (fashion, culture, luxury, lifestyle) ====================
   { name: 'Vogue', url: 'https://www.vogue.com/feed/rss', defaultCategory: 'Fashion', primaryBrands: ['saucecaviar'] },
@@ -60,36 +66,42 @@ const FEED_SOURCES: Array<{
   { name: 'Architectural Digest', url: 'https://www.architecturaldigest.com/feed/rss', defaultCategory: 'Lifestyle', primaryBrands: ['saucecaviar'] },
   { name: 'Robb Report', url: 'https://robbreport.com/feed/', defaultCategory: 'Lifestyle', primaryBrands: ['saucecaviar'] },
   { name: 'Luxe Digital', url: 'https://luxe.digital/feed/', defaultCategory: 'Lifestyle', primaryBrands: ['saucecaviar'] },
+  { name: 'WWD', url: 'https://wwd.com/feed/', defaultCategory: 'Fashion', primaryBrands: ['saucecaviar'] },
+  { name: 'Fashionista', url: 'https://fashionista.com/.rss/full/', defaultCategory: 'Fashion', primaryBrands: ['saucecaviar'] },
+  { name: 'Dazed', url: 'https://www.dazeddigital.com/rss', defaultCategory: 'Culture', primaryBrands: ['saucecaviar', 'trapglow'] },
 
   // ==================== TRAPGLOW (hip-hop, R&B, emerging artists, music culture) ====================
-  { name: 'HotNewHipHop', url: 'https://www.hotnewhiphop.com/rss.xml', defaultCategory: 'Hip-Hop', primaryBrands: ['trapglow', 'saucewire'] },
   { name: 'Billboard', url: 'https://www.billboard.com/feed/', defaultCategory: 'Music', primaryBrands: ['trapglow', 'saucewire', 'saucecaviar'] },
-  { name: 'Complex', url: 'https://www.complex.com/feeds/music.xml', defaultCategory: 'Music', primaryBrands: ['trapglow'] },
   { name: 'Pitchfork', url: 'https://pitchfork.com/feed/feed-news/rss', defaultCategory: 'Music', primaryBrands: ['trapglow', 'saucecaviar'] },
   { name: 'Stereogum', url: 'https://www.stereogum.com/feed/', defaultCategory: 'Music', primaryBrands: ['trapglow'] },
-  { name: 'Genius', url: 'https://rsshub.app/genius/latest', defaultCategory: 'Hip-Hop', primaryBrands: ['trapglow'] },
   { name: 'XXL Magazine', url: 'https://www.xxlmag.com/feed/', defaultCategory: 'Hip-Hop', primaryBrands: ['trapglow', 'saucewire'] },
   { name: 'NME', url: 'https://www.nme.com/news/music/feed', defaultCategory: 'Music', primaryBrands: ['trapglow'] },
-  { name: 'Clash Magazine', url: 'https://www.clashmusic.com/feed/', defaultCategory: 'Music', primaryBrands: ['trapglow'] },
-  { name: 'WORLDSTARHIPHOP', url: 'https://rsshub.app/worldstarhiphop/featured', defaultCategory: 'Hip-Hop', primaryBrands: ['trapglow', 'saucewire'] },
+  { name: 'The FADER', url: 'https://www.thefader.com/rss', defaultCategory: 'Music', primaryBrands: ['trapglow'] },
+  { name: 'Rap-Up', url: 'https://www.rap-up.com/feed/', defaultCategory: 'Hip-Hop', primaryBrands: ['trapglow', 'saucewire'] },
+  { name: 'HipHopDX', url: 'https://hiphopdx.com/feed', defaultCategory: 'Hip-Hop', primaryBrands: ['trapglow', 'saucewire'] },
+  { name: 'AllHipHop', url: 'https://allhiphop.com/feed/', defaultCategory: 'Hip-Hop', primaryBrands: ['trapglow', 'saucewire'] },
+  { name: 'Consequence of Sound', url: 'https://consequence.net/feed/', defaultCategory: 'Music', primaryBrands: ['trapglow'] },
+  { name: 'Spin', url: 'https://www.spin.com/feed/', defaultCategory: 'Music', primaryBrands: ['trapglow'] },
+  { name: 'Rolling Stone', url: 'https://www.rollingstone.com/feed/', defaultCategory: 'Music', primaryBrands: ['trapglow', 'saucewire'] },
 
   // ==================== GAMING (gaming news, esports, reviews, industry) ====================
   { name: 'IGN', url: 'https://feeds.feedburner.com/ign/all', defaultCategory: 'Gaming', primaryBrands: ['saucewire'] },
   { name: 'Kotaku', url: 'https://kotaku.com/rss', defaultCategory: 'Gaming', primaryBrands: ['saucewire'] },
   { name: 'GameSpot', url: 'https://www.gamespot.com/feeds/mashup/', defaultCategory: 'Gaming', primaryBrands: ['saucewire'] },
   { name: 'Polygon', url: 'https://www.polygon.com/rss/index.xml', defaultCategory: 'Gaming', primaryBrands: ['saucewire'] },
+  { name: 'Destructoid', url: 'https://www.destructoid.com/feed/', defaultCategory: 'Gaming', primaryBrands: ['saucewire'] },
   { name: 'PC Gamer', url: 'https://www.pcgamer.com/rss/', defaultCategory: 'Gaming', primaryBrands: ['saucewire'] },
   { name: 'Eurogamer', url: 'https://www.eurogamer.net/feed', defaultCategory: 'Gaming', primaryBrands: ['saucewire'] },
 
   // ==================== TRAPFREQUENCY (production, gear, tech, tutorials) ====================
   { name: 'MusicRadar', url: 'https://www.musicradar.com/rss', defaultCategory: 'Gear', primaryBrands: ['trapfrequency'] },
-  { name: 'Sound On Sound', url: 'https://www.soundonsound.com/feeds/rss.xml', defaultCategory: 'Tutorials', primaryBrands: ['trapfrequency'] },
   { name: 'The Verge Music', url: 'https://www.theverge.com/rss/entertainment/index.xml', defaultCategory: 'Tech', primaryBrands: ['trapfrequency', 'saucewire'] },
   { name: 'Sweetwater', url: 'https://www.sweetwater.com/insync/feed/', defaultCategory: 'Gear', primaryBrands: ['trapfrequency'] },
-  { name: 'Reverb News', url: 'https://reverb.com/news/feed', defaultCategory: 'Gear', primaryBrands: ['trapfrequency'] },
-  { name: 'Ableton Blog', url: 'https://rsshub.app/ableton/blog', defaultCategory: 'Tutorials', primaryBrands: ['trapfrequency'] },
   { name: 'Native Instruments Blog', url: 'https://blog.native-instruments.com/feed/', defaultCategory: 'Tutorials', primaryBrands: ['trapfrequency'] },
-  { name: 'Plugin Boutique', url: 'https://www.pluginboutique.com/feed', defaultCategory: 'Gear', primaryBrands: ['trapfrequency'] },
+  { name: 'Splice Blog', url: 'https://splice.com/blog/feed/', defaultCategory: 'Tutorials', primaryBrands: ['trapfrequency'] },
+  { name: 'Attack Magazine', url: 'https://www.attackmagazine.com/feed/', defaultCategory: 'Tutorials', primaryBrands: ['trapfrequency'] },
+  { name: 'Bedroom Producers Blog', url: 'https://bedroomproducersblog.com/feed/', defaultCategory: 'Gear', primaryBrands: ['trapfrequency'] },
+  { name: 'Ask Audio', url: 'https://ask.audio/feed', defaultCategory: 'Tutorials', primaryBrands: ['trapfrequency'] },
 ];
 
 // ======================== BRAND TOPIC DETECTION ========================
@@ -347,8 +359,8 @@ export async function GET() {
       return dateB - dateA;
     });
 
-    // Return top 120 (more items = less dedup exhaustion at 17 articles/day)
-    const topItems = allItems.slice(0, 120);
+    // Return top 200 (more items = less dedup exhaustion at 17 articles/day)
+    const topItems = allItems.slice(0, 200);
 
     // Collect feed health data
     const feedHealth: FeedHealthEntry[] = Array.from(feedHealthMap.values());
@@ -362,7 +374,9 @@ export async function GET() {
       },
       {
         headers: {
-          'Cache-Control': 'public, max-age=600, s-maxage=600',
+          'Cache-Control': 'public, max-age=300, s-maxage=300, stale-while-revalidate=60',
+          'CDN-Cache-Control': 'max-age=300',
+          'Vercel-CDN-Cache-Control': 'max-age=300',
         },
       }
     );
