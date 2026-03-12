@@ -149,17 +149,28 @@ function mapCategoryForBrand(brand: string, feedCategory: string): string {
   return mapping[feedCategory] || BRAND_CATEGORIES[brand]?.[0] || feedCategory;
 }
 
-async function fetchNewsFeed(baseUrl: string): Promise<FeedItem[]> {
+async function fetchNewsFeed(baseUrl: string): Promise<{ items: FeedItem[]; stale: boolean; fetchedAt: string }> {
   try {
     const res = await fetch(`${baseUrl}/api/news-feed`, {
-      headers: { 'Accept': 'application/json' },
+      headers: { 'Accept': 'application/json', 'Cache-Control': 'no-cache' },
     });
     if (!res.ok) throw new Error(`News feed returned ${res.status}`);
     const data = await res.json();
-    return data.items || [];
+    const fetchedAt = data.fetchedAt || '';
+    // Staleness check: if the feed was fetched more than 2 hours ago, flag it
+    let stale = false;
+    if (fetchedAt) {
+      const fetchedTime = new Date(fetchedAt).getTime();
+      const TWO_HOURS = 2 * 60 * 60 * 1000;
+      if (Date.now() - fetchedTime > TWO_HOURS) {
+        stale = true;
+        console.warn(`[STALE FEED] News feed data is from ${fetchedAt} — over 2 hours old!`);
+      }
+    }
+    return { items: data.items || [], stale, fetchedAt };
   } catch (err) {
     console.error('Failed to fetch news feed:', err);
-    return [];
+    return { items: [], stale: true, fetchedAt: '' };
   }
 }
 
@@ -210,13 +221,15 @@ export async function POST(request: Request) {
     const url = new URL(request.url);
     const baseUrl = `${url.protocol}//${url.host}`;
 
-    const newsItems = await fetchNewsFeed(baseUrl);
+    const feedResult = await fetchNewsFeed(baseUrl);
+    const newsItems = feedResult.items;
     if (newsItems.length === 0) {
       return NextResponse.json({
         success: true,
         message: 'No news items available',
         results: [],
         summary: { total: 0, success: 0, skipped: 0, errors: 0 },
+        ...(feedResult.stale && { warning: `Feed data is stale (from ${feedResult.fetchedAt}). Fresh content may not be available.` }),
       });
     }
 
@@ -398,6 +411,7 @@ export async function POST(request: Request) {
       results,
       summary,
       generatedAt: new Date().toISOString(),
+      ...(feedResult.stale && { warning: `Feed data is stale (from ${feedResult.fetchedAt}). Some content may be outdated.` }),
     });
   } catch (err) {
     console.error('Auto-generate error:', err);
