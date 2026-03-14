@@ -4,22 +4,20 @@ import {
   getFeaturedArtists,
   getDailyPicks,
   getGlowUpLeaderboard,
+  fetchTrendingArticles,
 } from '@/lib/supabase';
-import { getTrendingPosts } from '@/lib/mock-data';
 import { JsonLd } from '@media-network/shared';
 
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const [allArtists, featuredArtists, dailyPicks, leaderboardArtists] = await Promise.all([
+  const [allArtists, featuredArtists, dailyPicks, leaderboardArtists, trendingArticles] = await Promise.all([
     getArtists(),
     getFeaturedArtists(),
     getDailyPicks(),
     getGlowUpLeaderboard(10),
+    fetchTrendingArticles(8),
   ]);
-
-  // Blog posts still from mock data (they're not in the artists table)
-  const trendingPosts = getTrendingPosts(5);
 
   return (
     <>
@@ -33,7 +31,7 @@ export default async function HomePage() {
         featuredArtists={featuredArtists}
         dailyPicks={dailyPicks}
         leaderboardArtists={leaderboardArtists}
-        trendingPosts={trendingPosts}
+        trendingArticles={trendingArticles}
         allArtists={allArtists}
       />
     </>

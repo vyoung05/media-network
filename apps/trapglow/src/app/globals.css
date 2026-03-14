@@ -122,6 +122,85 @@
   background-size: 128px 128px;
 }
 
+/* Hero animated gradient background */
+.hero-animated-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    -45deg,
+    #0F0B2E 0%,
+    #1A1035 20%,
+    #2d1b69 35%,
+    #1A1035 50%,
+    #0a2a2a 65%,
+    #0F0B2E 80%,
+    #1A1035 100%
+  );
+  background-size: 400% 400%;
+  animation: heroGradientShift 12s ease infinite;
+}
+
+@keyframes heroGradientShift {
+  0% { background-position: 0% 50%; }
+  25% { background-position: 50% 100%; }
+  50% { background-position: 100% 50%; }
+  75% { background-position: 50% 0%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Floating orbs for hero fallback */
+.hero-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.4;
+  animation: heroOrbFloat 8s ease-in-out infinite;
+}
+
+.hero-orb-1 {
+  width: 400px;
+  height: 400px;
+  top: -10%;
+  left: 15%;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.5), transparent 70%);
+  animation-duration: 10s;
+}
+
+.hero-orb-2 {
+  width: 300px;
+  height: 300px;
+  bottom: 10%;
+  right: 10%;
+  background: radial-gradient(circle, rgba(6, 245, 214, 0.35), transparent 70%);
+  animation-duration: 8s;
+  animation-delay: -3s;
+}
+
+.hero-orb-3 {
+  width: 250px;
+  height: 250px;
+  top: 40%;
+  left: 55%;
+  background: radial-gradient(circle, rgba(255, 107, 53, 0.25), transparent 70%);
+  animation-duration: 12s;
+  animation-delay: -6s;
+}
+
+@keyframes heroOrbFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(30px, -20px) scale(1.05); }
+  50% { transform: translate(-20px, 15px) scale(0.95); }
+  75% { transform: translate(15px, 25px) scale(1.02); }
+}
+
+/* Subtle grid overlay for hero */
+.hero-grid {
+  background-image:
+    linear-gradient(rgba(139, 92, 246, 0.3) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(139, 92, 246, 0.3) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
 @layer utilities {
   .scrollbar-hide {
     -ms-overflow-style: none;

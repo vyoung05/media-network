@@ -6,18 +6,20 @@ import {
   getFeaturedProducers,
   getSamplePacks,
   getFeaturedBeats,
+  fetchTrendingArticles,
 } from '@/lib/supabase';
 import { JsonLd } from '@media-network/shared';
 
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const [tutorials, beats, gearReviews, producers, samplePacks] = await Promise.all([
+  const [tutorials, beats, gearReviews, producers, samplePacks, trendingArticles] = await Promise.all([
     getLatestTutorials(6),
     getBeats(),
     getTopGearReviews(4),
     getFeaturedProducers(),
     getSamplePacks(),
+    fetchTrendingArticles(6),
   ]);
 
   // Build frequency chart from beats sorted by plays
@@ -44,6 +46,7 @@ export default async function HomePage() {
         producers={producers}
         chartEntries={chartEntries}
         samplePacks={samplePacks}
+        trendingArticles={trendingArticles}
       />
     </>
   );

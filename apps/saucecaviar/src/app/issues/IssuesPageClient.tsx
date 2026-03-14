@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { NativeInFeedAd } from '@media-network/shared';
 import type { MagazineIssue } from '@/lib/mock-data';
 import { IssueCard } from '@/components/IssueCard';
 
@@ -11,11 +10,9 @@ interface IssuesPageClientProps {
 }
 
 export function IssuesPageClient({ issues }: IssuesPageClientProps) {
-
   return (
     <div className="min-h-screen pt-28 pb-20 bg-secondary">
       <div className="container-caviar">
-        {/* Header */}
         <motion.div
           className="mb-16 text-center"
           initial={{ opacity: 0, y: 20 }}
@@ -34,22 +31,12 @@ export function IssuesPageClient({ issues }: IssuesPageClientProps) {
           <div className="mt-6 w-16 h-px bg-primary/40 mx-auto" />
         </motion.div>
 
-        {/* Issues grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {issues.map((issue, i) => (
-            <React.Fragment key={issue.id}>
-              <IssueCard issue={issue} index={i} />
-              {/* Native in-feed ad after every 6th issue */}
-              {(i + 1) % 6 === 0 && i < issues.length - 1 && (
-                <div className="col-span-full">
-                  <NativeInFeedAd slot="sc-native-infeed" badgeClass="text-primary/40 bg-primary/5" />
-                </div>
-              )}
-            </React.Fragment>
+            <IssueCard key={issue.id} issue={issue} index={i} />
           ))}
         </div>
 
-        {/* Empty state / coming soon */}
         <motion.div
           className="mt-16 text-center py-12 border border-dashed border-surface/30"
           initial={{ opacity: 0 }}

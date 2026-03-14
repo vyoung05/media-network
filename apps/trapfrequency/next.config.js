@@ -14,7 +14,7 @@ const nextConfig = {
     ],
   },
   experimental: {
-    optimizePackageImports: ['@media-network/shared', '@media-network/ui'],
+    optimizePackageImports: ['@media-network/ui'],
   },
 };
 

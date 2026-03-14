@@ -8,7 +8,7 @@ export type Brand = 'saucecaviar' | 'trapglow' | 'saucewire' | 'trapfrequency';
 
 export type UserRole = 'admin' | 'editor' | 'writer' | 'artist' | 'producer' | 'reader';
 
-export type ArticleStatus = 'draft' | 'pending_review' | 'published' | 'archived';
+export type ArticleStatus = 'draft' | 'pending_review' | 'published' | 'archived' | 'saved';
 
 export type SubmissionStatus = 'pending' | 'under_review' | 'approved' | 'rejected' | 'published';
 
@@ -54,6 +54,7 @@ export interface Article {
   source_url: string | null;
   reading_time_minutes: number;
   view_count: number;
+  metadata?: Record<string, any>;
   published_at: string | null;
   created_at: string;
   updated_at: string;

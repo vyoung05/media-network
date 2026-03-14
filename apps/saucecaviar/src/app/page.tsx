@@ -1,5 +1,5 @@
 import { HomePageClient } from '@/components/HomePageClient';
-import { fetchAllIssues, fetchLatestIssue } from '@/lib/supabase';
+import { fetchAllIssues, fetchLatestIssue, fetchTrendingArticles } from '@/lib/supabase';
 import { getAllIssues, getLatestIssue } from '@/lib/mock-data';
 import { JsonLd } from '@media-network/shared';
 
@@ -14,6 +14,9 @@ export default async function HomePage() {
   if (!latestIssue) latestIssue = getLatestIssue();
   if (allIssues.length === 0) allIssues = getAllIssues();
 
+  // Fetch trending articles from Supabase
+  const trendingArticles = await fetchTrendingArticles(8);
+
   return (
     <>
       <JsonLd
@@ -22,7 +25,11 @@ export default async function HomePage() {
         url="https://saucecaviar.com"
         description="Culture Served Premium. Fashion, music, art, culture, and lifestyle — the finest editorial experience."
       />
-      <HomePageClient latestIssue={latestIssue} allIssues={allIssues} />
+      <HomePageClient
+        latestIssue={latestIssue}
+        allIssues={allIssues}
+        trendingArticles={trendingArticles}
+      />
     </>
   );
 }
