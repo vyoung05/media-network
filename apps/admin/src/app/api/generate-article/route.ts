@@ -363,6 +363,7 @@ const AI_ARTIFACT_PATTERNS = [
   /\bAs of my\s+(last\s+)?training\b/i,
   /\bmy training data\b/i,
   /\bLorem ipsum\b/i,
+  /amazon\.com\/dp\/[A-Z0-9]{10}/i,
 ];
 
 function scoreArticleQuality(article: { title: string; body: string; excerpt: string; tags: string[] }): QualityScoreResult {
@@ -474,6 +475,14 @@ function parseGeneratedArticle(raw: string): GeneratedArticle & { coverSearch: s
   return { title, body, excerpt, metaDescription, suggestedCategory, tags, coverSearch };
 }
 
+function stripFakeAmazonLinks(html: string): string {
+  // Replace <a href="amazon...">text</a> with just the text
+  let cleaned = html.replace(/<a[^>]*href="[^"]*amazon\.com[^"]*"[^>]*>(.*?)<\/a>/gi, '$1');
+  // Also handle markdown-style [text](amazon-url)
+  cleaned = cleaned.replace(/\[([^\]]+)\]\(https?:\/\/[^)]*amazon\.com[^)]*\)/gi, '$1');
+  return cleaned;
+}
+
 // ======================== ROUTE HANDLER ========================
 
 export async function POST(request: Request) {
@@ -527,6 +536,8 @@ TAGS: [tag1, tag2, tag3, tag4, tag5]
 COVER_SEARCH: [2-3 word search term for a cover photo, e.g. "concert stage" or "fashion runway" or "studio microphone"]
 BODY: [Full article body, 400-800 words. Use double line breaks between paragraphs. Write in the brand's voice. Do not include the title in the body.]
 
+IMPORTANT: Do NOT include Amazon.com product links, affiliate links, or any made-up URLs in the article body. If you want to reference a product, mention it by name only (e.g., "Google Pixel 8a ($499)") without linking to any store. Only link to the original news source if relevant. Never invent URLs — every link must be to a real, verifiable page.
+
 IMPORTANT: The CATEGORY must be one of the brand's valid categories listed above. Do not use generic categories.`;
 
     const userPrompt = `Write an article based on this news story:
@@ -541,6 +552,7 @@ Remember: Write 400-800 words in the ${BRAND_NAMES[brand]} voice. Make it engagi
     // Generate the article (uses BYOK key if provided, else server key)
     const rawOutput = await generateArticleContent(userPrompt, systemPrompt, provider, userKey || undefined);
     const generated = parseGeneratedArticle(rawOutput);
+    generated.body = stripFakeAmazonLinks(generated.body);
 
     // Use generated title or fall back to a rewrite of the original
     const finalTitle = generated.title || `${newsTitle} — ${BRAND_NAMES[brand]}`;

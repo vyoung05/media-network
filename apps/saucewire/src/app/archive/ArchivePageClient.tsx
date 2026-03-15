@@ -24,14 +24,17 @@ export function ArchivePageClient({ articles }: ArchivePageClientProps) {
 
     // Search filter
     if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(
-        (a) =>
-          a.title.toLowerCase().includes(q) ||
-          (a.excerpt && a.excerpt.toLowerCase().includes(q)) ||
-          a.tags.some((t) => t.includes(q)) ||
-          a.category.toLowerCase().includes(q)
-      );
+      const tokens = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
+      result = result.filter((a) => {
+        // Normalize text: remove hyphens/special chars for matching
+        const searchable = [
+          a.title,
+          a.excerpt || '',
+          ...a.tags,
+          a.category,
+        ].join(' ').toLowerCase().replace(/[-_]/g, ' ');
+        return tokens.every((token) => searchable.includes(token));
+      });
     }
 
     // Category filter
