@@ -476,10 +476,11 @@ function parseGeneratedArticle(raw: string): GeneratedArticle & { coverSearch: s
 }
 
 function stripFakeAmazonLinks(html: string): string {
-  // Replace <a href="amazon...">text</a> with just the text
-  let cleaned = html.replace(/<a[^>]*href="[^"]*amazon\.com[^"]*"[^>]*>(.*?)<\/a>/gi, '$1');
-  // Also handle markdown-style [text](amazon-url)
-  cleaned = cleaned.replace(/\[([^\]]+)\]\(https?:\/\/[^)]*amazon\.com[^)]*\)/gi, '$1');
+  // Strip fake ASIN links (invented /dp/XXXXX URLs) but KEEP valid search links (/s?k=...)
+  // HTML links with fake ASINs
+  let cleaned = html.replace(/<a[^>]*href="([^"]*amazon\.com\/dp\/[^"]*)"[^>]*>(.*?)<\/a>/gi, '$2');
+  // Markdown links with fake ASINs
+  cleaned = cleaned.replace(/\[([^\]]+)\]\(https?:\/\/[^)]*amazon\.com\/dp\/[^)]*\)/gi, '$1');
   return cleaned;
 }
 
@@ -536,7 +537,13 @@ TAGS: [tag1, tag2, tag3, tag4, tag5]
 COVER_SEARCH: [2-3 word search term for a cover photo, e.g. "concert stage" or "fashion runway" or "studio microphone"]
 BODY: [Full article body, 400-800 words. Use double line breaks between paragraphs. Write in the brand's voice. Do not include the title in the body.]
 
-IMPORTANT: Do NOT include Amazon.com product links, affiliate links, or any made-up URLs in the article body. If you want to reference a product, mention it by name only (e.g., "Google Pixel 8a ($499)") without linking to any store. Only link to the original news source if relevant. Never invent URLs — every link must be to a real, verifiable page.
+PRODUCT LINKS: When mentioning a specific purchasable product (gadget, phone, headphones, gear, clothing item, etc.), link it using an Amazon SEARCH URL in this exact format:
+https://www.amazon.com/s?k=PRODUCT+NAME+HERE&tag=vincentyoung-20
+Replace spaces with + signs. Examples:
+- [Google Pixel 8a](https://www.amazon.com/s?k=Google+Pixel+8a&tag=vincentyoung-20)
+- [AirPods Pro](https://www.amazon.com/s?k=AirPods+Pro+2nd+generation&tag=vincentyoung-20)
+- [Nike Air Max 90](https://www.amazon.com/s?k=Nike+Air+Max+90&tag=vincentyoung-20)
+NEVER invent Amazon product IDs (ASINs like /dp/B0CX23V2ZK). ONLY use search URLs as shown above. Only add product links when naturally relevant — don't force them. Non-product links (news sources, social media) should use real URLs only.
 
 IMPORTANT: The CATEGORY must be one of the brand's valid categories listed above. Do not use generic categories.`;
 
