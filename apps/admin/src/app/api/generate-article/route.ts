@@ -534,7 +534,7 @@ EXCERPT: [1-2 sentence teaser that hooks the reader]
 META_DESCRIPTION: [SEO-optimized description, max 160 characters]
 CATEGORY: [Suggested category]
 TAGS: [tag1, tag2, tag3, tag4, tag5]
-COVER_SEARCH: [2-3 word search term for a cover photo, e.g. "concert stage" or "fashion runway" or "studio microphone"]
+COVER_SEARCH: [The main person or subject's FULL NAME for the cover photo. If the article is about a celebrity, athlete, musician, or public figure, use their real name (e.g. "Chad Ochocinco", "Shannon Sharpe", "Zendaya"). Only use generic terms like "concert stage" if no specific person is the subject.]
 BODY: [Full article body, 400-800 words. Use double line breaks between paragraphs. Write in the brand's voice. Do not include the title in the body.]
 
 PRODUCT LINKS: When mentioning a specific purchasable product (gadget, phone, headphones, gear, clothing item, etc.), link it using an Amazon SEARCH URL in this exact format:
