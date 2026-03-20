@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -71,6 +71,7 @@ export function HomePageClient({
 }: HomePageClientProps) {
   const router = useRouter();
   const heroRef = useRef<HTMLDivElement>(null);
+  const [heroImageFailed, setHeroImageFailed] = useState(false);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
   const heroY = useTransform(scrollYProgress, [0, 1], [0, 100]);
   const heroScale = useTransform(scrollYProgress, [0, 1], [1, 1.1]);
@@ -91,7 +92,7 @@ export function HomePageClient({
       {/* Hero section */}
       <section ref={heroRef} className="relative h-[85vh] md:h-[90vh] overflow-hidden">
         {/* Background: artist image with parallax OR animated gradient fallback */}
-        {hasHeroImage ? (
+        {hasHeroImage && !heroImageFailed ? (
           <motion.div style={{ y: heroY, scale: heroScale }} className="absolute inset-0">
             <Image
               src={topFeatured.cover_image}
@@ -99,6 +100,7 @@ export function HomePageClient({
               fill
               className="object-cover"
               priority
+              onError={() => setHeroImageFailed(true)}
             />
           </motion.div>
         ) : (

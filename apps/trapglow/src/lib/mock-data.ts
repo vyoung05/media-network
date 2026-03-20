@@ -175,7 +175,7 @@ export const mockArtists: Artist[] = [
     slug: 'pharaoh-bliss',
     real_name: 'Marcus Jordan',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600',
-    cover_image: 'https://images.unsplash.com/photo-1571266028243-e4733b0f0bb0?w=1600',
+    cover_image: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=1600',
     bio: 'Pharaoh Bliss is Chicago\'s latest prodigy — a producer-rapper hybrid who builds his beats from scratch and then floats over them. His sound sits at the intersection of drill and jazz, sampling Coltrane over sliding 808s. He sold out Metro Chicago three times before ever releasing a full album.',
     genre: ['Hip-Hop', 'Drill', 'Alternative'],
     mood: ['Dark', 'Experimental', 'Aggressive'],
@@ -198,7 +198,7 @@ export const mockArtists: Artist[] = [
     featured_track_url: null,
     tags: ['drill', 'jazz-rap', 'chicago', 'producer'],
     gallery: [
-      'https://images.unsplash.com/photo-1571266028243-e4733b0f0bb0?w=800',
+      'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800',
       'https://images.unsplash.com/photo-1598387181032-a3103a2db5b3?w=800',
     ],
     created_at: '2024-01-20T00:00:00Z',
@@ -443,7 +443,7 @@ export const mockArtists: Artist[] = [
     tags: ['afro-drill', 'ghanaian', 'rage', 'london'],
     gallery: [
       'https://images.unsplash.com/photo-1598387181032-a3103a2db5b3?w=800',
-      'https://images.unsplash.com/photo-1571266028243-e4733b0f0bb0?w=800',
+      'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800',
     ],
     created_at: '2024-03-10T00:00:00Z',
   },
@@ -609,7 +609,7 @@ export const mockBlogPosts: BlogPost[] = [
     body: `<p>Chicago has always been a city of musical innovation. From house music to drill, from gospel to footwork — the city doesn't just participate in scenes, it invents them. Pharaoh Bliss is the latest in that lineage.</p>
 <p>The 24-year-old producer-rapper grew up on the South Side, equally influenced by his grandfather's jazz record collection and the drill music blasting from every other car. "People act like those are opposite things," he says. "But the energy is the same. Jazz was the drill of its era — raw, real, from the streets."</p>
 <p>His music proves the point. "Gold Casket" opens with a Coltrane sample that dissolves into one of the hardest drill beats you'll hear this year. The juxtaposition shouldn't work, but it does — because Pharaoh understands that both genres come from the same place of urgency and expression.</p>`,
-    cover_image: 'https://images.unsplash.com/photo-1571266028243-e4733b0f0bb0?w=1600',
+    cover_image: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=1600',
     category: 'Feature',
     tags: ['pharaoh-bliss', 'jazz-drill', 'chicago', 'innovation'],
     author: authors[1],
@@ -781,3 +781,4 @@ export function formatListeners(count: number): string {
   if (count >= 1000) return `${(count / 1000).toFixed(0)}K`;
   return count.toString();
 }
+
