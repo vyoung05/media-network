@@ -25,21 +25,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Safety timeout — if auth check takes too long, stop loading
     const timeout = setTimeout(() => {
       setLoading(false);
-    }, 10000);
+    }, 8000);
 
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
-      clearTimeout(timeout);
-      setSession(s);
-      if (s?.user) {
-        fetchUserProfile(s.user.id);
-      } else {
-        setLoading(false);
+    // Get initial session with retry
+    async function initSession() {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const { data: { session: s }, error } = await supabase.auth.getSession();
+          if (error && attempt === 0) {
+            // First attempt failed — wait briefly and retry
+            await new Promise(r => setTimeout(r, 1000));
+            continue;
+          }
+          clearTimeout(timeout);
+          setSession(s);
+          if (s?.user) {
+            await fetchUserProfile(s.user.id);
+          } else {
+            setLoading(false);
+          }
+          return;
+        } catch {
+          if (attempt === 0) {
+            await new Promise(r => setTimeout(r, 1000));
+            continue;
+          }
+        }
       }
-    }).catch(() => {
+      // Both attempts failed
       clearTimeout(timeout);
       setLoading(false);
-    });
+    }
+
+    initSession();
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(

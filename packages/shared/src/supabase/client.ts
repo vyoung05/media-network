@@ -2,10 +2,20 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { createBrowserClient, createServerClient, type CookieOptions } from '@supabase/ssr';
 
 // ======================== CONFIG ========================
+// Env vars are read lazily inside each getter to avoid module-load race
+// conditions in monorepo setups where Next.js hasn't injected the vars yet.
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+function getUrl(): string {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!url) throw new Error('NEXT_PUBLIC_SUPABASE_URL is not set');
+  return url;
+}
+
+function getAnonKey(): string {
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!key) throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY is not set');
+  return key;
+}
 
 // ======================== BROWSER CLIENT ========================
 
@@ -13,7 +23,7 @@ let browserClient: SupabaseClient | null = null;
 
 export function getSupabaseBrowserClient(): SupabaseClient {
   if (browserClient) return browserClient;
-  browserClient = createBrowserClient(supabaseUrl, supabaseAnonKey, {
+  browserClient = createBrowserClient(getUrl(), getAnonKey(), {
     auth: {
       flowType: 'pkce',
       detectSessionInUrl: true,
@@ -34,7 +44,7 @@ export function getSupabaseServerClient(cookieStore: {
   set: (name: string, value: string, options: CookieOptions) => void;
   delete: (name: string, options: CookieOptions) => void;
 }): SupabaseClient {
-  return createServerClient(supabaseUrl, supabaseAnonKey, {
+  return createServerClient(getUrl(), getAnonKey(), {
     cookies: {
       get(name: string) {
         return cookieStore.get(name)?.value;
@@ -63,10 +73,11 @@ let serviceClient: SupabaseClient | null = null;
 
 export function getSupabaseServiceClient(): SupabaseClient {
   if (serviceClient) return serviceClient;
-  if (!supabaseServiceKey) {
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceKey) {
     throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set');
   }
-  serviceClient = createClient(supabaseUrl, supabaseServiceKey, {
+  serviceClient = createClient(getUrl(), serviceKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
