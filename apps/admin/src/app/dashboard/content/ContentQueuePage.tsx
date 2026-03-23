@@ -934,9 +934,12 @@ export function ContentQueuePage() {
   const [filterBrand, setFilterBrand] = useState<Brand | 'all'>('all');
   const [filterType, setFilterType] = useState<'all' | 'ai' | 'human'>('all');
   const [filterStatus, setFilterStatus] = useState<ArticleStatus | 'all'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [audioGenerating, setAudioGenerating] = useState<Set<string>>(new Set());
+  const [bulkAudioRunning, setBulkAudioRunning] = useState(false);
+  const [bulkAudioResult, setBulkAudioResult] = useState<string | null>(null);
   const [previewArticle, setPreviewArticle] = useState<QueueArticle | null>(null);
 
   // Pre-fill values from query params (from News Scanner "Draft Article" button)
@@ -961,7 +964,7 @@ export function ContentQueuePage() {
         .from('articles')
         .select('id, title, slug, body, excerpt, category, brand, status, author_id, is_ai_generated, is_breaking, source_url, cover_image, tags, reading_time_minutes, view_count, created_at, published_at, audio_versions(id, status)')
         .order('created_at', { ascending: false })
-        .limit(50);
+        .limit(100);
 
       const { data, error: fetchError } = await query;
       if (fetchError) throw fetchError;
@@ -1147,11 +1150,46 @@ export function ContentQueuePage() {
     }
   };
 
+  const handleBulkAudio = async () => {
+    if (!confirm('Generate audio for up to 10 published articles missing TTS. This may take a few minutes. Continue?')) return;
+    setBulkAudioRunning(true);
+    setBulkAudioResult(null);
+    try {
+      const res = await fetch('/api/tts/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ limit: 10 }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setBulkAudioResult(`✅ ${data.succeeded} generated, ${data.failed} failed. ${data.remaining} still remaining.`);
+        fetchArticles(); // Refresh to update audio badges
+      } else {
+        setBulkAudioResult(`❌ ${data.error || 'Bulk generation failed'}`);
+      }
+    } catch (err) {
+      setBulkAudioResult(`❌ ${err instanceof Error ? err.message : 'Request failed'}`);
+    } finally {
+      setBulkAudioRunning(false);
+    }
+  };
+
+  const handleExportCSV = () => {
+    const params = new URLSearchParams();
+    if (filterBrand !== 'all') params.set('brand', filterBrand);
+    if (filterStatus !== 'all') params.set('status', filterStatus);
+    window.open(`/api/articles/export?${params}`, '_blank');
+  };
+
   const filtered = articles.filter((a) => {
     if (filterBrand !== 'all' && a.brand !== filterBrand) return false;
     if (filterType === 'ai' && !a.is_ai_generated) return false;
     if (filterType === 'human' && a.is_ai_generated) return false;
     if (filterStatus !== 'all' && a.status !== filterStatus) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      if (!a.title.toLowerCase().includes(q) && !a.category.toLowerCase().includes(q)) return false;
+    }
     return true;
   });
 
@@ -1171,19 +1209,64 @@ export function ContentQueuePage() {
         <div>
           <h1 className="text-2xl font-bold text-white">Content Queue</h1>
           <p className="text-sm text-gray-500 mt-1">
-            {loading ? 'Loading...' : `${articles.length} articles total • ${statusCounts.pending_review} pending review`}
+            {loading ? 'Loading...' : `${articles.length} articles total • ${statusCounts.pending_review} pending review • ${articles.filter(a => a.status === 'published' && !a.hasAudio).length} missing audio`}
           </p>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="admin-btn-primary flex items-center gap-2"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          New Article
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleExportCSV}
+            className="admin-btn-ghost flex items-center gap-2 text-sm"
+            title="Export articles as CSV"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Export CSV
+          </button>
+          <button
+            onClick={handleBulkAudio}
+            disabled={bulkAudioRunning}
+            className="px-3 py-2 text-sm flex items-center gap-2 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 transition-colors disabled:opacity-40"
+            title="Generate TTS audio for articles missing it"
+          >
+            {bulkAudioRunning ? (
+              <>
+                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Generating...
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                </svg>
+                Bulk Audio
+              </>
+            )}
+          </button>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="admin-btn-primary flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            New Article
+          </button>
+        </div>
       </div>
+
+      {/* Bulk audio result */}
+      {bulkAudioResult && (
+        <div className={`glass-panel p-4 ${bulkAudioResult.startsWith('✅') ? 'border-emerald-500/20 bg-emerald-500/5' : 'border-red-500/20 bg-red-500/5'}`}>
+          <div className="flex items-center gap-2">
+            <p className={`text-sm ${bulkAudioResult.startsWith('✅') ? 'text-emerald-400' : 'text-red-400'}`}>{bulkAudioResult}</p>
+            <button onClick={() => setBulkAudioResult(null)} className="ml-auto text-xs text-gray-400 hover:text-white">Dismiss</button>
+          </div>
+        </div>
+      )}
 
       {/* Error banner */}
       {error && (
@@ -1238,6 +1321,24 @@ export function ContentQueuePage() {
 
       {/* Filters */}
       <div className="glass-panel p-4 flex flex-wrap items-center gap-3">
+        {/* Search */}
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <svg className="w-3.5 h-3.5 text-gray-500 absolute left-2.5 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search articles..."
+              className="admin-input text-xs py-1.5 pl-8 pr-3 w-48"
+            />
+          </div>
+        </div>
+
+        <div className="w-px h-5 bg-white/10" />
+
         <div className="flex items-center gap-2">
           <span className="text-xs font-mono text-gray-500">Brand:</span>
           <div className="flex gap-1">
