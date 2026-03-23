@@ -103,7 +103,7 @@ export default function AnalyticsPage() {
     setLoading(true);
     try {
       const params = new URLSearchParams({ range: timeRange });
-      if (activeBrand) params.set('brand', activeBrand);
+      if (activeBrand && activeBrand !== 'all') params.set('brand', activeBrand);
       const res = await fetch(`/api/analytics?${params}`);
       if (res.ok) {
         const result = await res.json();
