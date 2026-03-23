@@ -239,11 +239,12 @@ export async function POST(request: Request) {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    // Dedup window: 3 days — balances freshness vs avoiding repeats
+    // Dedup window: 1.5 days — SauceWire generates 30+/day, 3-day window exhausted the 200-item pool
+    // At 115 articles/3 days, we were burning through sources too fast. 1.5 days = ~55 articles to dedup against
     const { data: recentArticles } = await supabase
       .from('articles')
       .select('title, brand, source_url')
-      .gte('created_at', new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString())
+      .gte('created_at', new Date(Date.now() - 1.5 * 24 * 60 * 60 * 1000).toISOString())
       .order('created_at', { ascending: false })
       .limit(200);
 

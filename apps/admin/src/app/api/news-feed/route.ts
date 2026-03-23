@@ -359,8 +359,8 @@ export async function GET() {
       return dateB - dateA;
     });
 
-    // Return top 200 (more items = less dedup exhaustion at 17 articles/day)
-    const topItems = allItems.slice(0, 200);
+    // Return top 400 (more items = less dedup exhaustion at 30+ articles/day across 4 brands)
+    const topItems = allItems.slice(0, 400);
 
     // Collect feed health data
     const feedHealth: FeedHealthEntry[] = Array.from(feedHealthMap.values());
