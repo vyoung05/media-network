@@ -35,6 +35,7 @@ interface QueueArticle {
   view_count: number;
   created_at: string;
   published_at: string | null;
+  hasAudio: boolean;
 }
 
 // ======================== CONSTANTS ========================
@@ -935,6 +936,7 @@ export function ContentQueuePage() {
   const [filterStatus, setFilterStatus] = useState<ArticleStatus | 'all'>('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [audioGenerating, setAudioGenerating] = useState<Set<string>>(new Set());
   const [previewArticle, setPreviewArticle] = useState<QueueArticle | null>(null);
 
   // Pre-fill values from query params (from News Scanner "Draft Article" button)
@@ -957,7 +959,7 @@ export function ContentQueuePage() {
 
       const query = supabase
         .from('articles')
-        .select('id, title, slug, body, excerpt, category, brand, status, author_id, is_ai_generated, is_breaking, source_url, cover_image, tags, reading_time_minutes, view_count, created_at, published_at')
+        .select('id, title, slug, body, excerpt, category, brand, status, author_id, is_ai_generated, is_breaking, source_url, cover_image, tags, reading_time_minutes, view_count, created_at, published_at, audio_versions(id, status)')
         .order('created_at', { ascending: false })
         .limit(50);
 
@@ -977,7 +979,7 @@ export function ContentQueuePage() {
         }
       }
 
-      const mapped: QueueArticle[] = (data || []).map((a) => ({
+      const mapped: QueueArticle[] = (data || []).map((a: any) => ({
         id: a.id,
         title: a.title,
         excerpt: a.excerpt,
@@ -997,6 +999,7 @@ export function ContentQueuePage() {
         view_count: a.view_count || 0,
         created_at: a.created_at,
         published_at: a.published_at,
+        hasAudio: Array.isArray(a.audio_versions) && a.audio_versions.some((av: any) => av.status === 'ready'),
       }));
 
       setArticles(mapped);
@@ -1111,6 +1114,36 @@ export function ContentQueuePage() {
       fetchArticles();
     } finally {
       setActionLoading(null);
+    }
+  };
+
+  const handleGenerateAudio = async (articleId: string) => {
+    setAudioGenerating((prev) => new Set(prev).add(articleId));
+    try {
+      const res = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ articleId }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        // Mark the article as having audio
+        setArticles((prev) =>
+          prev.map((a) => (a.id === articleId ? { ...a, hasAudio: true } : a))
+        );
+        alert(`✅ Audio generated via ${data.provider || 'TTS'}`);
+      } else {
+        alert(`❌ Audio generation failed: ${data.error || 'Unknown error'}`);
+      }
+    } catch (err) {
+      console.error('Generate audio error:', err);
+      alert(`Failed to generate audio: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      setAudioGenerating((prev) => {
+        const next = new Set(prev);
+        next.delete(articleId);
+        return next;
+      });
     }
   };
 
@@ -1319,6 +1352,16 @@ export function ContentQueuePage() {
                             🔴 Breaking
                           </span>
                         )}
+                        {article.hasAudio && (
+                          <span className="text-xs px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-mono">
+                            🎵 Audio
+                          </span>
+                        )}
+                        {!article.hasAudio && article.status === 'published' && (
+                          <span className="text-xs px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-400 font-mono">
+                            🔇 No Audio
+                          </span>
+                        )}
                         {embeds.length > 0 && (
                           <span className="text-xs px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-400 font-mono">
                             🎬 {embeds.length} media
@@ -1463,6 +1506,31 @@ export function ContentQueuePage() {
                           className="admin-btn-ghost px-3 py-2 text-xs"
                         >
                           Restore
+                        </button>
+                      )}
+                      {!article.hasAudio && article.status === 'published' && (
+                        <button
+                          onClick={() => handleGenerateAudio(article.id)}
+                          disabled={isActioning || audioGenerating.has(article.id)}
+                          className="px-3 py-2 text-xs flex items-center gap-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 transition-colors disabled:opacity-40"
+                          title="Generate TTS audio for this article"
+                        >
+                          {audioGenerating.has(article.id) ? (
+                            <>
+                              <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                              </svg>
+                              Generating...
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                              </svg>
+                              🎵 Generate Audio
+                            </>
+                          )}
                         </button>
                       )}
                       <button
