@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { searchMedia, pickBestCoverImage, type MediaSearchResult } from '@/lib/media-search';
+import { trackCost, estimateTokens } from '@/lib/cost-tracker';
 
 // Allow up to 60 seconds for AI generation + media search + Supabase insert
 export const maxDuration = 60;
@@ -560,6 +561,22 @@ Remember: Write 400-800 words in the ${BRAND_NAMES[brand]} voice. Make it engagi
     const rawOutput = await generateArticleContent(userPrompt, systemPrompt, provider, userKey || undefined);
     const generated = parseGeneratedArticle(rawOutput);
     generated.body = stripFakeAmazonLinks(generated.body);
+
+    // Track API cost (fire-and-forget)
+    const providerModelMap: Record<string, string> = {
+      gemini: process.env.AI_MODEL || 'gemini-2.5-flash-preview-05-20',
+      openai: 'gpt-4o-mini',
+      anthropic: 'claude-sonnet-4-20250514',
+    };
+    trackCost({
+      service: 'article-generation',
+      operation: 'generate',
+      model: providerModelMap[provider] || provider,
+      provider,
+      brand,
+      tokens_in: estimateTokens(userPrompt + systemPrompt),
+      tokens_out: estimateTokens(rawOutput),
+    });
 
     // Use generated title or fall back to a rewrite of the original
     const finalTitle = generated.title || `${newsTitle} — ${BRAND_NAMES[brand]}`;

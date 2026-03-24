@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { trackCost } from '@/lib/cost-tracker';
 
 // Brand-specific voice mapping for ElevenLabs
 const ELEVENLABS_VOICES: Record<string, { voiceId: string; voiceName: string }> = {
@@ -208,6 +209,20 @@ export async function POST(request: NextRequest) {
         .eq('id', audioRecord.id);
       return NextResponse.json({ error: 'All TTS providers failed' }, { status: 500 });
     }
+
+    // Track TTS cost (fire-and-forget)
+    trackCost({
+      service: 'tts',
+      operation: 'generate',
+      model: result.provider === 'elevenlabs' ? 'eleven_multilingual_v2' : 'tts-1',
+      provider: result.provider,
+      brand: article.brand,
+      article_id: articleId,
+      tokens_in: ttsText.length, // chars for TTS
+      estimated_cost: result.provider === 'elevenlabs'
+        ? (ttsText.length / 1000) * 0.30  // ~$0.30/1K chars
+        : (ttsText.length / 1000) * 0.015, // ~$0.015/1K chars
+    });
 
     // 7. Upload to Supabase Storage
     const fileName = `${article.brand}/${articleId}.mp3`;
