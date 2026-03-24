@@ -26,7 +26,26 @@ export async function GET(request: NextRequest) {
         },
       }
     );
-    await supabase.auth.exchangeCodeForSession(code);
+
+    const { data: sessionData } = await supabase.auth.exchangeCodeForSession(code);
+
+    // SECURITY: Verify this user has an approved admin/editor role
+    // Only pre-created users in the 'users' table with proper roles can access the dashboard
+    if (sessionData?.user) {
+      const { data: profile } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', sessionData.user.id)
+        .single();
+
+      if (!profile || !['admin', 'editor', 'writer'].includes(profile.role)) {
+        // User is not authorized — sign them out and redirect to login with error
+        await supabase.auth.signOut();
+        return NextResponse.redirect(
+          new URL('/?error=access_denied', requestUrl.origin)
+        );
+      }
+    }
   }
 
   return NextResponse.redirect(new URL('/dashboard', requestUrl.origin));

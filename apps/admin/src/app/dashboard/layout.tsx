@@ -6,7 +6,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { DashboardLayout } from '@/components/DashboardLayout';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const { session, loading } = useAuth();
+  const { session, user, loading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showRetry, setShowRetry] = useState(false);
@@ -21,7 +21,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     if (!loading && !session) {
       router.push('/');
     }
-  }, [session, loading, router, searchParams]);
+    // SECURITY: If session exists but user has no profile (unauthorized Google login),
+    // redirect to login page
+    if (!loading && session && !user) {
+      router.push('/?error=access_denied');
+    }
+  }, [session, user, loading, router, searchParams]);
 
   // Show retry button after 5 seconds of loading
   useEffect(() => {
@@ -49,7 +54,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!session) {
+  if (!session || !user) {
     return null;
   }
 

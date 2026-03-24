@@ -11,7 +11,16 @@ export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(() => {
+    // Check for access_denied error from OAuth redirect
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('error') === 'access_denied') {
+        return 'Access denied. Your account is not authorized for the admin dashboard. Contact the administrator to get access.';
+      }
+    }
+    return '';
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
