@@ -11,6 +11,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
   const [showRetry, setShowRetry] = useState(false);
 
+  const [profileCheckDone, setProfileCheckDone] = useState(false);
+
   useEffect(() => {
     // If we landed here with a ?code= param, redirect to auth callback to exchange it
     const code = searchParams.get('code');
@@ -22,11 +24,23 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       router.push('/');
     }
     // SECURITY: If session exists but user has no profile (unauthorized Google login),
-    // redirect to login page
+    // give the profile fetch a moment to complete before rejecting.
+    // This prevents race conditions where Google OAuth session is set but profile
+    // hasn't been fetched yet.
     if (!loading && session && !user) {
+      if (!profileCheckDone) {
+        // Wait 2s for profile to load (covers Google OAuth redirect timing)
+        const timer = setTimeout(() => setProfileCheckDone(true), 2000);
+        return () => clearTimeout(timer);
+      }
+      // Profile check has waited — still no user, actually redirect
       router.push('/?error=access_denied');
     }
-  }, [session, user, loading, router, searchParams]);
+    // Reset profile check flag when user is found
+    if (user) {
+      setProfileCheckDone(false);
+    }
+  }, [session, user, loading, router, searchParams, profileCheckDone]);
 
   // Show retry button after 5 seconds of loading
   useEffect(() => {
