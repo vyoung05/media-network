@@ -1,6 +1,5 @@
 import { StorePageClient } from '@/components/StorePageClient';
 import { fetchMerchProducts } from '@/lib/supabase';
-import { JsonLd } from '@media-network/shared';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,7 +10,7 @@ export default async function StorePage() {
   return (
     <>
       <JsonLd
-        type="webpage"
+        type="article"
         name="Store - TrapGlow"
         description="Premium TrapGlow merchandise. Empower your glow-up journey with style."
         url="https://trapglow.com/store"
@@ -28,3 +27,4 @@ export default async function StorePage() {
     </>
   );
 }
+

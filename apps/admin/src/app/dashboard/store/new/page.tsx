@@ -22,7 +22,7 @@ interface ProductFormData {
 
 export default function NewProductPage() {
   const router = useRouter();
-  const { selectedBrand } = useBrand();
+  const { activeBrand } = useBrand();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [imageInput, setImageInput] = useState('');
@@ -30,7 +30,7 @@ export default function NewProductPage() {
   const [formData, setFormData] = useState<ProductFormData>({
     title: '',
     description: '',
-    brand: getBrandDisplayName(selectedBrand) || 'Young Empire',
+    brand: getBrandDisplayName(activeBrand) || 'Young Empire',
     price: '',
     images: [],
     sizes: ['S', 'M', 'L', 'XL', '2XL'],

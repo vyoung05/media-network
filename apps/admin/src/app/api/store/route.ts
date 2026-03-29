@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseServerClient } from '@/lib/supabase-server';
+import { getSupabaseServiceClient } from '@media-network/shared';
 
 // GET /api/store - List products (with optional brand filter)
 export async function GET(request: NextRequest) {
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category');
     const search = searchParams.get('search');
 
-    const supabase = await getSupabaseServerClient();
+    const supabase = getSupabaseServiceClient();
     
     // Build query
     let query = supabase
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = await getSupabaseServerClient();
+    const supabase = getSupabaseServiceClient();
     
     const productData = {
       title: title.trim(),

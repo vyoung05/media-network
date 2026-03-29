@@ -377,3 +377,38 @@ export function truncate(str: string, maxLength: number): string {
   if (str.length <= maxLength) return str;
   return str.slice(0, maxLength - 3) + '...';
 }
+
+// ======================== MERCH ========================
+
+export type MerchStatus = 'active' | 'inactive' | 'sold_out';
+export type MerchCategory = 'tee' | 'hoodie' | 'hat' | 'tank' | 'sweatshirt' | 'longsleeve' | 'accessories';
+export type OrderStatus = 'pending' | 'paid' | 'fulfilling' | 'shipped' | 'delivered' | 'cancelled';
+
+export interface MerchProduct {
+  id: string;
+  title: string;
+  description: string | null;
+  brand: string;
+  price: number;
+  images: string[];
+  sizes: string[];
+  printful_product_id: string | null;
+  printful_variant_ids: Record<string, string>;
+  status: MerchStatus;
+  category: MerchCategory;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MerchOrder {
+  id: string;
+  user_id: string | null;
+  email: string;
+  items: any[];
+  subtotal: number;
+  shipping: number;
+  total: number;
+  status: OrderStatus;
+  created_at: string;
+  updated_at: string;
+}

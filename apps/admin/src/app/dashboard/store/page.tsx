@@ -8,14 +8,14 @@ import { getSupabaseBrowserClient } from '@/lib/supabase';
 import type { MerchProduct } from '@media-network/shared';
 
 export default function StorePage() {
-  const { selectedBrand } = useBrand();
+  const { activeBrand } = useBrand();
   const [products, setProducts] = useState<MerchProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     loadProducts();
-  }, [selectedBrand]);
+  }, [activeBrand]);
 
   const loadProducts = async () => {
     try {
@@ -29,8 +29,8 @@ export default function StorePage() {
         .order('created_at', { ascending: false });
       
       // Filter by brand if not 'all'
-      if (selectedBrand && selectedBrand !== 'all') {
-        const brandName = getBrandDisplayName(selectedBrand);
+      if (activeBrand && activeBrand !== 'all') {
+        const brandName = getBrandDisplayName(activeBrand);
         query = query.eq('brand', brandName);
       }
       
@@ -112,7 +112,7 @@ export default function StorePage() {
         <div>
           <h1 className="text-2xl font-bold text-white">Store Products</h1>
           <p className="text-gray-400 mt-1">
-            Manage products for {selectedBrand === 'all' ? 'all brands' : getBrandDisplayName(selectedBrand)}
+            Manage products for {activeBrand === 'all' ? 'all brands' : getBrandDisplayName(activeBrand)}
           </p>
         </div>
         <Link

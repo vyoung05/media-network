@@ -276,7 +276,7 @@ export default function OrdersPage() {
                   <div className="text-sm">
                     <span className="text-gray-400">Ship to:</span>
                     <span className="text-gray-300 ml-2">
-                      {order.shipping_address.name}, {order.shipping_address.address1}, {order.shipping_address.city}, {order.shipping_address.state} {order.shipping_address.zip}
+                      {order.shipping_address.name}, {order.shipping_address.line1}, {order.shipping_address.city}, {order.shipping_address.state} {order.shipping_address.postal_code}
                     </span>
                   </div>
                 </div>

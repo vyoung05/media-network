@@ -1,6 +1,5 @@
 import { StoreGridClient } from '@media-network/ui';
 import { fetchMerchProducts } from '@/lib/supabase';
-import { JsonLd } from '@media-network/shared';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,7 +10,7 @@ export default async function StorePage() {
   return (
     <>
       <JsonLd
-        type="webpage"
+        type="article"
         name="Store - TrapFrequency"
         description="TrapFrequency merchandise for music creators and audio enthusiasts."
         url="https://trapfrequency.com/store"
@@ -32,3 +31,4 @@ export default async function StorePage() {
     </>
   );
 }
+

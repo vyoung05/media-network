@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseServerClient } from '@/lib/supabase-server';
+import { getSupabaseServiceClient } from '@media-network/shared';
 
 interface RouteParams {
   params: {
@@ -22,7 +22,7 @@ export async function GET(
       );
     }
 
-    const supabase = await getSupabaseServerClient();
+    const supabase = getSupabaseServiceClient();
     
     const { data, error } = await supabase
       .from('merch_products')
@@ -97,7 +97,7 @@ export async function PUT(
       );
     }
 
-    const supabase = await getSupabaseServerClient();
+    const supabase = getSupabaseServiceClient();
     
     const updateData = {
       title: title.trim(),
@@ -157,7 +157,7 @@ export async function DELETE(
       );
     }
 
-    const supabase = await getSupabaseServerClient();
+    const supabase = getSupabaseServiceClient();
     
     const { error } = await supabase
       .from('merch_products')
