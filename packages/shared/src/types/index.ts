@@ -20,6 +20,12 @@ export type MediaType = 'image' | 'video' | 'audio' | 'document';
 
 export type LayoutType = 'full_image' | 'text_left' | 'text_right' | 'text_only' | 'split' | 'hero' | 'gallery';
 
+export type MerchStatus = 'active' | 'inactive' | 'sold_out';
+
+export type MerchCategory = 'tee' | 'hoodie' | 'hat' | 'tank' | 'sweatshirt' | 'longsleeve' | 'accessories';
+
+export type OrderStatus = 'pending' | 'paid' | 'fulfilling' | 'shipped' | 'delivered' | 'cancelled';
+
 // ======================== MODELS ========================
 
 export interface User {
@@ -170,6 +176,59 @@ export interface AudioVersion {
   status: 'processing' | 'ready' | 'error';
   error_message: string | null;
   play_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MerchProduct {
+  id: string;
+  title: string;
+  description: string | null;
+  brand: string;
+  price: number;
+  images: string[];
+  sizes: string[];
+  printful_product_id: string | null;
+  printful_variant_ids: Record<string, string>;
+  status: MerchStatus;
+  category: MerchCategory;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MerchOrderItem {
+  product_id: string;
+  title: string;
+  size: string;
+  quantity: number;
+  price: number;
+}
+
+export interface ShippingAddress {
+  name: string;
+  address1: string;
+  address2?: string;
+  city: string;
+  state: string;
+  zip: string;
+  country: string;
+  phone?: string;
+}
+
+export interface MerchOrder {
+  id: string;
+  user_id: string | null;
+  email: string;
+  stripe_payment_id: string | null;
+  printful_order_id: string | null;
+  items: MerchOrderItem[];
+  subtotal: number;
+  shipping: number;
+  total: number;
+  shipping_address: ShippingAddress | null;
+  status: OrderStatus;
+  tracking_number: string | null;
+  tracking_url: string | null;
   created_at: string;
   updated_at: string;
 }

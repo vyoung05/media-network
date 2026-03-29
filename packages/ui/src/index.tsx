@@ -6,3 +6,4 @@ export { CategoryFilter } from './components/CategoryFilter';
 export { NewsFeed } from './components/NewsFeed';
 export { Loading, ArticleCardSkeleton, WireSkeleton, FeedSkeleton } from './components/Loading';
 export { ShareCard } from './components/ShareCard';
+export { StoreGrid, StoreGridClient } from './components/StoreGrid';

@@ -6,7 +6,7 @@ import {
   getTrendingArticles,
   getArticleAudioUrl,
 } from '@media-network/shared';
-import type { Article, Brand } from '@media-network/shared';
+import type { Article, Brand, MerchProduct } from '@media-network/shared';
 import type { MagazineIssue, MagazinePage } from './mock-data';
 
 const BRAND: Brand = 'saucecaviar';
@@ -196,4 +196,23 @@ export async function fetchIssuesSlugs(): Promise<string[]> {
 
   if (error || !data) return [];
   return data.map((row: any) => row.slug);
+}
+
+export async function fetchMerchProducts(brand: string): Promise<MerchProduct[]> {
+  const supabase = getSupabase();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from('merch_products')
+    .select('*')
+    .eq('brand', brand)
+    .eq('status', 'active')
+    .order('created_at', { ascending: false });
+
+  if (error || !data) {
+    console.warn('Error fetching merch products:', error);
+    return [];
+  }
+  
+  return data as MerchProduct[];
 }

@@ -7,7 +7,7 @@ import {
   getTrendingArticles,
   getArticleAudioUrl,
 } from '@media-network/shared';
-import type { Article, Brand } from '@media-network/shared';
+import type { Article, Brand, MerchProduct } from '@media-network/shared';
 
 const BRAND: Brand = 'saucewire';
 
@@ -100,4 +100,23 @@ export async function fetchArticlesByCategory(category: string): Promise<Article
     per_page: 50,
   });
   return res.data;
+}
+
+export async function fetchMerchProducts(brand: string): Promise<MerchProduct[]> {
+  const supabase = getSupabase();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from('merch_products')
+    .select('*')
+    .eq('brand', brand)
+    .eq('status', 'active')
+    .order('created_at', { ascending: false });
+
+  if (error || !data) {
+    console.warn('Error fetching merch products:', error);
+    return [];
+  }
+  
+  return data as MerchProduct[];
 }
