@@ -8,7 +8,8 @@ export { Loading, ArticleCardSkeleton, WireSkeleton, FeedSkeleton } from './comp
 export { ShareCard } from './components/ShareCard';
 export { StoreGrid, StoreGridClient } from './components/StoreGrid';
 export { ProductModal } from './components/ProductModal';
-export { TShirtViewer3D } from './components/TShirtViewer3D';
+// TShirtViewer3D intentionally NOT exported here — Three.js bundle crashes on load
+// Import directly from './components/TShirtViewer3D' only where needed (e.g. /store-3d page)
 
 // Cart system components
 export { CartProvider, useCart, type CartItem } from './components/CartContext';
