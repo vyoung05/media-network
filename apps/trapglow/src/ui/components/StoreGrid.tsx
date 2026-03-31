@@ -1,7 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import type { MerchProduct } from '@media-network/shared';
+import { ProductModal } from './ProductModal';
+import { useCart } from './CartContext';
 
 interface BrandConfig {
   name: string;
@@ -18,13 +20,15 @@ interface StoreGridProps {
   brand?: string;
   brandConfig?: BrandConfig;
   loading?: boolean;
+  onProductClick?: (product: MerchProduct) => void;
 }
 
 export function StoreGrid({ 
   products, 
   brand,
   brandConfig,
-  loading = false 
+  loading = false,
+  onProductClick 
 }: StoreGridProps) {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -35,6 +39,12 @@ export function StoreGrid({
 
   const primaryColor = brandConfig?.colors.primary || '#3B82F6';
   const accentColor = brandConfig?.colors.accent || '#1D4ED8';
+
+  const handleProductClick = (product: MerchProduct) => {
+    if (onProductClick) {
+      onProductClick(product);
+    }
+  };
 
   if (loading) {
     return (
@@ -93,8 +103,9 @@ export function StoreGrid({
   }
 
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {products.map((product, index) => (
+    <>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {products.map((product, index) => (
         <div
           key={product.id}
           className="group relative bg-gray-900 rounded-xl overflow-hidden border border-gray-700 hover:border-gray-600 transition-all duration-300"
@@ -104,7 +115,10 @@ export function StoreGrid({
           }}
         >
           {/* Product Image */}
-          <div className="aspect-square bg-gray-800 relative overflow-hidden">
+          <div 
+            className="aspect-square bg-gray-800 relative overflow-hidden cursor-pointer"
+            onClick={() => handleProductClick(product)}
+          >
             {product.images && product.images.length > 0 ? (
               <img
                 src={product.images[0]}
@@ -118,6 +132,13 @@ export function StoreGrid({
                 </svg>
               </div>
             )}
+            
+            {/* 3D View Hint */}
+            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+              <div className="text-white text-sm font-semibold bg-black bg-opacity-50 px-3 py-1 rounded-full">
+                🔍 View in 3D
+              </div>
+            </div>
             
             {/* Brand Badge */}
             {product.brand && (
@@ -175,17 +196,19 @@ export function StoreGrid({
 
             {/* CTA Button */}
             <button
+              onClick={() => handleProductClick(product)}
               style={{ 
                 background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
               }}
               className="w-full py-2.5 text-white font-semibold rounded-lg hover:opacity-90 transition-opacity"
             >
-              Contact for Orders
+              Add to Cart
             </button>
           </div>
         </div>
-      ))}
-    </div>
+        ))}
+      </div>
+    </>
   );
 }
 
@@ -199,7 +222,20 @@ export function StoreGridClient({
   brand?: string;
   brandConfig?: BrandConfig;
 }) {
+  const [selectedProduct, setSelectedProduct] = useState<MerchProduct | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const primaryColor = brandConfig?.colors.primary || '#3B82F6';
+
+  const handleProductClick = (product: MerchProduct) => {
+    setSelectedProduct(product);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setTimeout(() => setSelectedProduct(null), 300);
+  };
 
   return (
     <div className="min-h-screen bg-black">
@@ -232,9 +268,20 @@ export function StoreGridClient({
             products={products} 
             brand={brand}
             brandConfig={brandConfig}
+            onProductClick={handleProductClick}
           />
         </div>
       </section>
+
+      {/* Product Modal */}
+      {selectedProduct && (
+        <ProductModal
+          product={selectedProduct}
+          brandConfig={brandConfig}
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+        />
+      )}
     </div>
   );
 }

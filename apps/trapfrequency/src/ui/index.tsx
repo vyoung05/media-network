@@ -8,8 +8,11 @@ export { Loading, ArticleCardSkeleton, WireSkeleton, FeedSkeleton } from './comp
 export { ShareCard } from './components/ShareCard';
 
 export { StoreGrid, StoreGridClient } from './components/StoreGrid';
+export { ProductModal } from './components/ProductModal';
+export { TShirtViewer3D } from './components/TShirtViewer3D';
 
 // Cart system
-export { CartProvider, useCart, type CartItem } from '../../../../packages/ui/src/components/CartContext';
-export { CartIcon } from '../../../../packages/ui/src/components/CartIcon';
-export { CartPage } from '../../../../packages/ui/src/components/CartPage';
+export { CartProvider, useCart, type CartItem } from './components/CartContext';
+export { CartIcon } from './components/CartIcon';
+export { CartPage } from './components/CartPage';
+
