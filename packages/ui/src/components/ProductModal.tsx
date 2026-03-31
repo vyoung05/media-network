@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useState, useRef, Suspense, Component, ErrorInfo, ReactNode } from 'react';
-import dynamic from 'next/dynamic';
+import React, { useState, useRef } from 'react';
 import type { MerchProduct } from '@media-network/shared';
 import { useCart } from './CartContext';
 
@@ -22,62 +21,8 @@ interface ProductModalProps {
   onClose: () => void;
 }
 
-// Error boundary for 3D viewer — falls back to product image
-class Viewer3DErrorBoundary extends Component<
-  { children: ReactNode; fallbackImage?: string },
-  { hasError: boolean }
-> {
-  constructor(props: { children: ReactNode; fallbackImage?: string }) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError(_: Error) {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.warn('3D Viewer failed to load, showing product image instead:', error.message);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900 p-8">
-          {this.props.fallbackImage ? (
-            <img
-              src={this.props.fallbackImage}
-              alt="Product"
-              className="max-w-full max-h-full object-contain rounded-lg"
-            />
-          ) : (
-            <div className="text-center text-gray-400">
-              <div className="text-4xl mb-4">👕</div>
-              <p>Product preview</p>
-            </div>
-          )}
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
-
-// Dynamically import the 3D viewer with SSR disabled
-const TShirtViewer3D = dynamic(
-  () => import('./TShirtViewer3D').then((mod) => mod.TShirtViewer3D),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="w-full h-full bg-gray-800 rounded-lg flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p className="text-gray-400">Loading 3D Viewer...</p>
-        </div>
-      </div>
-    ),
-  }
-);
+// 3D viewer removed from modal — was crashing due to Three.js compatibility issues
+// 3D viewer still available as standalone on /store-3d test page
 
 export function ProductModal({ product, brandConfig, isOpen, onClose }: ProductModalProps) {
   const [selectedSize, setSelectedSize] = useState<string>(product.sizes?.[0] || '');
@@ -157,25 +102,20 @@ export function ProductModal({ product, brandConfig, isOpen, onClose }: ProductM
           </svg>
         </button>
 
-        {/* Left Side - 3D Viewer (with error boundary fallback to product image) */}
-        <div className="flex-1 h-full bg-gradient-to-br from-gray-800 to-gray-900 relative">
-          <Viewer3DErrorBoundary fallbackImage={product.images?.[0]}>
-            <Suspense
-              fallback={
-                <div className="w-full h-full flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto mb-4"></div>
-                    <p className="text-gray-400 text-lg">Loading 3D Experience...</p>
-                  </div>
-                </div>
-              }
-            >
-              <TShirtViewer3D 
-                designImageUrl={product.images?.[0] || ''} 
-                brandColor={primaryColor}
-              />
-            </Suspense>
-          </Viewer3DErrorBoundary>
+        {/* Left Side - Product Image */}
+        <div className="flex-1 h-full bg-gradient-to-br from-gray-800 to-gray-900 relative flex items-center justify-center p-8">
+          {product.images?.[0] ? (
+            <img
+              src={product.images[0]}
+              alt={product.title}
+              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+            />
+          ) : (
+            <div className="text-center text-gray-400">
+              <div className="text-6xl mb-4">👕</div>
+              <p className="text-lg">Product Preview</p>
+            </div>
+          )}
         </div>
 
         {/* Right Side - Product Details */}
