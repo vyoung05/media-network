@@ -1,26 +1,55 @@
-# Homepage Fix Progress — COMPLETE
+# 3D T-Shirt Product Viewer Progress
 
-## Assessment
-All three sites were already wired up with Supabase articles. The code changes had been made in a previous session:
+## ✅ Analysis Phase
+- [x] Read and understand StoreGrid.tsx structure
+- [x] Analyze MerchProduct type from shared types
+- [x] Understand brand config system
 
-- ✅ **TrapGlow**: `fetchTrendingArticles(8)` in page.tsx, HomePageClient accepts `trendingArticles: Article[]`, gradient fallbacks for missing images, hero falls back to animated gradient when no featured artist image
-- ✅ **TrapFrequency**: `fetchTrendingArticles(6)` in page.tsx, HomePageClient accepts `trendingArticles: Article[]`, green gradient fallbacks with `SafeImage` component, rotating article ticker in hero
-- ✅ **SauceCaviar**: `fetchTrendingArticles(8)` in page.tsx, HomePageClient accepts `trendingArticles?: Article[]`, `TrendingArticles` component shows editorial grid above magazine issues, gold gradient fallbacks, rotating hero images from article covers, lifestyle-focused copy (not food)
+## ✅ Installation Phase
+- [x] Install Three.js dependencies (with --legacy-peer-deps)
+- [x] Check package compatibility
 
-## Builds
-- ✅ TrapGlow: `npx next build` — SUCCESS
-- ✅ TrapFrequency: `npx next build` — SUCCESS (after clearing stale .next cache)
-- ✅ SauceCaviar: `npx next build` — SUCCESS (after clearing stale .next cache)
+## ✅ Development Phase
+- [x] Create ProductModal component
+- [x] Build 3D T-Shirt Viewer component
+- [x] Update StoreGrid to trigger modal
+- [x] Add modal state management
+- [x] Implement size selector
+- [x] Style with brand colors
 
-## Deployments
-- ✅ TrapGlow → https://trapglow.com (deployed via Vercel `--prod`)
-- ✅ TrapFrequency → https://trapfrequency.com (deployed via Vercel `--prod`)
-- ✅ SauceCaviar → https://saucecaviar.com (deployed via Vercel `--prod`)
+## ✅ Export Phase
+- [x] Update ui package index.tsx
+- [x] Test component integration
 
-## Deploy Note
-Vercel projects have `rootDirectory: "apps/<site>"` set in project settings, so deploy from monorepo root with env vars:
-```powershell
-cd D:\Vector\media-network
-$env:VERCEL_PROJECT_ID="<project_id>"; $env:VERCEL_ORG_ID="team_EjGLVhUj3JF7sk8RBnJWk8CD"
-npx vercel --prod --yes
-```
+## ✅ Testing Phase
+- [x] Copy components to SauceCaviar app for testing
+- [x] Install Three.js dependencies in SauceCaviar
+- [x] Create test page with mock products (/store-3d)
+- [x] Set up brand configuration
+
+## Notes
+- StoreGrid shows product cards with images, brand, pricing
+- Products have images array (using first as texture)
+- Brand colors available via brandConfig prop
+- Product images are now clickable to open 3D modal
+- Created test page: /store-3d with mock products
+
+## Components Created
+1. **ProductModal.tsx** - Full-screen modal with 3D viewer and product details
+2. **TShirtViewer3D.tsx** - Interactive 3D t-shirt component with texture mapping
+3. **Updated StoreGrid.tsx** - Added modal triggers and click handlers
+
+## Features Implemented
+- 3D interactive t-shirt (rotate, zoom)
+- Design texture mapping from product images
+- Size selector with brand theming
+- Contact for orders integration
+- Auto-rotate when not interacting
+- Loading states and fallbacks
+- Mobile responsive design
+- Dark premium aesthetic matching brand
+
+## Test Environment
+- Added components to SauceCaviar app for testing
+- Test URL: `/store-3d` with mock products
+- All dependencies installed and ready

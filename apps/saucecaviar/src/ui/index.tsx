@@ -8,3 +8,5 @@ export { Loading, ArticleCardSkeleton, WireSkeleton, FeedSkeleton } from './comp
 export { ShareCard } from './components/ShareCard';
 
 export { StoreGrid, StoreGridClient } from './components/StoreGrid';
+export { ProductModal } from './components/ProductModal';
+export { TShirtViewer3D } from './components/TShirtViewer3D';

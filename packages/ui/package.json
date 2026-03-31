@@ -11,18 +11,26 @@
     "./breaking-banner": "./src/components/BreakingBanner.tsx",
     "./category-filter": "./src/components/CategoryFilter.tsx",
     "./news-feed": "./src/components/NewsFeed.tsx",
-    "./loading": "./src/components/Loading.tsx"
+    "./loading": "./src/components/Loading.tsx",
+    "./store-grid": "./src/components/StoreGrid.tsx",
+    "./product-modal": "./src/components/ProductModal.tsx",
+    "./tshirt-viewer-3d": "./src/components/TShirtViewer3D.tsx"
   },
   "scripts": {
     "build": "echo 'ui: no build needed'",
     "lint": "echo 'ui: no lint configured'"
   },
   "dependencies": {
-    "@media-network/shared": "*"
+    "@media-network/shared": "*",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.5.0",
+    "@types/three": "^0.183.1",
+    "three": "^0.183.2"
   },
   "peerDependencies": {
     "react": "^18.0.0",
-    "react-dom": "^18.0.0"
+    "react-dom": "^18.0.0",
+    "next": "^13.0.0 || ^14.0.0 || ^15.0.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.0",
