@@ -14,7 +14,7 @@
     "./loading": "./src/components/Loading.tsx",
     "./store-grid": "./src/components/StoreGrid.tsx",
     "./product-modal": "./src/components/ProductModal.tsx",
-    "./tshirt-viewer-3d": "./src/components/TShirtViewer3D.tsx",
+
     "./cart-context": "./src/components/CartContext.tsx",
     "./cart-icon": "./src/components/CartIcon.tsx",
     "./cart-page": "./src/components/CartPage.tsx"
@@ -24,11 +24,7 @@
     "lint": "echo 'ui: no lint configured'"
   },
   "dependencies": {
-    "@media-network/shared": "*",
-    "@react-three/drei": "^10.7.7",
-    "@react-three/fiber": "^9.5.0",
-    "@types/three": "^0.183.1",
-    "three": "^0.183.2"
+    "@media-network/shared": "*"
   },
   "peerDependencies": {
     "react": "^18.0.0",
