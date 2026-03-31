@@ -14,7 +14,10 @@
     "./loading": "./src/components/Loading.tsx",
     "./store-grid": "./src/components/StoreGrid.tsx",
     "./product-modal": "./src/components/ProductModal.tsx",
-    "./tshirt-viewer-3d": "./src/components/TShirtViewer3D.tsx"
+    "./tshirt-viewer-3d": "./src/components/TShirtViewer3D.tsx",
+    "./cart-context": "./src/components/CartContext.tsx",
+    "./cart-icon": "./src/components/CartIcon.tsx",
+    "./cart-page": "./src/components/CartPage.tsx"
   },
   "scripts": {
     "build": "echo 'ui: no build needed'",
