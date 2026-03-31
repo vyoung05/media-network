@@ -8,6 +8,7 @@ import { PageTransition } from '@/components/PageTransition';
 import { CustomCursor } from '@/components/CustomCursor';
 import { PageViewTracker } from '@/components/PageViewTracker';
 import { OrganizationSchema } from '@/components/StructuredData';
+import { CartProvider } from '@media-network/ui';
 
 export const metadata: Metadata = {
   title: {
@@ -64,16 +65,18 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className="min-h-screen flex flex-col bg-secondary">
         <OrganizationSchema />
-        <LenisProvider>
-          <CustomCursor />
-          <ScrollProgress />
-          <Header />
-          <main className="flex-1">
-            <PageTransition>{children}</PageTransition>
-          </main>
-          <Footer />
-          <PageViewTracker brand="saucewire" />
-        </LenisProvider>
+        <CartProvider>
+          <LenisProvider>
+            <CustomCursor />
+            <ScrollProgress />
+            <Header />
+            <main className="flex-1">
+              <PageTransition>{children}</PageTransition>
+            </main>
+            <Footer />
+            <PageViewTracker brand="saucewire" />
+          </LenisProvider>
+        </CartProvider>
       </body>
     </html>
   );

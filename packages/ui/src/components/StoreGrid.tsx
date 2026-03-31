@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import type { MerchProduct } from '@media-network/shared';
 import { ProductModal } from './ProductModal';
+import { useCart } from './CartContext';
 
 interface BrandConfig {
   name: string;
@@ -195,12 +196,13 @@ export function StoreGrid({
 
             {/* CTA Button */}
             <button
+              onClick={() => handleProductClick(product)}
               style={{ 
                 background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
               }}
               className="w-full py-2.5 text-white font-semibold rounded-lg hover:opacity-90 transition-opacity"
             >
-              Contact for Orders
+              Add to Cart
             </button>
           </div>
         </div>

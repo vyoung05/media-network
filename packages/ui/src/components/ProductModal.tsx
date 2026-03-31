@@ -3,6 +3,7 @@
 import React, { useState, useRef, Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import type { MerchProduct } from '@media-network/shared';
+import { useCart } from './CartContext';
 
 interface BrandConfig {
   name: string;
@@ -39,7 +40,10 @@ const TShirtViewer3D = dynamic(
 
 export function ProductModal({ product, brandConfig, isOpen, onClose }: ProductModalProps) {
   const [selectedSize, setSelectedSize] = useState<string>(product.sizes?.[0] || '');
+  const [quantity, setQuantity] = useState<number>(1);
+  const [addingToCart, setAddingToCart] = useState<boolean>(false);
   const modalRef = useRef<HTMLDivElement>(null);
+  const { addItem } = useCart();
 
   const primaryColor = brandConfig?.colors.primary || '#3B82F6';
   const accentColor = brandConfig?.colors.accent || '#1D4ED8';
@@ -57,18 +61,39 @@ export function ProductModal({ product, brandConfig, isOpen, onClose }: ProductM
     }
   };
 
-  const handleContactOrder = () => {
-    // Create mailto link with product details
-    const subject = encodeURIComponent(`Order Inquiry: ${product.title}`);
-    const body = encodeURIComponent(
-      `Hi! I'm interested in ordering the following item:\n\n` +
-      `Product: ${product.title}\n` +
-      `Size: ${selectedSize}\n` +
-      `Price: ${formatPrice(product.price)}\n\n` +
-      `Please let me know how to proceed with the order.\n\n` +
-      `Thank you!`
-    );
-    window.open(`mailto:orders@youngempire.co?subject=${subject}&body=${body}`);
+  const handleAddToCart = async () => {
+    if (!selectedSize && product.sizes && product.sizes.length > 0) {
+      alert('Please select a size first');
+      return;
+    }
+
+    setAddingToCart(true);
+    
+    try {
+      const cartItem = {
+        productId: product.id,
+        title: product.title,
+        image: product.images?.[0] || '',
+        size: selectedSize || 'One Size',
+        quantity: quantity,
+        price: product.price,
+        brand: product.brand,
+        printfulVariantId: product.printful_variant_ids[selectedSize] || undefined,
+      };
+
+      addItem(cartItem);
+      
+      // Show success feedback (could be replaced with a toast notification)
+      setTimeout(() => {
+        onClose();
+      }, 500);
+      
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      alert('Failed to add item to cart. Please try again.');
+    } finally {
+      setAddingToCart(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -146,7 +171,7 @@ export function ProductModal({ product, brandConfig, isOpen, onClose }: ProductM
 
           {/* Size Selector */}
           {product.sizes && product.sizes.length > 0 && (
-            <div className="mb-8">
+            <div className="mb-6">
               <h3 className="text-white font-semibold mb-3">Size</h3>
               <div className="grid grid-cols-4 gap-2">
                 {product.sizes.map((size) => (
@@ -172,6 +197,28 @@ export function ProductModal({ product, brandConfig, isOpen, onClose }: ProductM
             </div>
           )}
 
+          {/* Quantity Selector */}
+          <div className="mb-8">
+            <h3 className="text-white font-semibold mb-3">Quantity</h3>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                className="w-10 h-10 bg-gray-700 text-white font-bold rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                -
+              </button>
+              <span className="w-12 text-center text-white font-bold text-lg">
+                {quantity}
+              </span>
+              <button
+                onClick={() => setQuantity(quantity + 1)}
+                className="w-10 h-10 bg-gray-700 text-white font-bold rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
           {/* Category */}
           <div className="mb-8">
             <span className="inline-block px-3 py-1 text-xs text-gray-400 border border-gray-600 rounded-full">
@@ -182,18 +229,19 @@ export function ProductModal({ product, brandConfig, isOpen, onClose }: ProductM
           {/* Action Buttons */}
           <div className="flex-1 flex flex-col justify-end space-y-4">
             <button
-              onClick={handleContactOrder}
+              onClick={handleAddToCart}
+              disabled={addingToCart || (product.sizes && product.sizes.length > 0 && !selectedSize)}
               style={{ 
                 background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
               }}
-              className="w-full py-4 text-white font-bold rounded-lg hover:opacity-90 transition-opacity text-lg"
+              className="w-full py-4 text-white font-bold rounded-lg hover:opacity-90 transition-opacity text-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Contact for Orders
+              {addingToCart ? 'Adding to Cart...' : `Add to Cart - ${formatPrice(product.price * quantity)}`}
             </button>
             
             <div className="text-center">
               <p className="text-xs text-gray-500">
-                Secure ordering • Fast shipping • Premium quality
+                Secure checkout • Fast shipping • Premium quality
               </p>
             </div>
           </div>

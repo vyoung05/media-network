@@ -3,12 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import { CartIcon } from '@media-network/ui';
 
 const NAV_LINKS = [
   { href: '/', label: 'Home' },
   { href: '/tutorials', label: 'Tutorials' },
   { href: '/beats', label: 'Beats' },
   { href: '/gear', label: 'Gear' },
+  { href: '/store', label: 'Shop' },
   { href: '/submit', label: 'Submit' },
 ];
 
@@ -37,22 +39,25 @@ export function Header() {
 
       <div className="container-freq py-3">
         <div className="flex items-center justify-between">
-          {/* Mobile menu toggle */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-neutral hover:text-primary transition-colors"
-            aria-label="Toggle menu"
-          >
-            {mobileMenuOpen ? (
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            ) : (
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            )}
-          </button>
+          {/* Mobile Actions */}
+          <div className="md:hidden flex items-center gap-2">
+            <CartIcon primaryColor="#39FF14" />
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 text-neutral hover:text-primary transition-colors"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? (
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
+            </button>
+          </div>
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group" data-cursor="HOME">
@@ -94,6 +99,7 @@ export function Header() {
                 <path d="M6.18 15.64a2.18 2.18 0 010 4.36 2.18 2.18 0 010-4.36m0-12.64C3.42 3 1 3 1 3v4s1.57 0 3.36.14c2.14.17 3.9.72 5.41 1.66 1.73 1.08 2.91 2.55 3.56 4.43.52 1.49.78 3.51.78 5.77h4C18.11 10.05 13.18 3.61 6.18 3m0 6C3.58 9 1 9 1 9v4c1.52 0 2.93.15 4.23.44 1.58.36 2.74 1.01 3.48 1.94.78.98 1.18 2.38 1.18 4.18h4C13.89 13.53 10.78 9.6 6.18 9" />
               </svg>
             </Link>
+            <CartIcon primaryColor="#39FF14" />
             <Link href="/submit" className="btn-primary text-xs py-2 px-4">
               Submit a Beat
             </Link>

@@ -3,12 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import { CartIcon } from '@media-network/ui';
 
 const NAV_LINKS = [
   { label: 'Issues', href: '/issues' },
   { label: 'About', href: '/about' },
   { label: 'Submit', href: '/submit' },
   { label: 'Advertise', href: '/advertise' },
+  { label: 'Shop', href: '/store' },
   { label: 'Subscribe', href: '/subscribe' },
 ];
 
@@ -45,43 +47,49 @@ export function Header() {
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-1">
-            {NAV_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="relative px-5 py-2 text-xs tracking-[0.2em] uppercase text-text/60
-                         hover:text-primary transition-colors duration-300 font-body group"
-                data-cursor={link.label}
-              >
-                {link.label}
-                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-px bg-primary
-                               group-hover:w-full transition-all duration-500" />
-              </Link>
-            ))}
-          </nav>
+          <div className="hidden md:flex items-center gap-1">
+            <nav className="flex items-center gap-1">
+              {NAV_LINKS.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="relative px-5 py-2 text-xs tracking-[0.2em] uppercase text-text/60
+                           hover:text-primary transition-colors duration-300 font-body group"
+                  data-cursor={link.label}
+                >
+                  {link.label}
+                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-px bg-primary
+                                 group-hover:w-full transition-all duration-500" />
+                </Link>
+              ))}
+            </nav>
+            <CartIcon primaryColor="#C9A84C" className="ml-2" />
+          </div>
 
-          {/* Mobile Toggle */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-text/60 hover:text-primary transition-colors"
-            aria-label="Toggle menu"
-          >
-            <div className="flex flex-col gap-1.5 w-6">
-              <motion.span
-                animate={mobileMenuOpen ? { rotate: 45, y: 7 } : { rotate: 0, y: 0 }}
-                className="block h-[1px] bg-current transition-colors"
-              />
-              <motion.span
-                animate={mobileMenuOpen ? { opacity: 0 } : { opacity: 1 }}
-                className="block h-[1px] bg-current transition-colors"
-              />
-              <motion.span
-                animate={mobileMenuOpen ? { rotate: -45, y: -7 } : { rotate: 0, y: 0 }}
-                className="block h-[1px] bg-current transition-colors"
-              />
-            </div>
-          </button>
+          {/* Mobile Actions */}
+          <div className="md:hidden flex items-center gap-2">
+            <CartIcon primaryColor="#C9A84C" />
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 text-text/60 hover:text-primary transition-colors"
+              aria-label="Toggle menu"
+            >
+              <div className="flex flex-col gap-1.5 w-6">
+                <motion.span
+                  animate={mobileMenuOpen ? { rotate: 45, y: 7 } : { rotate: 0, y: 0 }}
+                  className="block h-[1px] bg-current transition-colors"
+                />
+                <motion.span
+                  animate={mobileMenuOpen ? { opacity: 0 } : { opacity: 1 }}
+                  className="block h-[1px] bg-current transition-colors"
+                />
+                <motion.span
+                  animate={mobileMenuOpen ? { rotate: -45, y: -7 } : { rotate: 0, y: 0 }}
+                  className="block h-[1px] bg-current transition-colors"
+                />
+              </div>
+            </button>
+          </div>
         </div>
       </div>
 

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SAUCEWIRE_CATEGORIES } from '@media-network/shared';
+import { CartIcon } from '@media-network/ui';
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -56,24 +57,27 @@ export function Header() {
       {/* Main header */}
       <div className="container-wire py-3">
         <div className="flex items-center justify-between">
-          {/* Mobile menu toggle */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-neutral hover:text-white transition-colors"
-            aria-label="Toggle menu"
-          >
-            <motion.div animate={mobileMenuOpen ? 'open' : 'closed'}>
-              {mobileMenuOpen ? (
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              ) : (
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              )}
-            </motion.div>
-          </button>
+          {/* Mobile Actions */}
+          <div className="md:hidden flex items-center gap-2">
+            <CartIcon primaryColor="#E63946" />
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 text-neutral hover:text-white transition-colors"
+              aria-label="Toggle menu"
+            >
+              <motion.div animate={mobileMenuOpen ? 'open' : 'closed'}>
+                {mobileMenuOpen ? (
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                )}
+              </motion.div>
+            </button>
+          </div>
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
@@ -89,6 +93,7 @@ export function Header() {
 
           {/* Right actions */}
           <div className="flex items-center gap-2">
+            <CartIcon primaryColor="#E63946" />
             <button
               onClick={() => setSearchOpen(!searchOpen)}
               className="p-2 text-neutral hover:text-white transition-colors"
@@ -154,6 +159,12 @@ export function Header() {
             >
               Archive
             </Link>
+            <Link
+              href="/store"
+              className="px-4 py-2 text-sm font-mono text-accent uppercase tracking-wider hover:text-white hover:bg-white/5 rounded transition-all duration-200 whitespace-nowrap"
+            >
+              Shop
+            </Link>
           </div>
         </div>
       </nav>
@@ -199,6 +210,13 @@ export function Header() {
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Submit a Tip
+                </Link>
+                <Link
+                  href="/store"
+                  className="block px-6 py-3 text-sm font-mono text-accent uppercase tracking-wider hover:text-white hover:bg-surface transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Shop
                 </Link>
                 <Link
                   href="/write"
