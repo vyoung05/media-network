@@ -159,26 +159,40 @@ export const CartPage: React.FC<CartPageProps> = ({ brandConfig, brand = 'Young 
     setCheckoutError(null);
     
     try {
-      // For now, just create a mailto link
-      const subject = encodeURIComponent('Cart Checkout Request');
-      const body = encodeURIComponent(
-        `Hi! I'd like to checkout with the following items:\n\n` +
-        items.map(item => 
-          `• ${item.title} (${item.size}) x${item.quantity} - $${(item.price * item.quantity).toFixed(2)}\n`
-        ).join('') +
-        `\nSubtotal: $${total.toFixed(2)}\n` +
-        `Shipping: ${estimatedShipping === 0 ? 'FREE' : `$${estimatedShipping.toFixed(2)}`}\n` +
-        `Total: $${finalTotal.toFixed(2)}\n\n` +
-        `Please let me know the next steps for completing my order.\n\n` +
-        `Thank you!`
-      );
-      
-      window.open(`mailto:orders@youngempire.co?subject=${subject}&body=${body}`);
+      // Build items for checkout server
+      const checkoutItems = items.map(item => ({
+        printful_variant_id: item.printfulVariantId,
+        quantity: item.quantity,
+      }));
+
+      // Validate all items have Printful variant IDs
+      const missingVariants = items.filter(item => !item.printfulVariantId);
+      if (missingVariants.length > 0) {
+        throw new Error(`Some items are missing variant info. Please remove and re-add: ${missingVariants.map(i => i.title).join(', ')}`);
+      }
+
+      const response = await fetch('https://checkout-server-pi.vercel.app/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: checkoutItems }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Checkout failed. Please try again.');
+      }
+
+      if (data.checkout_url) {
+        // Redirect to Stripe Checkout
+        window.location.href = data.checkout_url;
+      } else {
+        throw new Error('No checkout URL returned. Please try again.');
+      }
       
     } catch (error: any) {
       console.error('Checkout error:', error);
       setCheckoutError(error?.message || 'Checkout failed. Please try again.');
-    } finally {
       setIsCheckingOut(false);
     }
   };
