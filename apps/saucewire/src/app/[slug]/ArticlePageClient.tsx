@@ -8,7 +8,6 @@ import { formatDate, timeAgo, formatNumber, NativeInArticleAd } from '@media-net
 import { ArticleCard } from '@media-network/ui';
 import { TrendingSidebar } from '@/components/TrendingSidebar';
 import { AudioPlayer } from '@/components/AudioPlayer';
-import { TextReveal } from '@/components/TextReveal';
 
 interface ArticlePageClientProps {
   article: Article;
@@ -49,14 +48,10 @@ export function ArticlePageClient({
             </div>
           )}
 
-          {/* Title — animated with TextReveal */}
-          <TextReveal
-            text={article.title}
-            as="h1"
-            className="text-3xl md:text-4xl lg:text-5xl font-headline text-white leading-tight mb-4"
-            speed={20}
-            triggerOnView={false}
-          />
+          {/* Title */}
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-headline text-white leading-tight mb-4">
+            {article.title}
+          </h1>
 
           {/* Meta */}
           <div className="flex flex-wrap items-center gap-3 text-sm text-neutral mb-6 pb-6 border-b border-gray-800">

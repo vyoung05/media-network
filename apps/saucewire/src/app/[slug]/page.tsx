@@ -23,9 +23,14 @@ export async function generateMetadata({ params }: ArticlePageProps) {
   });
   const ogImageUrl = `${siteUrl}/api/og?${ogParams.toString()}`;
 
+  const canonicalUrl = `${siteUrl}/${article.slug}`;
+
   return {
     title: article.title,
     description: article.excerpt || article.title,
+    alternates: {
+      canonical: canonicalUrl,
+    },
     openGraph: {
       title: article.title,
       description: article.excerpt || article.title,
@@ -36,6 +41,7 @@ export async function generateMetadata({ params }: ArticlePageProps) {
     },
     twitter: {
       card: 'summary_large_image',
+      site: '@SauceWire',
       title: article.title,
       description: article.excerpt || article.title,
       images: [ogImageUrl],
@@ -66,6 +72,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     <>
       <JsonLd
         type="article"
+        articleType="NewsArticle"
         headline={article.title}
         description={article.excerpt || article.title}
         image={article.cover_image || undefined}

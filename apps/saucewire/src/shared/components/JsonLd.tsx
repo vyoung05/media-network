@@ -2,6 +2,7 @@ import React from 'react';
 
 interface ArticleJsonLdProps {
   type: 'article';
+  articleType?: 'Article' | 'NewsArticle';
   headline: string;
   description?: string;
   image?: string;
@@ -35,7 +36,7 @@ export function JsonLd(props: JsonLdProps) {
     case 'article':
       structuredData = {
         '@context': 'https://schema.org',
-        '@type': 'Article',
+        '@type': props.articleType || 'Article',
         headline: props.headline,
         description: props.description || '',
         image: props.image || undefined,

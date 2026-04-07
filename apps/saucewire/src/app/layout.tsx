@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     url: 'https://saucewire.com',
     images: [
       {
-        url: 'https://heyboss.heeyo.ai/replicate-z-image-turbo-1772241235-870da467.jpeg',
+        url: 'https://saucewire.com/og-image.png',
         width: 1200,
         height: 630,
         alt: 'SauceWire - Culture. Connected. Now.',
@@ -35,9 +35,10 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
+    site: '@SauceWire',
     title: 'SauceWire',
-    description: 'Culture. Connected. Now.',
-    images: ['https://heyboss.heeyo.ai/replicate-z-image-turbo-1772241235-870da467.jpeg'],
+    description: 'Breaking hip-hop, culture, fashion, entertainment and sports news. Always on, always plugged in.',
+    images: ['https://saucewire.com/og-image.png'],
   },
   icons: {
     icon: [
@@ -50,6 +51,7 @@ export const metadata: Metadata = {
   },
   manifest: '/site.webmanifest',
   alternates: {
+    canonical: 'https://saucewire.com',
     types: {
       'application/rss+xml': '/feed.xml',
     },
