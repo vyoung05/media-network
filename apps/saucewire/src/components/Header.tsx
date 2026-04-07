@@ -10,6 +10,18 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [currentDate, setCurrentDate] = useState('');
+
+  useEffect(() => {
+    setCurrentDate(
+      new Date().toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })
+    );
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -31,12 +43,7 @@ export function Header() {
       <div className="hidden md:block border-b border-gray-800/50">
         <div className="container-wire flex items-center justify-between py-1">
           <span className="text-xs font-mono text-neutral">
-            {new Date().toLocaleDateString('en-US', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}
+            {currentDate}
           </span>
           <div className="flex items-center gap-4">
             <Link href="/submit" className="text-xs font-mono text-accent hover:text-primary transition-colors">
